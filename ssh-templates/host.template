@@ -1,0 +1,11 @@
+Host {name}
+    HostName {hostname}
+    Port 22
+    User segata
+    IdentityFile {identity}
+    ForwardAgent yes
+    ProxyCommand            ssh -F ssh-config proxy0 -W %h:%p
+    TCPKeepAlive            yes
+    Compression             no
+    CheckHostIP no
+    StrictHostKeyChecking no

@@ -1,0 +1,11 @@
+Host bastion.test.iminds.be proxy0
+    User segata
+    HostName bastion.test.iminds.be
+    Port 22
+    IdentityFile {identity}
+    ProxyCommand none
+    BatchMode yes
+    PasswordAuthentication no
+    EscapeChar none
+    CheckHostIP no
+    StrictHostKeyChecking yes
