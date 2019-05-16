@@ -62,7 +62,7 @@ use_hardware = False
 if args.filter:
     filters = args.filter.split(",")
 else:
-    filters = ["pcgen05"]
+    filters = []
 
 if args.nodes:
     nodes = args.nodes.split(",")
