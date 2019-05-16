@@ -19,5 +19,5 @@ node_template = """<node client_id="%s" exclusive="true" \
   component_id="%s">
   <sliver_type name="raw-pc"/>
   <location xmlns="http://jfed.iminds.be/rspec/ext/jfed/1" x="%f" y="%f"/>
-</node>"""
+</node>\n"""
 
