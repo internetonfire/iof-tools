@@ -64,3 +64,59 @@ This command should print something that resembles the following:
 omni: GENI Omni Command Line Aggregate Manager Tool Version 2.11
 Copyright (c) 2011-2016 Raytheon BBN Technologies
 ```
+
+## RSPEC generation
+
+RSPEC files (extension .rspec) are XML files that describes which nodes to
+allocate in a given testbed. For the TWIST and w.iLab1 testbeds the .rspec files
+can be generated automatically using the `gen-rspec.py` script. The script
+supports the following command line parameters:
+
+* `-t` (`--testbed`): specifies which testbed the RSPEC will be generated for.
+  Use twist for the TWIST testbed and wilab for w.iLab1;
+
+* `-f` (`--filter`): comma separated list of node name prefixes. Only the
+  available nodes whose name starts with one of the specified prefixes are
+  inserted in the generated RSPEC. By default all the available nodes are used for
+  generating the RSPEC file.
+
+* `-n` (`--nodes`): comma separated list of node names. Only the available nodes
+  whose name is listed with the `-n` option are inserted in the RSPEC file. By
+  default all the available nodes are used. The `-n` option takes precedence over
+  `-f`.
+
+* `-w` (`--hardware`): comma separated list of hardware types (e.g., `pcgen05`)
+
+For example, an RSPEC containing all the available nodes in the TWIST testbed
+can be generated with the following command:
+
+```
+./gen-rspec.py -t twist > twist_all.rspec
+```
+
+Instead, an RSPEC containing all the nuc nodes in the TWIST testbed can be
+generated with the following command:
+
+```
+./gen-rspec.py -t twist -f nuc > twist_nuc.rspec
+```
+
+An RSPEC containing only nuc4 and nuc6 from the TWIST testbed can be
+generated with the following command:
+
+```
+./gen-rspec.py -t twist -n nuc4,nuc6 > twist_nuc_4_6.rspec
+```
+
+An RSPEC containing nodes of hardware type `pcgen05` from both the
+VirtualWall1 and the VirtualWall2 testbeds can be generated with the following
+command:
+
+```
+./gen-rspec.py -t wall1,wall2 -w pcgen05 > iof.rspec
+```
+
+Note that, in any case, a node is inserted in the RSPEC only if it is available
+in the moment the `gen-rspec.py` command is executed. For this reason the
+suggested best practice is to execute `gen-rspec.py` just before allocating the
+resources using the `reserve.py` command.
