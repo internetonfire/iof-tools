@@ -16,6 +16,10 @@ Z = "z"
 
 NODE_NAME = "node{{:0{}d}}"
 
-SSH_CONFIG_TEMPLATE = "./ssh-templates/ssh-config.template"
-HOST_CONFIG_TEMPLATE = "./ssh-templates/host.template"
+SSH_CONFIG_TEMPLATE = "./templates/ssh-config.template"
+HOST_CONFIG_TEMPLATE = "./templates/host.template"
 IDENTITY_FILE = "~/.ssh/twist.cert"
+
+ANSIBLE_CONFIG_TEMPLATE = "./templates/ansible-cfg.template"
+INVENTORY_CONFIG_TEMPLATE = "./templates/ansible-inventory.template"
+ANSIBLE_HOST_TEMPLATE = "./templates/ansible-host.template"
