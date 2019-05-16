@@ -8,4 +8,4 @@ Host bastion.test.iminds.be proxy0
     PasswordAuthentication no
     EscapeChar none
     CheckHostIP no
-    StrictHostKeyChecking yes
+    StrictHostKeyChecking no
