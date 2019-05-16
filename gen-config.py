@@ -15,15 +15,20 @@ parser.add_argument("-r", "--rspec", dest="rspec",
 parser.add_argument("-s", "--ssh-config", dest="ssh_config",
                     default="ssh-config", action="store", metavar="FILENAME",
                     help="Output file onto which the SSH configuration is "
-                         "written")
+                         "written (default=%(default)s)")
 parser.add_argument("-a", "--ansible-config", dest="ansible_config",
                     default="ansible.cfg", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible configuration is "
-                         "written")
+                         "written (default=%(default)s)")
 parser.add_argument("-i", "--inventory", dest="ansible_inventory",
                     default="ansible-hosts", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible inventory is "
-                         "written")
+                         "written (default=%(default)s)")
+parser.add_argument("-k", "--key", dest="identity",
+                    default=IDENTITY_FILE, action="store",
+                    metavar="FILENAME",
+                    help="Private key or certificate used for the "
+                         "authentication (default=%(default)s)")
 
 args = parser.parse_args()
 
@@ -35,15 +40,16 @@ rspec_file = args.rspec
 ssh_config_file = args.ssh_config
 ansible_config_file = args.ansible_config
 ansible_inventory_file = args.ansible_inventory
+identity_file = args.identity
 
 config_file = open(ssh_config_file, "w")
 ansible_file = open(ansible_config_file, "w")
 inventory_file = open(ansible_inventory_file, "w")
 
-ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE, IDENTITY_FILE)
+ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE, identity_file)
 ansible_config = AnsibleConfig(ANSIBLE_CONFIG_TEMPLATE,
                                INVENTORY_CONFIG_TEMPLATE,
-                               ANSIBLE_HOST_TEMPLATE, IDENTITY_FILE,
+                               ANSIBLE_HOST_TEMPLATE, identity_file,
                                ansible_inventory_file, ssh_config_file)
 
 xml_file = ET.iterparse(rspec_file)

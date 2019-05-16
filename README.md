@@ -120,3 +120,29 @@ Note that, in any case, a node is inserted in the RSPEC only if it is available
 in the moment the `gen-rspec.py` command is executed. For this reason the
 suggested best practice is to execute `gen-rspec.py` just before allocating the
 resources using the `reserve.py` command.
+
+## Generating SSH and Ansible config
+
+After generating the `rspec` file, the `gen-config.py` script can generate
+the SSH and the ansible configuration files to access the nodes of the
+testbeds. To do so, simply run:
+
+```
+./gen-config.py -r <rspec file> -k <identity file>
+```
+
+The identity file is the private key or the certificate obtained after getting
+an account from the [iMinds authority](https://authority.ilabt.iminds.be/).
+
+This will generate:
+* `ssh-config`: the configuration file to be given to the SSH command (e.g.,
+  `ssh -F ssh-config ...`). This defines the names of the hosts as `node<i>`,
+  for `i` going from 0 to N-1. To connect to one host, you can thus run
+  `ssh -F ssh-config node0`.
+* `ansible.cfg`: the Ansible configuration file.
+* `ansible-hosts`: the Ansible inventory (list of nodes). In this file the
+  group of nodes reserved for the experiments is named `nodes`. To test that
+  this is properly working, try with `ansible nodes -m shell -a "uptime"`.
+
+The filename of the configuration files can be changed via command line
+arguments (see `./gen-config.py --help`).
