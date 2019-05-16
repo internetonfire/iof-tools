@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import xml.etree.ElementTree as ET
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -7,6 +8,10 @@ except ImportError:
 from subprocess import check_output
 from argparse import ArgumentParser
 import sys
+
+from const import AVAILABLE, COMPONENT_ID, COMPONENT_NAME, FOOTER_TEMPLATE, \
+    HARDWARE_TYPE, HEADER_TEMPLATE, LOCATION, NAME, NODE, NODE_TEMPLATE, NOW, \
+    TRUE, X, Y, Z
 
 
 def matches(name, filters, nodes):
@@ -30,10 +35,70 @@ def matches_hardware(hardware_filter, hardware_types):
     return False
 
 
+def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
+                dump_file, df):
+    omni = ["omni", "-V3", "listresources", "-a", testbed, "--error",
+            "--tostdout"]
+
+    xml = check_output(omni)
+
+    # parse the xml file removing the namespaces from tag names
+    xml_file = StringIO(xml.decode('utf-8'))
+    it = ET.iterparse(xml_file)
+    for _, el in it:
+        el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
+    e = it.root
+
+    t = __import__('%stemplates' % testbed, globals(), locals(),
+                   [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE])
+    h = 40
+    w = 120
+    xs = 100
+    ys = 100
+
+    xml = ""
+
+    for node in e.findall(NODE):
+        name = node.get(COMPONENT_NAME)
+        available = node.find(AVAILABLE).get(NOW).lower() == TRUE
+        has_position = X in node.find(LOCATION).attrib
+        component_id = node.get(COMPONENT_ID)
+        if has_position:
+            x = float(node.find(LOCATION).get(X))
+            y = float(node.find(LOCATION).get(Y))
+            z = float(node.find(LOCATION).get(Z))
+        else:
+            x = 0
+            y = 0
+            z = 0
+        row = (n - 1) / 8
+        col = (n - 1) % 8
+        good_node = False
+        if use_hardware:
+            hardware_type_nodes = node.findall(HARDWARE_TYPE)
+            hardware_types = [ht.get(NAME) for ht in hardware_type_nodes]
+            if available and matches_hardware(hardware, hardware_types):
+                good_node = True
+        else:
+            if available and matches(name, filters, nodes):
+                good_node = True
+
+        if good_node:
+            domain = component_id.split("+")[1]
+            hostname = "{}.{}".format(name, domain)
+            xml += t.node_template % \
+                   (name, component_id, xs + col * w, ys + row * h)
+            if dump_file != "":
+                df.write("%s\n" % name)
+            n += 1
+    return n, xml
+
+
 parser = ArgumentParser()
 parser.add_argument("-t", "--testbed", dest="testbed",
-                    default="twist", action="store", metavar="TESTBED",
-                    help="Testbed to use [default: %(default)s]")
+                    default="wall1", action="store", metavar="TESTBED",
+                    help="Comma separated list of testbeds to use [default: "
+                         "%(default)s]")
 parser.add_argument("-f", "--filter", dest="filter",
                     default="", action="store", metavar="List of filters",
                     help="Comma separated list of node prefixes [default: %("
@@ -57,7 +122,7 @@ if args.filter and args.hardware:
     print("Cannot use the --filter and the --hardware options together")
     sys.exit(1)
 
-testbed = args.testbed
+testbeds = args.testbed.split(",")
 use_hardware = False
 if args.filter:
     filters = args.filter.split(",")
@@ -77,67 +142,21 @@ else:
 
 dump_file = args.dump
 
-omni = ["omni", "-V3", "listresources", "-a", testbed, "--error", "--tostdout"]
+t = __import__('%stemplates' % testbeds[0], globals(), locals(),
+               [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE])
 
-xml = check_output(omni)
-
-# parse the xml file removing the namespaces from tag names
-xml_file = StringIO(xml)
-it = ET.iterparse(xml_file)
-for _, el in it:
-    el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
-e = it.root
-
-
-t = __import__('%stemplates' % testbed, globals(), locals(),
-               ['node_template', 'header_template', 'footer_template'])
-
-h = 40
-w = 120
-xs = 100
-ys = 100
-
+df = None
 if dump_file != "":
     df = open(dump_file, "w")
 
-n = 0
 print(t.header_template)
-for node in e.findall('node'):
-    name = node.get('component_name')
-    available = node.find('available').get('now').lower() == "true"
-    has_position = 'x' in node.find('location').attrib
-    component_id = node.get('component_id')
-    if has_position:
-        x = float(node.find('location').get('x'))
-        y = float(node.find('location').get('y'))
-        z = float(node.find('location').get('z'))
-    else:
-        x = 0
-        y = 0
-        z = 0
-    row = (n - 1) / 8
-    col = (n - 1) % 8
-    good_node = False
-    if use_hardware:
-        hardware_type_nodes = node.findall("hardware_type")
-        hardware_types = [ht.get('name') for ht in hardware_type_nodes]
-        if available and matches_hardware(hardware, hardware_types):
-            good_node = True
-    else:
-        if available and matches(name, filters, nodes):
-            good_node = True
 
-    if good_node:
-        print(t.node_template %
-              (name, component_id, xs + col * w, ys + row * h))
-        if dump_file != "":
-            df.write("%s\n" % name)
-        n += 1
-    # sys.stdout.write("Node: %s (%savailable) (%s)" %
-    #                  (name, "" if available else "not", component_id))
-    # if has_position:
-    #     sys.stdout.write(" Position x=%f, y=%f, z=%f" % (x, y, z))
-    # sys.stdout.write("\n")
+n = 0
+for testbed in testbeds:
+    n, xml = fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware,
+                         dump_file, df)
+    print(xml)
+
 print(t.footer_template)
 
 if dump_file != "":
