@@ -1,0 +1,8 @@
+__pycache__
+*/.idea
+*.pyc
+*.log
+*.conf
+ansible.cfg
+ansible-hosts
+ssh-config
