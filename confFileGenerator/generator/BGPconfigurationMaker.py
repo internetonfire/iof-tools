@@ -2,17 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
-from recordtype import recordtype
-from network_builder import *
-from random import randint
-import glob
-import re
-from datetime import datetime
 from BGP import BGP
 import shutil
 
-class BGPConf():
+class BGPConf:
 
     def __init__(self, path_out, net, args):
         self.BGP = BGP(net, path_out, args)

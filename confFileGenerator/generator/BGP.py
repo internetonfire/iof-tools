@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
 from random import randint
+from constants import *
 
 
 class BGP:
@@ -12,6 +12,14 @@ class BGP:
         self.prefix = ""
         self.nodes = net.nodes(data=True)
         self.links = net.edges(data=True)
+
+        with open(BIRD_TEMPLATE_PATH, "r") as bird_file:
+            self.bird_telmplate = bird_file.read()
+        with open(BGP_SESSION_TEMPLATE_PATH, "r") as bgp_file:
+            self.bgp_session = bgp_file.read()
+        with open(BGP_SESSION_EXPORTER_TEMPLATE_PATH, "r") as bgp_file:
+            self.bgp_session_exporter = bgp_file.read()
+
         self.firstOt = 100
         self.secondOt = 1
         self.thirdOt = 1
@@ -21,13 +29,14 @@ class BGP:
         self.fourth = 1
         self.networkCounter = 0
         self.AsSequenceNumber = 1
+
         self.asMaxId = int(args["asMaxId"])
         self.sameAsProbability = int(args["sameAsProbability"] if "sameAsProbability" in args else 0)
-        self.argExporter = args["share"]
-        # Creazione cartella di log
-        spl = self.argExporter.split("/")
+
+        spl = args["share"].split("/")
         spl[-1] = spl[-1].rstrip(".stub")
         self.outPath = ("/".join(spl[:-1]) + "/conf/")
+
         self.exportProbability = args["exportProbability"] if "exportProbability" in args else 0
         self.addrToExport = int(args["addrToExport"])
 
@@ -71,65 +80,58 @@ class BGP:
             self.second = 1
             self.first += 1
         else:
-            print("Uable to load more address")
+            print("Uable to load more addresses")
             address = ""
         return address
 
     def setBGPBaseConf(self, host, logPosition, simulationADR):
-        baseConf = """log \"""" + logPosition + host[0] + """.log\" all;
-        debug protocols all;
-        debug commands 2;
-        router id """ + self.getAddress() + """;
-        include \"kernel.conf\";
-        include \"direct.conf\";
-        include \"device.conf\";
-        include \"commonFilters.conf\";\n"""
+        logPath = logPosition + host[0]
+        addr = self.getAddress()
+        sessionExporter = "# no bgp session exporter"
 
         if host[1]["share"]:
-            baseConf += """include \"bgpSessionExporter_""" + host[0] + """_""" \
-                        + simulationADR + """.conf\";\n"""
+            sessionExporter = "include  \"bgpSessionExporter_" + host[0] + "_" + simulationADR + ".conf\";"
 
         birdConfFile1 = self.outPath + "bird_" + host[0] + "_" + simulationADR + ".conf"
 
         fileBgpConf1 = open(birdConfFile1, 'w+')
 
-        fileBgpConf1.write(baseConf)
+        fileBgpConf1.write(self.bird_telmplate.format(log_file_path=logPath, log_mode=LOG_MODE, dbg_mode=DBG_MODE,
+                                                      dbg_commands_mode=DBG_COMMANDS_MODE, addr=addr,
+                                                      kernel_conf_path=KERNEL_CONF_PATH,
+                                                      direct_conf_path=DIRECT_CONF_PATH,
+                                                      device_conf_path=DEVICE_CONF_PATH,
+                                                      filter_conf_path=FILTER_CONF_PATH,
+                                                      bgp_session_export_path=sessionExporter, bgp_session_path=""))
 
     def createExporterFile(self, link, simulationADR):
         if self.nodes[link[0]]["share"]:
-            node1Name = link[0]
-            bgpFile1 = "bgpSessionExporter_" + node1Name + "_" + simulationADR + ".conf"
+            proto_name = "static_bgp_" + link[0]
+            bgpFile1 = "bgpSessionExporter_" + link[0] + "_" + simulationADR + ".conf"
             bgpFilePath1 = self.outPath + bgpFile1
             addressString = ""
             for i in range(self.addrToExport):
                 network = self.getNetwork()
                 addressString += "route " + network + "/24 via \"lo\";\n\t"
 
-            bgpString = """
-            protocol static static_bgp_""" + node1Name + """ {
-            ipv4;
-            """ + addressString + """}
-            """
-
             file1 = open(bgpFilePath1, 'w')
-            file1.write(bgpString)
+            print addressString
+            file1.write(self.bgp_session_exporter.format(session_protocol_name=proto_name,
+                                                         addr_to_export=addressString))
+
         if self.nodes[link[1]]["share"]:
             node2Name = link[1]
+            proto_name = "static_bgp_" + node2Name
             bgpFile2 = "bgpSessionExporter_" + node2Name + "_" + simulationADR + ".conf"
             bgpFilePath2 = self.outPath + bgpFile2
             addressString2 = ""
             for i in range(self.addrToExport):
                 network = self.getNetwork()
-                addressString2 += "route " + network + "/24 via \"lo\";\n\t"
-
-            bgpString2 = """
-            protocol static static_bgp_""" + node2Name + """ {
-            ipv4;
-            """ + addressString2 + """}
-            """
+                addressString2 += "route " + network + "/24 via \"lo\";"
 
             file2 = open(bgpFilePath2, 'w')
-            file2.write(bgpString2)
+            file2.write(self.bgp_session_exporter.format(session_protocol_name=proto_name,
+                                                         addr_to_export=addressString2))
 
     def getNetwork(self):
         address = ""
