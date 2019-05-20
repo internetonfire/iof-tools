@@ -1,0 +1,35 @@
+---
+- hosts: nodes
+  tasks:
+  - name: set home
+    set_fact:
+      home_dir: "{{ lookup('env', 'HOME') }}"
+      bird_dir: "{{ ansible_env.HOME }}/iof-bird-daemon"
+  - name: archive file
+    local_action: command tar -C "{{ home_dir }}" -czf /tmp/iof-bird-daemon.bzip iof-bird-daemon
+  - unarchive:
+      src: "/tmp/iof-bird-daemon.bzip"
+      dest: "{{ ansible_env.HOME }}/"
+  - file:
+      path: /tmp/iof-bird-daemon.zip
+      state: absent
+  - name: install required libraries
+    become: true
+    apt:
+      name: "{{ packages }}"
+    vars:
+      packages:
+        - libncurses5-dev
+        - libreadline-dev
+  - name: run autoreconf
+    command: autoreconf
+    args:
+      chdir: "{{ bird_dir }}"
+  - name: run configure
+    command: ./configure
+    args:
+      chdir: "{{ bird_dir }}"
+  - name: compile bird
+    command: make -j 4
+    args:
+      chdir: "{{ bird_dir }}"

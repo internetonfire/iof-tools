@@ -1,0 +1,5 @@
+# Sample commands:
+# ansible nodes -m ping
+# ansible nodes -m shell -a "uptime"
+
+[nodes]

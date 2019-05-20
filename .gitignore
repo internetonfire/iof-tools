@@ -3,6 +3,8 @@ __pycache__
 *.pyc
 *.log
 *.conf
+.idea
+
 ansible.cfg
 ansible-hosts
 ssh-config
