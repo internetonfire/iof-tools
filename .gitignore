@@ -1,8 +1,9 @@
 __pycache__
-*/.idea
+*/.idea/
 *.pyc
 *.log
-*.conf
+.idea/
+confFileGenerator/test/**/*.conf
 ansible.cfg
 ansible-hosts
 ssh-config
