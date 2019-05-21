@@ -1,0 +1,7 @@
+# protocol_name: protocol static with a unique name
+# route: route shared
+protocol static {protocol_name} {{
+    ipv4; # Protocol used
+    route {route} via "lo"; # Route shared on the defined interface
+}}
+            
