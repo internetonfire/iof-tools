@@ -1,0 +1,90 @@
+---
+# this playbook must be run from the local machine with ansible-playbook
+- hosts: proxy0
+  gather_facts: yes
+  tasks:
+  - name: set variables 1
+    set_fact:
+      home_dir: "{{ ansible_env.HOME }}"
+      bird_folder: "iof-bird-daemon"
+  - name: set variables 2
+    set_fact:
+      bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+  - name: copy ssh-config
+    copy:
+      src: ../ssh-config-no-proxy
+      dest: "{{ home_dir }}/ssh-config"
+  - name: copy id.cert
+    copy:
+      src: ../id.cert
+      dest: "{{ home_dir }}/"
+      mode: '0600'
+  - name: delete bird directory
+    file:
+      state: absent
+      path: "{{ bird_dir }}"
+  - git:
+      repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
+      dest: "{{ bird_dir }}"
+      version: "milani/bird-2.0.1"
+  - name: archive file
+    command: tar -czf "/tmp/{{ bird_folder }}.bzip" "{{ bird_folder }}"
+    args:
+      chdir: "{{ home_dir }}"
+  # using transfer file instead of copy or unarchive because they does not
+  # seem to work properly (throwing error "destination path does not exists"
+  # even though it exists)
+  - name: transfer file
+    command: scp -F ssh-config "/tmp/iof-bird-daemon.bzip" node0:~/
+    args:
+      chdir: "{{ home_dir }}"
+  - file:
+      path: /tmp/iof-bird-daemon.zip
+      state: absent
+
+- hosts: node0
+  tasks:
+    - name: set variables 1
+      set_fact:
+        home_dir: "{{ ansible_env.HOME }}"
+        bird_folder: "iof-bird-daemon"
+    - name: set variables 2
+      set_fact:
+        bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+    - name: install required libraries
+      become: true
+      apt:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - libncurses5-dev
+          - libreadline-dev
+          - python3.6
+          - python3-pip
+    - name: set python2 as alternative
+      become: true
+      command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
+    - name: set python3 as default
+      become: true
+      command: update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
+    - name: install ansible
+      become: true
+      pip:
+        name: ansible
+    - name: unarchive file
+      command: tar -xf "{{ bird_folder }}.bzip"
+      args:
+        chdir: "{{ home_dir }}"
+    - name: run autoreconf
+      command: autoreconf
+      args:
+        chdir: "{{ bird_dir }}"
+    - name: run configure
+      command: ./configure
+      args:
+        chdir: "{{ bird_dir }}"
+    - name: compile bird
+      command: make -j 4
+      args:
+        chdir: "{{ bird_dir }}"
+

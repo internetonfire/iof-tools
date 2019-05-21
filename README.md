@@ -247,3 +247,34 @@ The script will generate:
 
 The filename of the configuration files can be changed via command line
 arguments (see `./gen-config.py --help`).
+
+## Installing bird on the nodes
+
+The process of installing bird on the nodes is composed by two steps. The
+first one clones the `bird` repository on the proxy node (the testbed nodes
+have Internet connection, but they cannot reach `ans.disi.unitn.it`), creates
+an archive file, and copies that to `node0`, used as a master node. `node0`
+then unpacks the archive, installs the required libraries, and compiles `bird`.
+To run the first task invoke
+```
+ansible-playbook playbooks/clone-bird.yaml
+```
+from your local machine.
+
+The second step deployes the compiled binary one all the testbed nodes. To
+run the second task invoke
+```
+./run playbooks/install-bird.yaml "testbed=wall1"
+```
+on your local machine. The `run` script copies the given ansible playbook on
+the master node specified for the testbed, as well as the required
+configuration files and runs it as you where running it directly on the master
+node.
+
+To test the installation run from your local machine (do so only if you have
+reserved a few nodes)
+```
+ansible nodes -m shell -a "~/iof-bird-daemon/bird --version"
+```
+The result should be the version of the bird daemon for each node in the
+testbed.
