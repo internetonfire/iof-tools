@@ -1,0 +1,1 @@
+ProxyCommand            ssh -F ssh-config proxy0 -W %h:%p

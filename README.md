@@ -133,12 +133,17 @@ testbeds. To do so, simply run:
 
 The identity file is the private key or the certificate obtained after getting
 an account from the [iMinds authority](https://authority.ilabt.iminds.be/).
+This file will be copied under the current directory with the name `id.cert`.
 
-This will generate:
+The script will generate:
 * `ssh-config`: the configuration file to be given to the SSH command (e.g.,
   `ssh -F ssh-config ...`). This defines the names of the hosts as `node<i>`,
   for `i` going from 0 to N-1. To connect to one host, you can thus run
-  `ssh -F ssh-config node0`.
+  `ssh -F ssh-config node0`. To connect to the node, the configuration uses a
+  proxy node with public IP address, which is called `proxy0`.
+* `ssh-config-no-proxy`: the same configuration file as `ssh-config` but
+  without the `ProxyCommand` through `proxy0`. This can be used by `ansible`
+  when run on a testbed node.
 * `ansible.cfg`: the Ansible configuration file.
 * `ansible-hosts`: the Ansible inventory (list of nodes). In this file the
   group of nodes reserved for the experiments is named `nodes`. To test that

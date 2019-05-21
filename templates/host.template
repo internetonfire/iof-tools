@@ -4,7 +4,7 @@ Host {name}
     User segata
     IdentityFile {identity}
     ForwardAgent yes
-    ProxyCommand            ssh -F ssh-config proxy0 -W %h:%p
+    {proxy}
     TCPKeepAlive            yes
     Compression             no
     CheckHostIP no

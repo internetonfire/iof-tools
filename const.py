@@ -14,11 +14,12 @@ X = "x"
 Y = "y"
 Z = "z"
 
-NODE_NAME = "node{{:0{}d}}"
+NODE_NAME = "node{}"
 
 SSH_CONFIG_TEMPLATE = "./templates/ssh-config.template"
 HOST_CONFIG_TEMPLATE = "./templates/host.template"
 IDENTITY_FILE = "~/.ssh/twist.cert"
+PROXY_COMMAND_TEMPLATE = "./templates/proxy-command.template"
 
 ANSIBLE_CONFIG_TEMPLATE = "./templates/ansible-cfg.template"
 INVENTORY_CONFIG_TEMPLATE = "./templates/ansible-inventory.template"

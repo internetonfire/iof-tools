@@ -6,7 +6,7 @@ from config_templates import SSHConfig, AnsibleConfig
 
 from const import COMPONENT_ID, NODE, SSH_CONFIG_TEMPLATE, \
     HOST_CONFIG_TEMPLATE, IDENTITY_FILE, NODE_NAME, ANSIBLE_CONFIG_TEMPLATE, \
-    INVENTORY_CONFIG_TEMPLATE, ANSIBLE_HOST_TEMPLATE
+    INVENTORY_CONFIG_TEMPLATE, ANSIBLE_HOST_TEMPLATE, PROXY_COMMAND_TEMPLATE
 
 parser = ArgumentParser()
 parser.add_argument("-r", "--rspec", dest="rspec",
@@ -38,19 +38,24 @@ if not args.rspec:
 
 rspec_file = args.rspec
 ssh_config_file = args.ssh_config
+ssh_config_no_proxy_file = ssh_config_file + "-no-proxy"
 ansible_config_file = args.ansible_config
 ansible_inventory_file = args.ansible_inventory
 identity_file = args.identity
 
 config_file = open(ssh_config_file, "w")
+config_no_proxy_file = open(ssh_config_no_proxy_file, "w")
 ansible_file = open(ansible_config_file, "w")
 inventory_file = open(ansible_inventory_file, "w")
 
-ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE, identity_file)
+ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
+                       identity_file, PROXY_COMMAND_TEMPLATE)
+ssh_config_no_proxy = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
+                                identity_file)
 ansible_config = AnsibleConfig(ANSIBLE_CONFIG_TEMPLATE,
                                INVENTORY_CONFIG_TEMPLATE,
-                               ANSIBLE_HOST_TEMPLATE, identity_file,
-                               ansible_inventory_file, ssh_config_file)
+                               ANSIBLE_HOST_TEMPLATE, ansible_inventory_file,
+                               ssh_config_file)
 
 xml_file = ET.iterparse(rspec_file)
 for _, el in xml_file:
@@ -60,7 +65,7 @@ n = 0
 root = xml_file.root
 nodes = root.findall(NODE)
 n_nodes = len(nodes)
-name_template = NODE_NAME.format(len(str(n_nodes)))
+name_template = NODE_NAME
 for node in nodes:
     component_id = node.get(COMPONENT_ID)
     components = component_id.split("+")
@@ -69,13 +74,16 @@ for node in nodes:
     hostname = "{}.{}".format(name, domain)
     friendly_name = name_template.format(n)
     ssh_config.add_host(friendly_name, hostname)
+    ssh_config_no_proxy.add_host(friendly_name, hostname)
     ansible_config.add_host(friendly_name)
     n += 1
 
 config_file.write(str(ssh_config))
+config_no_proxy_file.write(str(ssh_config_no_proxy))
 ansible_file.write(ansible_config.get_ansible_config())
 inventory_file.write(ansible_config.get_ansible_inventory())
 
 config_file.close()
+config_no_proxy_file.close()
 ansible_file.close()
 inventory_file.close()

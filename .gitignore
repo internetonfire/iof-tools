@@ -3,3 +3,5 @@ __pycache__
 ansible.cfg
 ansible-hosts
 ssh-config
+ssh-config-no-proxy
+id.cert

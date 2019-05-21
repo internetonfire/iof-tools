@@ -1,18 +1,35 @@
+from os import chmod
+from shutil import copyfile
+from os.path import expanduser
+from stat import S_IWUSR, S_IRUSR
+
+IDENTITY_FILE = "id.cert"
+
+
 class SSHConfig:
 
-    def __init__(self, ssh_config, host_config, identity_file):
+    def __init__(self, ssh_config, host_config, identity_file,
+                 proxy_command=None):
         self.ssh_config = ssh_config
         self.host_config = host_config
         with open(ssh_config, "r") as ssh_file:
             self.ssh_template = ssh_file.read()
         with open(host_config, "r") as host_file:
             self.host_template = host_file.read()
-        self.identity_file = identity_file
-        self.config = self.ssh_template.format(identity=identity_file)
+        if proxy_command is not None:
+            with open(proxy_command) as proxy_file:
+                self.proxy_template = proxy_file.read()
+        else:
+            self.proxy_template = ""
+        # copy the identity file locally
+        copyfile(expanduser(identity_file), IDENTITY_FILE)
+        chmod(IDENTITY_FILE, S_IWUSR | S_IRUSR)
+        self.config = self.ssh_template.format(identity=IDENTITY_FILE)
 
     def add_host(self, name, hostname):
         self.config += self.host_template.format(name=name, hostname=hostname,
-                                                 identity=self.identity_file)
+                                                 identity=IDENTITY_FILE,
+                                                 proxy=self.proxy_template)
 
     def __str__(self):
         return self.config
@@ -20,7 +37,7 @@ class SSHConfig:
 
 class AnsibleConfig:
     def __init__(self, ansible_config, inventory_config, host_config,
-                 identity_filename, inventory_filename, ssh_config_filename):
+                 inventory_filename, ssh_config_filename):
         self.ansible_config = ansible_config
         self.inventory_config = inventory_config
         self.host_config = host_config
@@ -32,8 +49,7 @@ class AnsibleConfig:
             self.inventory_template = inventory_file.read()
         with open(host_config, "r") as host_file:
             self.host_template = host_file.read()
-        self.identity_filename = identity_filename
-        config = self.ansible_template.format(identity=identity_filename,
+        config = self.ansible_template.format(identity=IDENTITY_FILE,
                                               inventory=inventory_filename,
                                               ssh_config=ssh_config_filename)
         inventory = self.inventory_template
