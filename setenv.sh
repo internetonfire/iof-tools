@@ -11,7 +11,7 @@ elif [ "$testbed" == "twist" ]; then
 	MASTER_NODE=nuc4
 	CONFIG_FILE=$HOME/.ssh/twist-ssh.cfg
 else
-	MASTER_NODE=proxy0
+	MASTER_NODE=node0
 	CONFIG_FILE=./ssh-config
 fi
 
