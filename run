@@ -22,4 +22,8 @@ fi
 
 IOF_FOLDER=${HOME_FOLDER}/iof-tools/
 
-ssh -A -F ${CONFIG_FILE} ${MASTER_NODE} "bash -ic 'cd ${IOF_FOLDER} && ansible-playbook $playbook $args'"
+ssh -F ${CONFIG_FILE} ${MASTER_NODE} "mkdir -p ${IOF_FOLDER}"
+scp -F ${CONFIG_FILE} $playbook id.cert ansible.cfg ansible-hosts ${MASTER_NODE}:${IOF_FOLDER}/
+scp -F ${CONFIG_FILE} ${CONFIG_FILE}-no-proxy ${MASTER_NODE}:${IOF_FOLDER}/${CONFIG_FILE}
+playbook_name=`basename $playbook`
+ssh -A -F ${CONFIG_FILE} ${MASTER_NODE} "bash -ic 'cd ${IOF_FOLDER} && ansible-playbook $playbook_name $args'"
