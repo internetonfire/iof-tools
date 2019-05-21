@@ -38,7 +38,7 @@ page](https://github.com/GENI-NSF/geni-tools/wiki/QuickStart#debian--ubuntu)
 
 ### Omni installation
 
-In order to install `omni` executes the following commands:
+In order to install `omni` execute the following commands:
 
 ```
 cd $HOME/src
@@ -65,6 +65,44 @@ omni: GENI Omni Command Line Aggregate Manager Tool Version 2.11
 Copyright (c) 2011-2016 Raytheon BBN Technologies
 ```
 
+### Omni configuration file
+
+The `omni_config` file provided in this repository is a template of the `omni`
+configuration file. Before running any other `omni` command, this template file
+must be modified in order to adapt it to the local host environment.
+
+First of all, we assume that the user running the omni commands has a
+valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
+assume that the user's public and private keys associated with the iMinds
+Authority account are located in ~/.ssh/twist.cert and ~/.ssh/twist.prk
+respectively (the private key MUST NOT be encrypted
+`openssl rsa -in ssl.key.secure -out ssl.key`).
+
+The users whose public keys will be installed on the testbed's nodes are listed
+(comma separated list) in the value of the `users` key in the `omni` section.
+For each user listed in the `users` key, there is a corresponding section (named
+after the user name) containing the specific configuration for that particular
+user. For example, in the current template configuration file one of the user
+is `segata`, and the corresponding configuration section looks like this:
+
+```
+[segata]
+urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+segata
+keys = ~/.ssh/twist.pub
+```
+
+The value of the field `keys` must be modified to point to the public key of the
+user `segata`. The public key can be extracted from the certificate file with
+```
+openssl x509 -pubkey -noout -in ~/.ssh/twist.cert > ~/.ssh/twist.pub
+```
+
+In case you need to add a new user, these are the required steps:
+1. append the new user name in the comma separated list of the `users` key in
+   the `omni` section.
+2. add to the `omni_config` file a new section for the new user.
+3. commit and push the new `omni_config` template.
+
 ## RSPEC generation
 
 RSPEC files (extension .rspec) are XML files that describes which nodes to
@@ -73,19 +111,24 @@ can be generated automatically using the `gen-rspec.py` script. The script
 supports the following command line parameters:
 
 * `-t` (`--testbed`): specifies which testbed the RSPEC will be generated for.
-  Use twist for the TWIST testbed and wilab for w.iLab1;
+  Use `twist` for the TWIST testbed, `wilab` for w.iLab1, `wall1` for
+  VirtualWall1, and `wall2` for VirtualWall2. It is possible to specify a
+  comma-separated list of testbeds, e.g. `wall1,wall2`.
 
 * `-f` (`--filter`): comma separated list of node name prefixes. Only the
   available nodes whose name starts with one of the specified prefixes are
-  inserted in the generated RSPEC. By default all the available nodes are used for
-  generating the RSPEC file.
+  inserted in the generated RSPEC. By default all the available nodes are
+  used for generating the RSPEC file.
 
 * `-n` (`--nodes`): comma separated list of node names. Only the available nodes
   whose name is listed with the `-n` option are inserted in the RSPEC file. By
-  default all the available nodes are used. The `-n` option takes precedence over
-  `-f`.
+  default all the available nodes are used. The `-n` option takes precedence
+  over `-f`.
 
-* `-w` (`--hardware`): comma separated list of hardware types (e.g., `pcgen05`)
+* `-w` (`--hardware`): comma separated list of hardware types (e.g.,
+  `pcgen05`). To know the type of hardware, look inside the [Virtual Walls
+  webpage](https://doc.ilabt.imec.be/ilabt/virtualwall/hardware.html) or
+  inside jFed.
 
 For example, an RSPEC containing all the available nodes in the TWIST testbed
 can be generated with the following command:
@@ -120,6 +163,59 @@ Note that, in any case, a node is inserted in the RSPEC only if it is available
 in the moment the `gen-rspec.py` command is executed. For this reason the
 suggested best practice is to execute `gen-rspec.py` just before allocating the
 resources using the `reserve.py` command.
+
+## Reserving resources
+
+One simple way of reserving the resource is to open the generated `.rspec`
+file inside jFed and click on `Run`. This is also the safest option as the
+`reserve.py` script is still under development.
+
+The `reserve.py` command can be used to allocate nodes specified in an `.rspec`
+file and to release resources previously allocated. The command supports the
+following parameters:
+
+* `-t` (`--testbed`): specifies in which testbed to allocate the nodes. The
+  testbed specified here must match the testbed used in the .rspec file
+  specified with the parameter `-f`. Use twist for the TWIST testbed and wilab
+  for w.iLab1;
+
+* `-d` (`--duration`): it's an integer value that specifies how many hours the
+  nodes will be reserved for. The minimum value currently supported is 3.
+
+* `-s` (`--name`): specifies the name that identify the experiment. Every
+  experiment whose allocation time overlaps must have a unique name.
+
+* `-f` (`--rspec`): specifies the path to the .rspec file generated with the
+  `gen-rspec.py` command.
+
+* `-p` (`--project`): specifies the project the experiments belongs to (by
+default `internetonfire`).
+
+By default `reserve.py` allocate the resources specified in the .rspec file. The
+same command can be used also to release previously allocated resources using
+the `-r` (`--release`) parameter.
+
+For example, an experiment called `iofexp1` that allocates in the Wall1
+testbed the nodes specified in the file `iof.rspec` for 4 hours can be
+created with the following command:
+
+```
+./reserve.py -t wall1 -d 4 -n iofexp1 -f iof.rspec
+```
+
+Instead, the resources allocated in `iofexp1` can be released with the
+following command:
+
+```
+./reserve.py -t wall1 -d 4 -n iofexp1 -f iof.rspec -r
+```
+
+The command queries for the status of the testbed every 10 seconds, and reports
+when everything is up and running.
+
+**WARNING:** the `reserve.py` script currently works only when a single
+testbed is involved. In case of an `.rspec` files with nodes from multiple
+testbeds, the operations needs to be performed twice. This is under development.
 
 ## Generating SSH and Ansible config
 
