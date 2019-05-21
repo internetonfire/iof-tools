@@ -2,6 +2,7 @@
 private_key_file = {identity}
 host_key_checking = false
 inventory = {inventory}
+interpreter_python = auto
 
 [ssh_connection]
 ssh_args = -F {ssh_config}
