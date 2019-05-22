@@ -18,7 +18,7 @@ node_template = """<node client_id="%s" exclusive="true" \
   component_manager_id="urn:publicid:IDN+wall1.ilabt.iminds.be+authority+cm" \
   component_id="%s">
   <sliver_type name="raw-pc">
-    <disk_image name="urn:publicid:IDN+wall2.ilabt.iminds.be+image+emulab-ops:UBUNTU18-64-STD"/>
+    <disk_image name="urn:publicid:IDN+wall1.ilabt.iminds.be+image+emulab-ops:UBUNTU18-64-STD"/>
   </sliver_type>
   <location xmlns="http://jfed.iminds.be/rspec/ext/jfed/1" x="%f" y="%f"/>
 </node>\n"""
