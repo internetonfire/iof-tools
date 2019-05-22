@@ -19,4 +19,5 @@ component_manager_id="urn:publicid:IDN+twist.tu-berlin.de+authority+am" \
 component_id="%s">
   <sliver_type name="raw-pc"/>
   <location xmlns="http://jfed.iminds.be/rspec/ext/jfed/1" x="%f" y="%f"/>
+  <!--hardware_type="%s"-->
 </node>"""

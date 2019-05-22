@@ -27,12 +27,12 @@ def matches(name, filters, nodes):
 
 def matches_hardware(hardware_filter, hardware_types):
     if len(hardware_filter) == 0:
-        return True
+        return True, ""
     for f in hardware_filter:
         for h in hardware_types:
             if h.startswith(f):
-                return True
-    return False
+                return True, h
+    return False, ""
 
 
 def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
@@ -74,10 +74,12 @@ def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
         row = (n - 1) / 8
         col = (n - 1) % 8
         good_node = False
+        hw = ""
         if use_hardware:
             hardware_type_nodes = node.findall(HARDWARE_TYPE)
             hardware_types = [ht.get(NAME) for ht in hardware_type_nodes]
-            if available and matches_hardware(hardware, hardware_types):
+            hw_match, hw = matches_hardware(hardware, hardware_types)
+            if available and hw_match:
                 good_node = True
         else:
             if available and matches(name, filters, nodes):
@@ -87,7 +89,7 @@ def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
             domain = component_id.split("+")[1]
             hostname = "{}.{}".format(name, domain)
             xml += t.node_template % \
-                   (name, component_id, xs + col * w, ys + row * h)
+                (name, component_id, xs + col * w, ys + row * h, hw)
             if dump_file != "":
                 df.write("%s\n" % name)
             n += 1

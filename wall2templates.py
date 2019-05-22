@@ -21,5 +21,6 @@ node_template = """<node client_id="%s" exclusive="true" \
     <disk_image name="urn:publicid:IDN+wall2.ilabt.iminds.be+image+emulab-ops:UBUNTU18-64-STD"/>
   </sliver_type>
   <location xmlns="http://jfed.iminds.be/rspec/ext/jfed/1" x="%f" y="%f"/>
+  <!--hardware_type="%s"-->
 </node>\n"""
 
