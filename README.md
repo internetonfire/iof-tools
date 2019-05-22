@@ -278,3 +278,14 @@ ansible nodes -m shell -a "~/iof-bird-daemon/bird --version"
 ```
 The result should be the version of the bird daemon for each node in the
 testbed.
+
+## Retrieving CPU info
+
+To retrieve CPU information for all the nodes in the testbed run
+```
+./get-cpu-info.sh
+```
+This will create a `cpu_info` folder containing one `json` file for each node
+in the testbed. The information can be used within python programs using the
+`nodes_info::NodesInfo` class. See the unit test `test_nodes_info.py` for an
+example usage.

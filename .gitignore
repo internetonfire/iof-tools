@@ -5,3 +5,4 @@ ansible-hosts
 ssh-config
 ssh-config-no-proxy
 id.cert
+cpu_info
