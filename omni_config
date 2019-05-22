@@ -15,6 +15,6 @@ keys = ~/.ssh/twist.pub
 
 [aggregate_nicknames]
 twist=,https://api.twist.tu-berlin.de:8001
-wilab=,https://www.wilab1.ilabt.iminds.be:12369/protogeni/xmlrpc/am/2.0
-wall1=,https://www.wall1.ilabt.iminds.be:12369/protogeni/xmlrpc/am/2.0
-wall2=,https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/am/2.0
+wilab=,https://www.wilab1.ilabt.iminds.be:12369/protogeni/xmlrpc/am/3.0
+wall1=,https://www.wall1.ilabt.iminds.be:12369/protogeni/xmlrpc/am/3.0
+wall2=,https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/am/3.0
