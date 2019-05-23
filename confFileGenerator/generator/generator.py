@@ -4,11 +4,8 @@
 import sys
 import inherit_config_parser
 import ConfigParser
-import inspect
 import StringIO
 from os import path
-from time import time
-from random import seed
 from parameters_parser import parameters
 from BGPconfigurationMaker import BGPConf
 from network_builder import *
@@ -24,7 +21,6 @@ class ConfigurationFile:
 
     mandatoryOptions = {"graph": None, "share": None, "addrToExport": 1}
     confParams = {}
-    className = None
 
     @staticmethod
     def file_exists(file_name):
@@ -44,7 +40,7 @@ class ConfigurationFile:
             raise "Can not find configuration " + str(test_name) + " in file " + str(file_name)
 
         for o in self.mandatoryOptions:
-            self.mandatoryOptions[o] = self.getConfigurations(o, raiseError=True)
+            self.mandatoryOptions[o] = self.getconfigurations(o, True)
 
         graph_file = self.mandatoryOptions['graph']
         if not self.file_exists(graph_file):
@@ -59,19 +55,19 @@ class ConfigurationFile:
 
         if override_option:
             options = override_option.replace(",", "\n")
-            overrideConf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
-            tmpParser = ConfigParser.ConfigParser()
-            tmpParser.optionxform = str
-            tmpParser.readfp(overrideConf)
-            for name, value in tmpParser.defaults().items():
+            override_conf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
+            tmp_parser = ConfigParser.ConfigParser()
+            tmp_parser.optionxform = str
+            tmp_parser.readfp(override_conf)
+            for name, value in tmp_parser.defaults().items():
                 print name, value
                 self.confParams[name] = value
 
-    def getConfigurations(self, name, raiseError=False):
+    def getconfigurations(self, name, raise_error=False):
         try:
             r = self.parser.get(self.testName, name)
         except ConfigParser.NoOptionError:
-            if raiseError:
+            if raise_error:
                 raise "no option " + str(name) + " found!"
             else:
                 return None
@@ -86,29 +82,31 @@ def generator():
          "base name for test output", str])
         ]
 
-    P = Conf(path.basename(__file__), need)
-    P.parseArgs()
-    if not P.checkCorrectness():
-        P.printUsage()
+    p = Conf(path.basename(__file__), need)
+    p.parseArgs()
+    if not p.checkCorrectness():
+        p.printUsage()
         sys.exit(1)
 
-    configFile = P.getParam("configFile")
-    testName = P.getParam("testName")
-    C = ConfigurationFile(configFile, testName)
+    configfile = p.getParam("configFile")
+    testname = p.getParam("testName")
+
+    configuration = ConfigurationFile(configfile, testname)
     # parse the conf file
-    networkGraph = C.getConfigurations("graph")
-    if not networkGraph:
+    network_graph = configuration.getconfigurations("graph")
+    if not network_graph:
         print("No graph topology specified in conf file or command line!")
         sys.exit(1)
 
-    subnetter = C.getConfigurations("subnetting")
-    graphNet = GraphNet(networkGraph, subnetter)
-    graphNet.setStubNodes(C.getConfigurations("share"))
-    net = graphNet.pickGraph()
+    subnetter = configuration.getconfigurations("subnetting")
+
+    graph_net = GraphNet(network_graph, subnetter)
+    graph_net.setStubNodes(configuration.getconfigurations("share"))
+    net = graph_net.pickGraph()
     # CLI(net)
-    conf = BGPConf("/", net, C.confParams)
+    conf = BGPConf(configuration.confParams["dest_folder"], net, configuration.confParams)
     conf.generateFiles()
-    print("*** Done with experiment: " + testName + "\n")
+    print("*** Done with experiment: " + testname + "\n")
 
 
 if __name__ == "__main__":

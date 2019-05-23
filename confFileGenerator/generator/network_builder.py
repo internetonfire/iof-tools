@@ -50,8 +50,6 @@ class GraphNet:
             quality_params = {}
             self.insertLink(self.gg.node[e[0]], self.gg.node[e[1]], e, subnet, quality_params)
 
-        print self.gg.edges(data=True)
-
     def pickGraph(self):
         return self.gg
 
@@ -99,7 +97,6 @@ class GraphNet:
         else:
             addr1, port1 = self.pickHostAddrPort(n1)
             addr2, port2 = self.pickHostAddrPort(n2)
-        print(str(subnet) + " " + str((addr1, port1)) + " " + str((addr2, port2)))
         link[2]["addr1"] = addr1
         link[2]["addr2"] = addr2
         link[2]["port1"] = port1
