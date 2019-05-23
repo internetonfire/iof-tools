@@ -104,7 +104,7 @@ def generator():
     graph_net.setStubNodes(configuration.getconfigurations("share"))
     net = graph_net.pickGraph()
     # CLI(net)
-    conf = BGPConf("/", net, configuration.confParams)
+    conf = BGPConf(configuration.confParams["dest_folder"], net, configuration.confParams)
     conf.generateFiles()
     print("*** Done with experiment: " + testname + "\n")
 

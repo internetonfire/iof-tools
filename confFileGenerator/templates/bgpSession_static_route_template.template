@@ -8,7 +8,7 @@
             hold time {hold_timer};
             ipv4{{
                 import filter bgp_in;
-                export all;
+                export where proto = "{export_protocol}";
             }};
             direct;
             connect retry time {connect_retry_timer};
