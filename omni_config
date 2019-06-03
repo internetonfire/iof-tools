@@ -1,6 +1,6 @@
 [omni]
 default_cf = iminds
-users = segata
+users = segata, mattia
 
 [iminds]
 type=pg
@@ -11,6 +11,10 @@ key = ~/.ssh/twist.key
 
 [segata]
 urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+segata
+keys = ~/.ssh/twist.pub
+
+[mattia]
+urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+mattia
 keys = ~/.ssh/twist.pub
 
 [aggregate_nicknames]
