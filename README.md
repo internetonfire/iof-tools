@@ -48,7 +48,7 @@ cd omni
 ./configure
 make
 cd $HOME/src/iof-tools
-ln -s $HOME/src/omni/src/omni omni
+ln -s ./$HOME/src/omni/src/omni omni
 ```
 
 If you are using Python version 3 and you don't want to switch system-wide to
