@@ -55,6 +55,7 @@
       become: true
       apt:
         name: "{{ packages }}"
+        update_cache: yes
       vars:
         packages:
           - libncurses5-dev
