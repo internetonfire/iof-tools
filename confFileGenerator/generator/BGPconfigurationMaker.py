@@ -29,7 +29,7 @@ class BGPConf:
         Function to generate the conf files
         """
         # Remove old files
-        shutil.rmtree(self.BGP.outPath)
+        # shutil.rmtree(self.BGP.outPath)
         # Generate the path
         if not os.path.exists(self.BGP.outPath):
             os.makedirs(self.BGP.outPath)
