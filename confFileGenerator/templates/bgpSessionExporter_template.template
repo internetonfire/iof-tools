@@ -1,7 +1,7 @@
 
-            protocol static {session_protocol_name} {{
+    protocol static {session_protocol_name} {{
             ipv4;
             # network addr to export and the corresponding interface
             {addr_to_export}
-	}}
+	 }}
             

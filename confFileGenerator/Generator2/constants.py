@@ -29,7 +29,9 @@ DIRECT_CONF_PATH = "direct.conf"
 DEVICE_CONF_PATH = "device.conf"
 FILTER_CONF_PATH = "commonFilters.conf"
 
-BGP_SESSION_TEMPLATE_PATH = "templates/bgpSession_template.template"
-BGP_SESSION_EXPORTER_TEMPLATE_PATH = "templates/bgpSessionExporter_template.template"
-BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH = "templates/bgpSession_static_route_template.template"
-BIRD_TEMPLATE_PATH = "templates/bird_template.template"
+BGP_SESSION_TEMPLATE_PATH = "../templates/bgpSession_template.template"
+BGP_SESSION_EXPORTER_TEMPLATE_PATH = "../templates/bgpSessionExporter_template.template"
+BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH = "../templates/bgpSession_static_route_template.template"
+BIRD_TEMPLATE_PATH = "../templates/bird_template.template"
+
+TYPE_KEY = "type"

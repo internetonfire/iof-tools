@@ -1,11 +1,11 @@
 # Log file to use
 log "{log_file_path}" {log_mode};
-        debug protocols {dbg_mode};
-        debug commands {dbg_commands_mode};
-        router id {addr};
-        include "{kernel_conf_path}";
-        include "{direct_conf_path}";
-        include "{device_conf_path}";
-        include "{filter_conf_path}";
+debug protocols {dbg_mode};
+debug commands {dbg_commands_mode};
+router id {addr};
+include "{kernel_conf_path}";
+include "{direct_conf_path}";
+include "{device_conf_path}";
+include "{filter_conf_path}";
 {bgp_session_export_path}
 {bgp_session_path}
