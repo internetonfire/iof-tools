@@ -3,6 +3,7 @@
 from networkx import *
 import os.path
 from Node import Node
+from Edge import Edge
 from constants import *
 
 gname = "small_g.graphml"
@@ -17,9 +18,13 @@ if not os.path.isdir(outDir):
 
 graph = read_graphml(gname)
 
-nodes_list = list()
+nodes_dict = {}
 for n in graph.nodes(data=True):
     new_node = Node(n[0], outDir)
     if n[1][TYPE_KEY] == 'C':
         new_node.add_addr_to_export()
-    nodes_list.append(new_node)
+    nodes_dict[n[0]] = new_node
+
+for edg in graph.edges(data=True):
+    new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], outDir)
+    print(str(new_edge))
