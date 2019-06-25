@@ -1,10 +1,13 @@
 ##Basic test
+
+gen2 for now is in an aplha state
+
 Move yourself inside the generator dir
 
-`cd confFileGenerator`
+`cd confFileGenerator/Generator2/`
 
 launch the generator on a basic test
 
-`python generator/generator.py -f conf/test.ini -t linear`
+`python confFileGen.py`
 
-Now inside the folder `test/lineare/lineare-100/` you will find all the files needed to start the nodes
+Now inside the folder `out` you will find all the files needed to start the nodes
