@@ -9,8 +9,9 @@ class Node:
     nodeIpNetworks_network = list(ipaddress.ip_network(u'100.0.0.0/8').subnets(new_prefix=24))
     counter_networks = 1
 
-    def __init__(self, name, out_folder):
+    def __init__(self, name, type, out_folder):
         self.name = name
+        self.type = type
         self.outFolder = out_folder
         self.mainOutFileName = "bgp_h_" + str(self.name) + ".conf"
         self.sessionExporterFile_name = "bgpSessionExporter_h_" + str(name) + ".conf"
@@ -34,11 +35,40 @@ class Node:
         self.log_file_name = "log_h_" + str(self.name) + ".log"
 
         self.eth_dict = {}
+        self.customer = {}
+        self.peer = {}
+        self.servicer = {}
 
         self.write_main_file()
 
     def __str__(self):
         return "{" + str(self.name) + "," + str(self.router_addr) + "}"
+
+    def add_customer(self, node):
+        self.customer[node.name] = node
+
+    def add_peer(self, node):
+        self.peer[node.name] = node
+
+    def add_servicer(self, node):
+        self.servicer[node.name] = node
+
+    def require_exported(self, type, sender=None):
+        res = ""
+        if type == "c" or type == "p":
+            for customer in self.customer:
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
+        if type == "s":
+            if sender is None:
+                raise ValueError('For a servicer node is mandatory to specify the sender of the informations')
+            for customer in self.customer:
+                if self.customer[customer].name != sender.name:
+                    res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
+            for servicer in self.servicer:
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.servicer[servicer].name) + "\";\n\t\t\t\t\t\t\t\t"
+            for peer in self.peer:
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.peer[peer].name) + "\";\n\t\t\t\t\t\t\t\t"
+        return res
 
     def add_addr_to_export(self):
         if Node.counter_networks < len(Node.nodeIpNetworks_network):

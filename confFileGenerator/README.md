@@ -8,6 +8,6 @@ Move yourself inside the generator dir
 
 launch the generator on a basic test
 
-`python confFileGen.py`
+`python3 confFileGen.py`
 
 Now inside the folder `out` you will find all the files needed to start the nodes
