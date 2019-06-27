@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
+
 import ipaddress
 from constants import *
 import os.path
@@ -57,17 +75,21 @@ class Node:
         res = ""
         if type == "c" or type == "p":
             for customer in self.customer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
+                    self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
         if type == "s":
             if sender is None:
                 raise ValueError('For a servicer node is mandatory to specify the sender of the informations')
             for customer in self.customer:
                 if self.customer[customer].name != sender.name:
-                    res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
+                    res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
+                        self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
             for servicer in self.servicer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.servicer[servicer].name) + "\";\n\t\t\t\t\t\t\t\t"
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
+                    self.servicer[servicer].name) + "\";\n\t\t\t\t\t\t\t\t"
             for peer in self.peer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(self.peer[peer].name) + "\";\n\t\t\t\t\t\t\t\t"
+                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
+                    self.peer[peer].name) + "\";\n\t\t\t\t\t\t\t\t"
         return res
 
     def add_addr_to_export(self):
@@ -88,12 +110,12 @@ class Node:
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
             self.bird_template.format(log_file_path=self.log_file_name, log_mode=LOG_MODE, dbg_mode=DBG_MODE,
-                                                         dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
-                                                         kernel_conf_path=KERNEL_CONF_PATH,
-                                                         direct_conf_path=DIRECT_CONF_PATH,
-                                                         device_conf_path=DEVICE_CONF_PATH,
-                                                         filter_conf_path=FILTER_CONF_PATH,
-                                                         bgp_session_export_path="", bgp_session_path=""))
+                                      dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
+                                      kernel_conf_path=KERNEL_CONF_PATH,
+                                      direct_conf_path=DIRECT_CONF_PATH,
+                                      device_conf_path=DEVICE_CONF_PATH,
+                                      filter_conf_path=FILTER_CONF_PATH,
+                                      bgp_session_export_path="", bgp_session_path=""))
 
     def delete_export_file(self):
         if os.path.isfile(self.outFolder + self.sessionExporterFile_name):
@@ -107,5 +129,10 @@ class Node:
     def include_in_main(self, file_name):
         self.mainOutFile.write("include  \"" + file_name + "\";\n")
 
-    def set_new_external_addr(self, network, addr):
-        self.eth_dict[str(network)] = addr
+    def set_new_external_addr(self, neighbor_node, addr):
+        self.eth_dict[str(neighbor_node.name)] = addr
+
+    def get_external_addr(self, neighbor_node):
+        if str(neighbor_node.name) in self.eth_dict.keys():
+            return self.eth_dict[str(neighbor_node.name)]
+        return None
