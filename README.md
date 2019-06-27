@@ -289,3 +289,40 @@ This will create a `cpu_info` and a `nw_info` folder containing one `json` file
 for each node in the testbed. The information can be used within python
 programs using the `nodes_info::NodesInfo` class. See the unit test
 `test_nodes_info.py` for an example usage.
+
+# Topologies and BGP configurations
+
+This section describes the tools that are used to generate network topologies
+to test and the corresponding `bird` configuration files.
+
+## Chain gadget topology
+
+This tool generates *chain gadget* topologies as described in the Fabrikant
+and Rexford paper *There's something about MRAI: Timing diversity can
+exponentially worsen BGP convergence*. The tool is composed by two files
+* `chain_gadget.py`: main library that exposes the `gen_chain_gadget` method.
+* `gen_chain_gadget.py`: script that invokes the `gen_chain_gadget` method of
+ the library and writes the graph on a `.graphml` output file.
+
+The parameters that both the method accepts as inputs are the following (the
+parameters of the script have different names, but the same meaning):
+* `n_rings`: the number of rings to generate in the topology. For example,
+ the number of rings in Figs. 1 and 3 in the paper is 3. The rings connected
+ together form the chain.
+* `n_inner`: the number of inner nodes. Each ring as inner nodes (marked with
+ `Y_i` in the paper). The topology in Fig. 1 in the paper has only 1 inner
+ node per ring, while Fig. 3 has 3.
+* `add_outer`: if set to `true`, the tool will generate outer nodes as well
+ (nodes marked with `Z_i` in the paper). The topology in Fig. 1 in the paper
+ has no outer nodes, while Fig. 3 has 4. The number of outer nodes is
+ automatically derived, and it is simply the number of inner nodes plus 1.
+* `node_type`: the node type to assign to nodes. This can either be `T`, `M`,
+ `CP`, or `C`.
+* `edge_type`: the edge type to assign to edges. This can either be `CS` or
+ `P`. By default this is set to `CS`.
+* `set_timer`: if set to `true`, the tool will compute the `MRAI` timer for
+ the nodes, so that the automatic BGP configuration tool can use them during
+ the generation phase. The timer is assigned with an exponentially decreasing
+ value, starting with the default of `30 s`. The left-most ring (according to
+ the graphical description of the topology in the paper) has the highest
+ timer. Each ring's timer is halved with respect to the one of its left ring.
