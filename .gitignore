@@ -2,6 +2,7 @@ __pycache__
 */.idea/
 *.pyc
 *.log
+*.graphml
 .idea/
 confFileGenerator/test/**/*.conf
 confFileGenerator/test/**/log*
