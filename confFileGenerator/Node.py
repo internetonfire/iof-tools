@@ -24,12 +24,19 @@ import os.path
 class Node:
     nodeIpAddr_network = ipaddress.ip_network(u'200.0.0.0/8')
     counter_node = 1
+    # ATTENTION if you would like to change the network 100.0.0.0/8 also change it in the conf file commonFilters.conf
+    # otherwise the configuration probably would drop all update packets.
     nodeIpNetworks_network = list(ipaddress.ip_network(u'100.0.0.0/8').subnets(new_prefix=24))
     counter_networks = 1
+    ClientList = []
 
     def __init__(self, name, type, out_folder):
         self.name = name
         self.type = type
+
+        if self.type == "C":
+            Node.ClientList.append(int(self.name)+1)
+
         self.outFolder = out_folder
         self.mainOutFileName = "bgp_h_" + str(self.name) + ".conf"
         self.sessionExporterFile_name = "bgpSessionExporter_h_" + str(name) + ".conf"
@@ -47,7 +54,7 @@ class Node:
 
         self.mainOutFile = open(self.outFolder + self.mainOutFileName, 'w+')
         self.sessionExporterFile = None
-        self.exporting_proto_name = "static_bgp_h_" + str(self.name)
+        self.exporting_proto_name = "static_bgp"
         self.exportedNetworks = []
         self.exportedNetworks_str = ""
         self.log_file_name = "log_h_" + str(self.name) + ".log"
@@ -90,6 +97,10 @@ class Node:
             for peer in self.peer:
                 res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
                     self.peer[peer].name) + "\";\n\t\t\t\t\t\t\t\t"
+        if self.type == "C":
+            res = "export where proto = \"static_bgp_h_" + self.name + "\";"
+        elif len(res) == 0:
+            res = "export none;"
         return res
 
     def add_addr_to_export(self):
@@ -100,7 +111,7 @@ class Node:
             raise ValueError('No more networks free')
         self.delete_export_file()
 
-        self.exportedNetworks_str += "route " + str(self.exportedNetworks[-1]) + "via \"lo\";\n\t\t\t"
+        self.exportedNetworks_str += "route " + str(self.exportedNetworks[-1]) + " via \"lo\";\n\t\t\t"
 
         self.write_export_file()
         self.include_in_main(self.sessionExporterFile_name)
@@ -109,7 +120,7 @@ class Node:
         # Write the template inside the file
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
-            self.bird_template.format(log_file_path=self.log_file_name, log_mode=LOG_MODE, dbg_mode=DBG_MODE,
+            self.bird_template.format(log_file_path="/etc/bird/"+self.log_file_name, log_mode=LOG_MODE, dbg_mode=DBG_MODE,
                                       dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
                                       kernel_conf_path=KERNEL_CONF_PATH,
                                       direct_conf_path=DIRECT_CONF_PATH,
@@ -127,7 +138,7 @@ class Node:
                                                                         addr_to_export=self.exportedNetworks_str))
 
     def include_in_main(self, file_name):
-        self.mainOutFile.write("include  \"" + file_name + "\";\n")
+        self.mainOutFile.write("include  \"/etc/bird/" + file_name + "\";\n")
 
     def set_new_external_addr(self, neighbor_node, addr):
         self.eth_dict[str(neighbor_node.name)] = addr

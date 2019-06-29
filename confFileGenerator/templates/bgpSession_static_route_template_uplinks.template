@@ -1,5 +1,17 @@
         # Protocol used with a bgp peer
 
+        filter {filter_in_name}
+        {{
+            if ! rt_import_all({peer_as_filter}) then reject;
+            accept;
+        }}
+
+        filter {filter_out_name}
+        {{
+            if ! rt_export() then reject;
+            accept;
+        }}
+
         protocol bgp {protocol_name} {{
             # local addr used by the interface and AS of the local peer
             local {local_addr} as {local_as};
@@ -7,9 +19,9 @@
             neighbor {peer_addr} as {peer_as};
             hold time {hold_timer};
             ipv4{{
-                import filter bgp_in;
+                import filter {filter_in_name};
                 # export where proto = "export_protocol";
-                {export_protocol}
+                export filter {filter_out_name};
             }};
             direct;
             connect retry time {connect_retry_timer};

@@ -70,6 +70,11 @@ for edg in graph.edges(data=True):
 for edg in edges_dict:
     edges_dict[edg].write_static_exporter()
 
+with open(COMMON_FILTERS_TEMPLATE, "r") as filter_file:
+    filter_template = filter_file.read()
+    filter_file = open(outDir + COMMON_FILTER_FILE_NAME, 'w+')
+    filter_file.write(filter_template.format(client_list=str(Node.ClientList)))
+
 # Copy the base files to the simulation directory
 src_files = os.listdir(src)
 for file_name in src_files:
