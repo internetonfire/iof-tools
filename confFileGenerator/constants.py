@@ -35,8 +35,6 @@ BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_UPLINKS = "templates/bgpSession_static
 BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_PEERS = "templates/bgpSession_static_route_template_peers.template"
 BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_CLIENTS = "templates/bgpSession_static_route_template_clients.template"
 BIRD_TEMPLATE_PATH = "templates/bird_template.template"
-COMMON_FILTERS_TEMPLATE = "templates/common_filters.template"
-COMMON_FILTER_FILE_NAME = "commonFilters.conf"
 
 TYPE_KEY = "type"
 

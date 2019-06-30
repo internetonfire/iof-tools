@@ -78,30 +78,11 @@ class Node:
     def add_servicer(self, node):
         self.servicer[node.name] = node
 
-    def require_exported(self, type, sender=None):
-        res = ""
-        if type == "c" or type == "p":
-            for customer in self.customer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
-                    self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
-        if type == "s":
-            if sender is None:
-                raise ValueError('For a servicer node is mandatory to specify the sender of the informations')
-            for customer in self.customer:
-                if self.customer[customer].name != sender.name:
-                    res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
-                        self.customer[customer].name) + "\";\n\t\t\t\t\t\t\t\t"
-            for servicer in self.servicer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
-                    self.servicer[servicer].name) + "\";\n\t\t\t\t\t\t\t\t"
-            for peer in self.peer:
-                res += "export where proto = \"h_" + str(self.name) + "_h_" + str(
-                    self.peer[peer].name) + "\";\n\t\t\t\t\t\t\t\t"
-        if self.type == "C":
-            res = "export where proto = \"static_bgp_h_" + self.name + "\";"
-        elif len(res) == 0:
-            res = "export none;"
-        return res
+    def get_customers_addresses(self):
+        addr_list = []
+        for node in self.customer.values():
+            addr_list.append(str(node.get_external_addr(self)))
+        return addr_list
 
     def add_addr_to_export(self):
         if Node.counter_networks < len(Node.nodeIpNetworks_network):

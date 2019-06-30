@@ -1,5 +1,16 @@
         # Protocol used with a bgp peer
 
+        function {rt_export_name} ()
+        {{
+          # If it's from my static protocol export it
+          if proto = "static_bgp" then return true;
+          if net_martian() then return false;
+          # Check from who comes the net informations
+          # return bgp_next_hop ~ [ 100.1.1.1, 100.1.1.2, 200.1.1.1 ];
+          # Clients list
+          {client_list}
+        }}
+
         filter {filter_in_name}
         {{
             if ! rt_import({peer_as_filter}) then reject;
@@ -8,7 +19,7 @@
 
         filter {filter_out_name}
         {{
-            if ! rt_export() then reject;
+            if ! {rt_export_name}() then reject;
             accept;
         }}
 

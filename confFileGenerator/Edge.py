@@ -78,9 +78,14 @@ class Edge:
 
     # Function to export only to some nodes the information, depending on the edge type
     def write_static_exporter(self):
+        lst = self.node1.get_customers_addresses()
+        clientList = ""
+        if len(lst) > 0:
+            clientList = "return bgp_next_hop ~ " + str(lst).replace("'", "") + ";"
+
         if self.type == "transit":
             # Write the exporter file
-            self.write_session_static_exporter_uplinks(self.bgpSessionFile1, "h_" + str(self.node1.name) + "_" + "h_"
+            self.write_session_static_exporter_uplinks(self.bgpSessionFile1, str(clientList), "h_" + str(self.node1.name) + "_" + "h_"
                                                        + str(self.node2.name), self.node1.get_external_addr(self.node2),
                                                        str(int(self.node1.name) + 1),
                                                        self.node2.get_external_addr(self.node1),
@@ -96,7 +101,7 @@ class Edge:
             self.node2.include_in_main(self.bgpSessionFile2_name)
         if self.type == "peer":
             # Write the exporter file
-            self.write_session_static_exporter_peers(self.bgpSessionFile1, "h_" + str(self.node1.name) + "_" + "h_"
+            self.write_session_static_exporter_peers(self.bgpSessionFile1, str(clientList), "h_" + str(self.node1.name) + "_" + "h_"
                                                      + str(self.node2.name), self.node1.get_external_addr(self.node2),
                                                      str(int(self.node1.name) + 1),
                                                      self.node2.get_external_addr(self.node1),
@@ -135,9 +140,9 @@ class Edge:
                                            local_pref=bgp_local_pref))
 
     # Write session exporter with a predefined export politics
-    def write_session_static_exporter_uplinks(self, file, protocol_name, local_addr, local_as, neigh_addr, neigh_as,
+    def write_session_static_exporter_uplinks(self, file, clientsList, protocol_name, local_addr, local_as, neigh_addr, neigh_as,
                                               bgp_local_pref):
-        file.write(self.bgp_session_static_uplinks.format(filter_in_name="filter_in_" + protocol_name, filter_out_name="filter_out_" + protocol_name, peer_as_filter=neigh_as, protocol_name=protocol_name,
+        file.write(self.bgp_session_static_uplinks.format(rt_export_name="rt_export_" + protocol_name, client_list=clientsList, filter_in_name="filter_in_" + protocol_name, filter_out_name="filter_out_" + protocol_name, peer_as_filter=neigh_as, protocol_name=protocol_name,
                                                           local_addr=local_addr, local_as=local_as,
                                                           peer_addr=neigh_addr, peer_as=neigh_as, hold_timer=HOLD_TIMER,
                                                           connect_retry_timer=CONNECT_RETRY_TIMER,
@@ -145,9 +150,9 @@ class Edge:
                                                           startup_hold_timer=STARTUP_HOLD_TIMER,
                                                           local_pref=bgp_local_pref))
 
-    def write_session_static_exporter_peers(self, file, protocol_name, local_addr, local_as, neigh_addr, neigh_as,
+    def write_session_static_exporter_peers(self, file, clientsList, protocol_name, local_addr, local_as, neigh_addr, neigh_as,
                                             bgp_local_pref):
-        file.write(self.bgp_session_static_peers.format(filter_in_name="filter_in_" + protocol_name, filter_out_name="filter_out_" + protocol_name, peer_as_filter=neigh_as, protocol_name=protocol_name,
+        file.write(self.bgp_session_static_peers.format(rt_export_name="rt_export_" + protocol_name, client_list=clientsList, filter_in_name="filter_in_" + protocol_name, filter_out_name="filter_out_" + protocol_name, peer_as_filter=neigh_as, protocol_name=protocol_name,
                                                         local_addr=local_addr, local_as=local_as, peer_addr=neigh_addr,
                                                         peer_as=neigh_as, hold_timer=HOLD_TIMER,
                                                         connect_retry_timer=CONNECT_RETRY_TIMER,
