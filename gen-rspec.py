@@ -37,7 +37,7 @@ def matches_hardware(hardware_filter, hardware_types):
 
 def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
                 dump_file, df):
-    omni = ["omni", "-V3", "listresources", "-a", testbed, "--error",
+    omni = ["./omni", "-V3", "listresources", "-a", testbed, "--error",
             "--tostdout"]
 
     xml = check_output(omni)
