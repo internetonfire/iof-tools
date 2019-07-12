@@ -30,9 +30,9 @@ class Node:
     counter_networks = 1
     ClientList = []
 
-    def __init__(self, name, type, mrai, out_folder):
+    def __init__(self, name, node_type, mrai, out_folder):
         self.name = name
-        self.type = type
+        self.type = node_type
         self.mrai = int(mrai*1000)
 
         if self.type == "C":
@@ -102,8 +102,8 @@ class Node:
         # Write the template inside the file
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
-            self.bird_template.format(log_file_path="/etc/bird/"+self.log_file_name, log_mode=LOG_MODE, dbg_mode=DBG_MODE,
-                                      dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
+            self.bird_template.format(log_file_path="/etc/bird/"+self.log_file_name, log_mode=LOG_MODE,
+                                      dbg_mode=DBG_MODE, dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
                                       kernel_conf_path=KERNEL_CONF_PATH,
                                       direct_conf_path=DIRECT_CONF_PATH,
                                       device_conf_path=DEVICE_CONF_PATH,
