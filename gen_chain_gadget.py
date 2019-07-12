@@ -26,7 +26,7 @@ n_inner = args.inner
 add_outer = args.outer
 set_timer = args.mrai
 node_type = args.type
-edge_type = "CS"
+edge_type = "transit"
 output_file = args.writeto
 
 if n_rings < 1:
