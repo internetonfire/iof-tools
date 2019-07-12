@@ -54,7 +54,10 @@ graph = read_graphml(gname)
 # I read all the nodes and I config the objects
 nodes_dict = {}
 for n in graph.nodes(data=True):
-    new_node = Node(n[0], n[1]['type'], n[1]['mrai'], outDir)
+    if 'mrai' in n[1]:
+        new_node = Node(n[0], n[1]['type'], outDir, n[1]['mrai'])
+    else:
+        new_node = Node(n[0], n[1]['type'], outDir)
     # If the node is of type c it will share some addresses
     if n[1][TYPE_KEY] == 'C':
         new_node.add_addr_to_export()

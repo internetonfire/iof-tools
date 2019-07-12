@@ -30,10 +30,10 @@ class Node:
     counter_networks = 1
     ClientList = []
 
-    def __init__(self, name, node_type, mrai, out_folder):
+    def __init__(self, name, node_type, out_folder, mrai='0'):
         self.name = name
         self.type = node_type
-        self.mrai = int(mrai*1000)
+        self.mrai = int(float(mrai)*1000)
 
         if self.type == "C":
             Node.ClientList.append(int(self.name)+1)
