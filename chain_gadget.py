@@ -5,7 +5,7 @@ ATTR_EDGE_TYPE = "type"
 ATTR_TIMER = "mrai"
 DEFAULT_MRAI_TIMER = 30.0
 VALID_NODE_TYPES = ["T", "M", "CP", "C"]
-VALID_EDGE_TYPES = ["CS", "P"]
+VALID_EDGE_TYPES = ["transit", "peer"]
 
 
 def gen_ring_with_outer(n_inner_ring, ring_index):
