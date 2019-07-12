@@ -85,7 +85,7 @@ def gen_ring(n_inner_ring, ring_index, add_outer):
     return g
 
 
-def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="CS",
+def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit",
                      set_timer=False):
     """
     Generates a chain gadget topology as in Fig. 3 of the Fabrikant-Rexford
