@@ -95,7 +95,7 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="CS",
 
           7     5     3     1
              6           2
-    9  8           4           0
+       8           4           0
 
     The chain gadget topology is composed by a set of rings, ring 1 being the
     set of nodes {0, 1, 2, 3, 4} and ring 2 being the set of nodes {4, 5, 6, 7,
@@ -108,8 +108,9 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="CS",
     they are labeled with Z_i). Within each ring all the nodes are connected in
     a chain, i.e., there exist the set of edges {(i, i+1) : i = first node, ...,
     last node - 1}.
-    Finally, there is the destination node (the one with the highest index)
-    which is connected to the last node of the last ring.
+    Finally, in the paper, there is a final node labelled as "d" (
+    destination). This IS NOT a node of the network, but a destination
+    network exported by the left-most node in the graph (8 in this example).
     :param n_rings: number of rings in the topology. In the example topology
     described above, n_rings = 2. This number must be at least 1
     :param n_inner: number of inner nodes. The number of outer nodes (if the
@@ -148,9 +149,6 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="CS",
             min_node_timer = {ATTR_TIMER: timer/2}
             nx.set_node_attributes(ring, {min_node: min_node_timer})
         g = nx.compose(g, ring)
-    last_node = g.number_of_nodes()
-    g.add_edge(last_node - 1, last_node)
     nx.set_node_attributes(g, node_type, ATTR_NODE_TYPE)
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
-    nx.set_node_attributes(g, {last_node: {ATTR_TIMER: DEFAULT_MRAI_TIMER}})
     return g
