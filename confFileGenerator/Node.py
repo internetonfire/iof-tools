@@ -17,6 +17,8 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
+from os.path import join
+
 from constants import *
 import os.path
 
@@ -109,6 +111,16 @@ class Node:
                                       device_conf_path=DEVICE_CONF_PATH,
                                       filter_conf_path=FILTER_CONF_PATH,
                                       bgp_session_export_path="", bgp_session_path=""))
+
+    def write_network_configuration(self):
+        host = self.name
+        output = "{}_conf.sh".format(host)
+        # TODO: before this: assign this AS to one testbed node
+        # TODO: read interface name from device configuration
+        ip_conf = "ip addr add {}/30 dev enp0s8\n"
+        with open(join(self.outFolder, output), "w") as out_file:
+            for _,ip in self.eth_dict.items():
+                out_file.write(ip_conf.format(str(ip)))
 
     def delete_export_file(self):
         if os.path.isfile(self.outFolder + self.sessionExporterFile_name):

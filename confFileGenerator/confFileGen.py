@@ -73,6 +73,9 @@ for edg in graph.edges(data=True):
 for edg in edges_dict:
     edges_dict[edg].write_static_exporter()
 
+for _, node in nodes_dict.items():
+    node.write_network_configuration()
+
 # Copy the base files to the simulation directory
 src_files = os.listdir(src)
 for file_name in src_files:
