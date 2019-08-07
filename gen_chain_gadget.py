@@ -8,9 +8,9 @@ parser.add_argument("-r", "--rings", dest="rings", required=True, type=int,
                     action="store", help="Number of rings to generate")
 parser.add_argument("-i", "--inner", dest="inner", required=True, type=int,
                     action="store", help="Number of inner nodes per ring")
-parser.add_argument("-o", "--outer", dest="outer", default=True,
+parser.add_argument("-o", "--outer", dest="outer", default=False,
                     action="store_true", help="Generate inner nodes as well")
-parser.add_argument("-m", "--mrai", dest="mrai", default=True,
+parser.add_argument("-m", "--mrai", dest="mrai", default=False,
                     action="store_true", help="Generate MRAI timer attributes "
                     "as well")
 parser.add_argument("-t", "--type", dest="type", default="T", action="store",
