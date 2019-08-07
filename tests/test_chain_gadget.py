@@ -39,9 +39,9 @@ def test_simplest_chain():
     - first node to all inner nodes 2: (4, 2)
     """
     g = gen_chain_gadget(2, 1, False, "T", "transit", True)
-    timers = {5: DEFAULT_MRAI_TIMER, 4: DEFAULT_MRAI_TIMER,
-              3: DEFAULT_MRAI_TIMER, 2: DEFAULT_MRAI_TIMER/2,
-              1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
+    timers = {4: DEFAULT_MRAI_TIMER, 3: DEFAULT_MRAI_TIMER,
+              2: DEFAULT_MRAI_TIMER/2, 1: DEFAULT_MRAI_TIMER/2,
+              0: DEFAULT_MRAI_TIMER/4}
     assert(g.number_of_nodes() == 5)
     assert((1, 0) in g.edges)
     assert((2, 1) in g.edges)
@@ -69,10 +69,10 @@ def test_no_outer_chain():
     - first node to all inner nodes 2: (5, 3), (6, 3)
     """
     g = gen_chain_gadget(2, 2, False, "T", "transit", True)
-    timers = {7: DEFAULT_MRAI_TIMER, 6: DEFAULT_MRAI_TIMER,
-              5: DEFAULT_MRAI_TIMER, 4: DEFAULT_MRAI_TIMER,
-              3: DEFAULT_MRAI_TIMER/2, 2: DEFAULT_MRAI_TIMER/2,
-              1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
+    timers = {6: DEFAULT_MRAI_TIMER, 5: DEFAULT_MRAI_TIMER,
+              4: DEFAULT_MRAI_TIMER, 3: DEFAULT_MRAI_TIMER / 2,
+              2: DEFAULT_MRAI_TIMER / 2, 1: DEFAULT_MRAI_TIMER / 2,
+              0: DEFAULT_MRAI_TIMER / 4}
     assert(g.number_of_nodes() == 7)
     assert((1, 0) in g.edges)
     assert((2, 1) in g.edges)
@@ -137,13 +137,13 @@ def test_chain():
     - first node to all inner nodes 2: (10, 6), (12, 6)
     """
     g = gen_chain_gadget(2, 2, True, "T", "transit", True)
-    timers = {13: DEFAULT_MRAI_TIMER, 12: DEFAULT_MRAI_TIMER,
-              11: DEFAULT_MRAI_TIMER, 10: DEFAULT_MRAI_TIMER,
-              9: DEFAULT_MRAI_TIMER, 8: DEFAULT_MRAI_TIMER,
-              7: DEFAULT_MRAI_TIMER, 6: DEFAULT_MRAI_TIMER/2,
-              5: DEFAULT_MRAI_TIMER/2, 4: DEFAULT_MRAI_TIMER/2,
-              3: DEFAULT_MRAI_TIMER/2, 2: DEFAULT_MRAI_TIMER/2,
-              1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
+    timers = {12: DEFAULT_MRAI_TIMER, 11: DEFAULT_MRAI_TIMER,
+              10: DEFAULT_MRAI_TIMER, 9: DEFAULT_MRAI_TIMER,
+              8: DEFAULT_MRAI_TIMER, 7: DEFAULT_MRAI_TIMER,
+              6: DEFAULT_MRAI_TIMER / 2, 5: DEFAULT_MRAI_TIMER / 2,
+              4: DEFAULT_MRAI_TIMER / 2, 3: DEFAULT_MRAI_TIMER / 2,
+              2: DEFAULT_MRAI_TIMER / 2, 1: DEFAULT_MRAI_TIMER / 2,
+              0: DEFAULT_MRAI_TIMER / 4}
     assert(g.number_of_nodes() == 13)
     assert((2, 0) in g.edges)
     assert((4, 2) in g.edges)
