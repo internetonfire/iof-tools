@@ -9,22 +9,22 @@ def test_simplest_chain():
           3     1
        4     2     0
     with the following edges:
-    - inner ring 1: (0, 1), (1, 2)
-    - first node to all inner nodes 1: (0, 2)
-    - inner ring 2: (2, 3), (3, 4)
-    - first node to all inner nodes 2: (2, 4)
+    - inner ring 1: (1, 0), (2, 1)
+    - first node to all inner nodes 1: (2, 0)
+    - inner ring 2: (3, 2), (4, 3)
+    - first node to all inner nodes 2: (4, 2)
     """
     g = gen_chain_gadget(2, 1, False, "T", "transit", True)
     timers = {5: DEFAULT_MRAI_TIMER, 4: DEFAULT_MRAI_TIMER,
               3: DEFAULT_MRAI_TIMER, 2: DEFAULT_MRAI_TIMER/2,
               1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
     assert(g.number_of_nodes() == 5)
-    assert((0, 1) in g.edges)
-    assert((1, 2) in g.edges)
-    assert((0, 2) in g.edges)
-    assert((2, 3) in g.edges)
-    assert((3, 4) in g.edges)
-    assert((2, 4) in g.edges)
+    assert((1, 0) in g.edges)
+    assert((2, 1) in g.edges)
+    assert((2, 0) in g.edges)
+    assert((3, 2) in g.edges)
+    assert((4, 3) in g.edges)
+    assert((4, 2) in g.edges)
     for i in range(g.number_of_nodes()):
         assert(g.nodes[i][ATTR_NODE_TYPE] == "T")
         assert(g.nodes[i][ATTR_TIMER] == timers[i])
@@ -39,10 +39,10 @@ def test_no_outer_chain():
           5  4     2  1
        6        3        0
     with the following edges:
-    - inner ring 1: (0, 1), (1, 2), (2, 3)
-    - first node to all inner nodes 1: (0, 2), (0, 3)
-    - inner ring 2: (3, 4), (4, 5), (5, 6)
-    - first node to all inner nodes 2: (3, 5), (3, 6)
+    - inner ring 1: (1, 0), (2, 1), (3, 2)
+    - first node to all inner nodes 1: (2, 0), (3, 0)
+    - inner ring 2: (4, 3), (5, 4), (6, 5)
+    - first node to all inner nodes 2: (5, 3), (6, 3)
     """
     g = gen_chain_gadget(2, 2, False, "T", "transit", True)
     timers = {7: DEFAULT_MRAI_TIMER, 6: DEFAULT_MRAI_TIMER,
@@ -50,16 +50,16 @@ def test_no_outer_chain():
               3: DEFAULT_MRAI_TIMER/2, 2: DEFAULT_MRAI_TIMER/2,
               1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
     assert(g.number_of_nodes() == 7)
-    assert((0, 1) in g.edges)
-    assert((1, 2) in g.edges)
-    assert((2, 3) in g.edges)
-    assert((0, 2) in g.edges)
-    assert((0, 3) in g.edges)
-    assert((3, 4) in g.edges)
-    assert((4, 5) in g.edges)
-    assert((5, 6) in g.edges)
-    assert((3, 5) in g.edges)
-    assert((3, 6) in g.edges)
+    assert((1, 0) in g.edges)
+    assert((2, 1) in g.edges)
+    assert((3, 2) in g.edges)
+    assert((2, 0) in g.edges)
+    assert((3, 0) in g.edges)
+    assert((4, 3) in g.edges)
+    assert((5, 4) in g.edges)
+    assert((6, 5) in g.edges)
+    assert((5, 3) in g.edges)
+    assert((6, 3) in g.edges)
     for i in range(g.number_of_nodes()):
         assert(g.nodes[i][ATTR_NODE_TYPE] == "T")
         assert(g.nodes[i][ATTR_TIMER] == timers[i])
@@ -75,19 +75,19 @@ def test_simple_chain():
              2
          4       0
     with the following edges:
-    - inner ring: (0, 2), (2, 4)
-    - outer ring: (0, 1), (1, 2), (2, 3), (3, 4)
-    - first node to all inner nodes: (0, 4)
+    - inner ring: (2, 0), (4, 2)
+    - outer ring: (1, 0), (2, 1), (3, 2), (4, 3)
+    - first node to all inner nodes: (4, 0)
     """
     g = gen_chain_gadget(1, 1, True, "T", "transit", True)
     assert(g.number_of_nodes() == 5)
-    assert((0, 2) in g.edges)
-    assert((2, 4) in g.edges)
-    assert((0, 1) in g.edges)
-    assert((1, 2) in g.edges)
-    assert((2, 3) in g.edges)
-    assert((3, 4) in g.edges)
-    assert((0, 4) in g.edges)
+    assert((2, 0) in g.edges)
+    assert((4, 2) in g.edges)
+    assert((1, 0) in g.edges)
+    assert((2, 1) in g.edges)
+    assert((3, 2) in g.edges)
+    assert((4, 3) in g.edges)
+    assert((4, 0) in g.edges)
     timers = dict([(i, DEFAULT_MRAI_TIMER) for i in range(6)])
     timers[0] = DEFAULT_MRAI_TIMER/2
     for i in range(g.number_of_nodes()):
@@ -105,12 +105,12 @@ def test_chain():
                 10     8           4     2
         12                   6                 0
     with the following edges:
-    - inner ring 1: (0, 2), (2, 4), (4, 6)
-    - outer ring 1: (0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)
-    - first node to all inner nodes 1: (0, 4), (0, 6)
-    - inner ring 2: (6, 8), (8, 10), (10, 12)
-    - outer ring 2: (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12)
-    - first node to all inner nodes 2: (6, 10), (6, 12)
+    - inner ring 1: (2, 0), (4, 2), (6, 4)
+    - outer ring 1: (1, 0), (2, 1), (3, 2), (4, 3), (5, 4), (6, 5)
+    - first node to all inner nodes 1: (4, 0), (6, 0)
+    - inner ring 2: (8, 6), (10, 8), (12, 10)
+    - outer ring 2: (7, 6), (8, 7), (9, 8), (10, 9), (11, 10), (12, 11)
+    - first node to all inner nodes 2: (10, 6), (12, 6)
     """
     g = gen_chain_gadget(2, 2, True, "T", "transit", True)
     timers = {13: DEFAULT_MRAI_TIMER, 12: DEFAULT_MRAI_TIMER,
@@ -121,28 +121,28 @@ def test_chain():
               3: DEFAULT_MRAI_TIMER/2, 2: DEFAULT_MRAI_TIMER/2,
               1: DEFAULT_MRAI_TIMER/2, 0: DEFAULT_MRAI_TIMER/4}
     assert(g.number_of_nodes() == 13)
-    assert((0, 2) in g.edges)
-    assert((2, 4) in g.edges)
-    assert((4, 6) in g.edges)
-    assert((0, 1) in g.edges)
-    assert((1, 2) in g.edges)
-    assert((2, 3) in g.edges)
-    assert((3, 4) in g.edges)
-    assert((4, 5) in g.edges)
-    assert((5, 6) in g.edges)
-    assert((0, 4) in g.edges)
-    assert((0, 6) in g.edges)
-    assert((6, 8) in g.edges)
-    assert((8, 10) in g.edges)
-    assert((10, 12) in g.edges)
-    assert((6, 7) in g.edges)
-    assert((7, 8) in g.edges)
-    assert((8, 9) in g.edges)
-    assert((9, 10) in g.edges)
-    assert((10, 11) in g.edges)
-    assert((11, 12) in g.edges)
-    assert((6, 10) in g.edges)
-    assert((6, 12) in g.edges)
+    assert((2, 0) in g.edges)
+    assert((4, 2) in g.edges)
+    assert((6, 4) in g.edges)
+    assert((1, 0) in g.edges)
+    assert((2, 1) in g.edges)
+    assert((3, 2) in g.edges)
+    assert((4, 3) in g.edges)
+    assert((5, 4) in g.edges)
+    assert((6, 5) in g.edges)
+    assert((4, 0) in g.edges)
+    assert((6, 0) in g.edges)
+    assert((8, 6) in g.edges)
+    assert((10, 8) in g.edges)
+    assert((12, 10) in g.edges)
+    assert((7, 6) in g.edges)
+    assert((8, 7) in g.edges)
+    assert((9, 8) in g.edges)
+    assert((10, 9) in g.edges)
+    assert((11, 10) in g.edges)
+    assert((12, 11) in g.edges)
+    assert((10, 6) in g.edges)
+    assert((12, 6) in g.edges)
     for i in range(g.number_of_nodes()):
         print(i)
         assert(g.nodes[i][ATTR_NODE_TYPE] == "T")

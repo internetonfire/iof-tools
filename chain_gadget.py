@@ -24,13 +24,13 @@ def gen_ring_with_outer(n_inner_ring, ring_index):
     total_nodes = n_inner_ring * 2 + 3
     # connect the inner part of the ring
     for i in range(0, total_nodes-2, 2):
-        g.add_edge(i, i+2)
+        g.add_edge(i+2, i)
     # connect the outer part of the ring
     for i in range(0, total_nodes-1):
-        g.add_edge(i, i+1)
+        g.add_edge(i+1, i)
     # connect the first node of the ring with all the inner nodes
     for i in range(2, total_nodes, 2):
-        g.add_edge(0, i)
+        g.add_edge(i, 0)
     mapping = {}
     for i in range(total_nodes):
         mapping[i] = i + (total_nodes - 1) * ring_index
@@ -54,10 +54,10 @@ def gen_ring_without_outer(n_inner_ring, ring_index):
     total_nodes = n_inner_ring + 2
     # connect the inner part of the ring
     for i in range(total_nodes-1):
-        g.add_edge(i, i+1)
+        g.add_edge(i+1, i)
     # connect the first node of the ring with all the inner nodes
     for i in range(2, total_nodes, 1):
-        g.add_edge(0, i)
+        g.add_edge(i, 0)
     mapping = {}
     for i in range(total_nodes):
         mapping[i] = i + (total_nodes - 1) * ring_index
@@ -107,7 +107,9 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     to all the inner nodes. Outer nodes are the ones at the top (in the paper
     they are labeled with Z_i). Within each ring all the nodes are connected in
     a chain, i.e., there exist the set of edges {(i, i+1) : i = first node, ...,
-    last node - 1}.
+    last node - 1}. In the paper the edge direction is the opposite of a
+    customer-provider relationship, so if in the paper there is an edge (i, j),
+    the topology needs to have the edge (j, i).
     Finally, in the paper, there is a final node labelled as "d" (
     destination). This IS NOT a node of the network, but a destination
     network exported by the left-most node in the graph (8 in this example).
