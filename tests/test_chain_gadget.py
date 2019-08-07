@@ -2,6 +2,30 @@ from chain_gadget import gen_chain_gadget, ATTR_NODE_TYPE, \
     ATTR_EDGE_TYPE, ATTR_TIMER, DEFAULT_MRAI_TIMER
 
 
+def test_mini_chain():
+    """
+    test the smallest possible chain, i.e., with only a single ring. The
+    topology is the following
+          1
+       2     0
+    with the following edges:
+    - inner ring: (1, 0), (2, 1)
+    - first node to all inner nodes 1: (2, 0)
+    """
+    g = gen_chain_gadget(1, 1, False, "T", "transit", True)
+    timers = {2: DEFAULT_MRAI_TIMER, 1: DEFAULT_MRAI_TIMER,
+              0: DEFAULT_MRAI_TIMER/2}
+    assert(g.number_of_nodes() == 3)
+    assert((1, 0) in g.edges)
+    assert((2, 1) in g.edges)
+    assert((2, 0) in g.edges)
+    for i in range(g.number_of_nodes()):
+        assert(g.nodes[i][ATTR_NODE_TYPE] == "T")
+        assert(g.nodes[i][ATTR_TIMER] == timers[i])
+    for e in g.edges:
+        assert(g.edges[e][ATTR_EDGE_TYPE] == "transit")
+
+
 def test_simplest_chain():
     """
     test one of the simplest possible chains, i.e., the one without outer nodes
