@@ -318,8 +318,8 @@ parameters of the script have different names, but the same meaning):
  automatically derived, and it is simply the number of inner nodes plus 1.
 * `node_type`: the node type to assign to nodes. This can either be `T`, `M`,
  `CP`, or `C`.
-* `edge_type`: the edge type to assign to edges. This can either be `CS` or
- `P`. By default this is set to `CS`.
+* `edge_type`: the edge type to assign to edges. This can either be `transit` or
+ `peer`. By default this is set to `transit`.
 * `set_timer`: if set to `true`, the tool will compute the `MRAI` timer for
  the nodes, so that the automatic BGP configuration tool can use them during
  the generation phase. The timer is assigned with an exponentially decreasing
