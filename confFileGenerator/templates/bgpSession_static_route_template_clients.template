@@ -29,4 +29,5 @@
             connect delay time {connect_delay_timer};
             startup hold time {startup_hold_timer};
             default bgp_local_pref {local_pref};
+            strict bind;
         }}
