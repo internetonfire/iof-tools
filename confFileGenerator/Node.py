@@ -23,6 +23,43 @@ from constants import *
 import os.path
 
 
+BRIDGE = "br-iof"
+BRIDGE_CONF = """
+exists=`brctl show | grep {bridge}`
+if [ -z "$exists" ]; then
+    brctl addbr {bridge}
+fi
+brctl stp   {bridge} off
+ip link set dev {bridge} up
+""".format(bridge=BRIDGE)
+
+NS_CONF = """
+ip netns add ns{host}
+ip netns exec ns{host} ip link set lo up
+"""
+
+TAP_CONF = """
+# create a port pair
+ip link add tap{host} type veth peer name br-tap{host}
+# attach one side to linuxbridge
+brctl addif {bridge} br-tap{host}
+# attach the other side to namespace
+ip link set tap{host} netns ns{host}
+# set the ports to up
+ip netns exec ns{host} ip link set dev tap{host} up
+ip link set dev br-tap{host} up
+"""
+
+IP_CONF = """
+ip netns exec ns{host} ip addr add {ip}/30 dev tap{host}
+"""
+
+IF_BRIDGE = """
+ip link set {interface} up
+brctl addif {bridge} {interface}
+"""
+
+
 class Node:
     nodeIpAddr_network = ipaddress.ip_network(u'200.0.0.0/8')
     counter_node = 1
@@ -32,10 +69,12 @@ class Node:
     counter_networks = 1
     ClientList = []
 
-    def __init__(self, name, node_type, out_folder, mrai='0'):
+    def __init__(self, name, node_type, out_folder, mrai='0',
+                 interface="enp0s9"):
         self.name = name
         self.type = node_type
         self.mrai = int(float(mrai)*1000)
+        self.intf = interface
 
         if self.type == "C":
             Node.ClientList.append(int(self.name)+1)
@@ -117,10 +156,13 @@ class Node:
         output = "{}_conf.sh".format(host)
         # TODO: before this: assign this AS to one testbed node
         # TODO: read interface name from device configuration
-        ip_conf = "ip addr add {}/30 dev enp0s8\n"
         with open(join(self.outFolder, output), "w") as out_file:
+            out_file.write(BRIDGE_CONF)
+            out_file.write(NS_CONF.format(host=host))
+            out_file.write(TAP_CONF.format(host=host, bridge=BRIDGE))
+            out_file.write(IF_BRIDGE.format(bridge=BRIDGE, interface=self.intf))
             for _,ip in self.eth_dict.items():
-                out_file.write(ip_conf.format(str(ip)))
+                out_file.write(IP_CONF.format(host=host, ip=str(ip)))
 
     def delete_export_file(self):
         if os.path.isfile(self.outFolder + self.sessionExporterFile_name):
