@@ -20,6 +20,9 @@ parser.add_argument("-a", "--ansible-config", dest="ansible_config",
                     default="ansible.cfg", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible configuration is "
                          "written (default=%(default)s)")
+parser.add_argument("-u", "--user", dest="user",
+                    default="segata", action="store", metavar="USERNAME",
+                    help="Username for ssh config file (default=%(default)s)")
 parser.add_argument("-i", "--inventory", dest="ansible_inventory",
                     default="ansible-hosts", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible inventory is "
@@ -42,6 +45,7 @@ ssh_config_no_proxy_file = ssh_config_file + "-no-proxy"
 ansible_config_file = args.ansible_config
 ansible_inventory_file = args.ansible_inventory
 identity_file = args.identity
+user = args.user
 
 config_file = open(ssh_config_file, "w")
 config_no_proxy_file = open(ssh_config_no_proxy_file, "w")
@@ -49,9 +53,9 @@ ansible_file = open(ansible_config_file, "w")
 inventory_file = open(ansible_inventory_file, "w")
 
 ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
-                       identity_file, PROXY_COMMAND_TEMPLATE)
+                       identity_file, user, PROXY_COMMAND_TEMPLATE)
 ssh_config_no_proxy = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
-                                identity_file)
+                                identity_file, user)
 ansible_config = AnsibleConfig(ANSIBLE_CONFIG_TEMPLATE,
                                INVENTORY_CONFIG_TEMPLATE,
                                ANSIBLE_HOST_TEMPLATE, ansible_inventory_file,

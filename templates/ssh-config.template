@@ -1,5 +1,5 @@
 Host bastion.test.iminds.be proxy0
-    User segata
+    User {user}
     HostName bastion.test.iminds.be
     Port 22
     IdentityFile {identity}

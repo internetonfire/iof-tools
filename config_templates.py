@@ -8,10 +8,11 @@ IDENTITY_FILE = "id.cert"
 
 class SSHConfig:
 
-    def __init__(self, ssh_config, host_config, identity_file,
+    def __init__(self, ssh_config, host_config, identity_file, user,
                  proxy_command=None):
         self.ssh_config = ssh_config
         self.host_config = host_config
+        self.user = user
         with open(ssh_config, "r") as ssh_file:
             self.ssh_template = ssh_file.read()
         with open(host_config, "r") as host_file:
@@ -24,12 +25,14 @@ class SSHConfig:
         # copy the identity file locally
         copyfile(expanduser(identity_file), IDENTITY_FILE)
         chmod(IDENTITY_FILE, S_IWUSR | S_IRUSR)
-        self.config = self.ssh_template.format(identity=IDENTITY_FILE)
+        self.config = self.ssh_template.format(identity=IDENTITY_FILE,
+                                               user=user)
 
     def add_host(self, name, hostname):
         self.config += self.host_template.format(name=name, hostname=hostname,
                                                  identity=IDENTITY_FILE,
-                                                 proxy=self.proxy_template)
+                                                 proxy=self.proxy_template,
+                                                 user=self.user)
 
     def __str__(self):
         return self.config
