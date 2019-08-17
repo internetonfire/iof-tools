@@ -42,3 +42,24 @@ gname = "small_g.graphml"
 outDir = "out/"
 src = "baseFiles/"
 node_number = 20
+
+HELP_MESSAGE = """
+Conf file generator for bird written by Mattia Milani, mattia.milani@studenti.unitn.it
+Mandatory args are: 
+    --graph [file name] -> name of the graphml (only graphml files are accepted) file that will be used to generate the conf files, this file needs to be correctly formatted and created.
+                            Is possible to use the 'internet_as_graph()' function that can be found at: 'https://github.com/leonardomaccari/networkx/blob/degree_bug/networkx/generators/tests/test_internet_AS_graph.py'
+                            Only nodes of type 'C' generates routes
+                            type of edges:
+                                transit: the first node of this edge pay the second one to transit through it, so the relation is customer <-> servicer
+                                peer: the two nodes share a peer relation
+                            the sharing policy is based on witch node send the information:
+                                customer: shared with everyone
+                                servicer: shared with customers
+                                peer: shared with customers
+                            If this does not exists yet it will be created with a predefined number of nodes (20)
+    --out [folder name] -> folder where the conf files will be saved
+Not mandatory args:
+    --nnodes [number]-> redefine the default number of nodes used to create the file, if the file already exists this parameter will be ignored
+    --directories -> this args does not require parameters, if present the output will be formatted to folders for each bird node
+    '--help', '-h' -> show this help
+"""

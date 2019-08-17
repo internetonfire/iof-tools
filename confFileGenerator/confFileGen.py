@@ -25,19 +25,32 @@ from Edge import Edge
 from constants import *
 import sys
 
+gname = ""
+outDir = ""
+directories = False
 
 options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
-                                                      'out='
+                                                      'out=',
+                                                      'nnodes=',
+                                                      'directories',
+                                                      'help',
+                                                      'h'
                                                       ])
-# print 'OPTIONS   :', [x[0] for x in options]
-if {'--graph', '--out'} != set([x[0] for x in options]):
-    print("Mandatory args are: ", '--graph (Graph file)', '--out (Output folder)')
+if set([x[0] for x in options]).issubset({'--help', '-h'}):
+    print(HELP_MESSAGE)
+    sys.exit(0)
+if not {'--graph', '--out'}.issubset(set([x[0] for x in options])):
+    print(HELP_MESSAGE)
     sys.exit(1)
 for opt, arg in options:
     if opt in '--graph':
         gname = arg
     if opt in '--out':
         outDir = arg
+    if opt in '--nnodes':
+        node_number = int(arg)
+    if opt in '--directories':
+        directories = True
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -47,17 +60,30 @@ if not os.path.isfile(gname):
 # If the output dire does not exists it will be created
 if not os.path.isdir(outDir):
     os.mkdir(outDir)
+else:
+    shutil.rmtree(outDir)
+    os.mkdir(outDir)
 
 # I read the graph
 graph = read_graphml(gname)
+
+if directories:
+    for node in graph.nodes(data=True):
+        os.mkdir(outDir + 'h_' + node[0])
 
 # I read all the nodes and I config the objects
 nodes_dict = {}
 for n in graph.nodes(data=True):
     if 'mrai' in n[1]:
-        new_node = Node(n[0], n[1]['type'], outDir, n[1]['mrai'])
+        if directories:
+            new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/', n[1]['mrai'])
+        else:
+            new_node = Node(n[0], n[1]['type'], outDir, n[1]['mrai'])
     else:
-        new_node = Node(n[0], n[1]['type'], outDir)
+        if directories:
+            new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/')
+        else:
+            new_node = Node(n[0], n[1]['type'], outDir)
     # If the node is of type c it will share some addresses
     if n[1][TYPE_KEY] == 'C':
         new_node.add_addr_to_export()
@@ -66,7 +92,11 @@ for n in graph.nodes(data=True):
 # I read all the edges and config the objects
 edges_dict = {}
 for edg in graph.edges(data=True):
-    new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], outDir)
+    if directories:
+        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], outDir + '/h_' + nodes_dict[edg[0]].name + '/',
+                        outDir + '/h_' + nodes_dict[edg[1]].name + '/')
+    else:
+        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], outDir, outDir)
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies
@@ -74,8 +104,17 @@ for edg in edges_dict:
     edges_dict[edg].write_static_exporter()
 
 # Copy the base files to the simulation directory
-src_files = os.listdir(src)
-for file_name in src_files:
-    full_file_name = os.path.join(src, file_name)
-    if os.path.isfile(full_file_name):
-        shutil.copy(full_file_name, outDir)
+if not directories:
+    src_files = os.listdir(src)
+    for file_name in src_files:
+        full_file_name = os.path.join(src, file_name)
+        if os.path.isfile(full_file_name):
+            shutil.copy(full_file_name, outDir)
+else:
+    src_files = os.listdir(src)
+    for file_name in src_files:
+        full_file_name = os.path.join(src, file_name)
+        if os.path.isfile(full_file_name):
+            for node in graph.nodes(data=True):
+                out = outDir + 'h_' + node[0]
+                shutil.copy(full_file_name, out)

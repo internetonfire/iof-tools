@@ -27,11 +27,12 @@ class Edge:
     nodeIpNetworks_externalEth = list(ipaddress.ip_network(u'10.0.0.0/12').subnets(new_prefix=30))
     counter_external_networks = 0
 
-    def __init__(self, node1, node2, _type, out):
+    def __init__(self, node1, node2, _type, out1, out2):
         self.node1 = node1
         self.node2 = node2
         self.type = _type
-        self.outFolder = out
+        self.outFolder1 = out1
+        self.outFolder2 = out2
 
         # Conf files name for this edge
         self.bgpSessionFile1_name = "bgpSession_h_" + str(self.node1.name) + "_h_" + str(self.node2.name) + ".conf"
@@ -70,8 +71,8 @@ class Edge:
             raise ValueError("Type not correct, it's possible to use only transit and peer")
 
         # Open the files for the edge
-        self.bgpSessionFile1 = open(self.outFolder + self.bgpSessionFile1_name, 'w+')
-        self.bgpSessionFile2 = open(self.outFolder + self.bgpSessionFile2_name, 'w+')
+        self.bgpSessionFile1 = open(self.outFolder1 + self.bgpSessionFile1_name, 'w+')
+        self.bgpSessionFile2 = open(self.outFolder2 + self.bgpSessionFile2_name, 'w+')
 
     def __str__(self):
         return str(self.node1) + " <-> " + str(self.node2)
@@ -123,12 +124,6 @@ class Edge:
                                                      str(int(self.node1.name) + 1), self.node2.mrai, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
-
-    # Function to delete an exporter file
-    def del_exporter(self, file_name):
-        # Delete an exporter file
-        if os.path.isfile(self.outFolder + file_name):
-            os.remove(self.outFolder + file_name)
 
     # Write session exporter with a predefined export politics
     def write_session_static_exporter_uplinks(self, file, clients_list, protocol_name, local_addr, local_as, neigh_addr,
