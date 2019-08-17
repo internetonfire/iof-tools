@@ -41,4 +41,4 @@ TYPE_KEY = "type"
 gname = "small_g.graphml"
 outDir = "out/"
 src = "baseFiles/"
-node_number = 50
+node_number = 20

@@ -83,6 +83,11 @@ class Edge:
         if len(lst) > 0:
             client_list = "return bgp_next_hop ~ " + str(lst).replace("'", "") + ";"
 
+        lst = self.node2.get_customers_addresses()
+        client_list2 = ""
+        if len(lst) > 0:
+            client_list2 = "return bgp_next_hop ~ " + str(lst).replace("'", "") + ";"
+
         if self.type == "transit":
             # Write the exporter file
             self.write_session_static_exporter_uplinks(self.bgpSessionFile1, str(client_list), "h_" +
@@ -108,6 +113,14 @@ class Edge:
                                                      str(int(self.node1.name) + 1),
                                                      self.node2.get_external_addr(self.node1),
                                                      str(int(self.node2.name) + 1), self.node1.mrai, str(1))
+            # Include the file in the node main file
+            self.node1.include_in_main(self.bgpSessionFile1_name)
+            self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" + str(self.node2.name)
+                                                     + "_" + "h_" + str(self.node1.name),
+                                                     self.node2.get_external_addr(self.node1),
+                                                     str(int(self.node2.name) + 1),
+                                                     self.node1.get_external_addr(self.node2),
+                                                     str(int(self.node1.name) + 1), self.node2.mrai, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
 
