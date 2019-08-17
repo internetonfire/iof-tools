@@ -42,7 +42,7 @@ Not mandatory args:
 *    --directories: this args does not require parameters, if present the output will be formatted to folders for each bird node
 *    --help, -h: show this help
 
-Example compleate command:
+Example complete command:
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories`
 
