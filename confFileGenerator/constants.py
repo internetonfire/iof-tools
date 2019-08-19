@@ -35,6 +35,7 @@ BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_UPLINKS = "templates/bgpSession_static
 BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_PEERS = "templates/bgpSession_static_route_template_peers.template"
 BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_CLIENTS = "templates/bgpSession_static_route_template_clients.template"
 BIRD_TEMPLATE_PATH = "templates/bird_template.template"
+MRAI_TEMPLATE_FILE = "templates/mrai.template"
 
 TYPE_KEY = "type"
 
@@ -42,6 +43,7 @@ gname = "small_g.graphml"
 outDir = "out/"
 src = "baseFiles/"
 node_number = 20
+mrai_type = 0
 
 HELP_MESSAGE = """
 Conf file generator for bird written by Mattia Milani, mattia.milani@studenti.unitn.it

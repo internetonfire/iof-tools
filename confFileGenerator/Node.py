@@ -52,6 +52,8 @@ class Node:
             self.bird_template = bird_file.read()
         with open(BGP_SESSION_EXPORTER_TEMPLATE_PATH, "r") as bgp_file:
             self.bgp_session_exporter = bgp_file.read()
+        with open(MRAI_TEMPLATE_FILE, "r") as mrai_file:
+            self.mrai_template = mrai_file.read()
 
         self.mainOutFile = open(self.outFolder + self.mainOutFileName, 'w+')
         self.sessionExporterFile = None

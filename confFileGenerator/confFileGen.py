@@ -22,20 +22,25 @@ import os.path
 import shutil
 from Node import Node
 from Edge import Edge
+import constants
 from constants import *
 import sys
 
 gname = ""
 outDir = ""
 directories = False
+mrai = True
 
 options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'out=',
                                                       'nnodes=',
                                                       'directories',
                                                       'help',
-                                                      'h'
+                                                      'h',
+                                                      'nomrai',
+                                                      'mraitype='
                                                       ])
+
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
     print(HELP_MESSAGE)
     sys.exit(0)
@@ -51,6 +56,10 @@ for opt, arg in options:
         node_number = int(arg)
     if opt in '--directories':
         directories = True
+    if opt in '--nomrai':
+        mrai = False
+    if opt in '--mraitype':
+        constants.mrai_type = int(arg)
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -74,7 +83,7 @@ if directories:
 # I read all the nodes and I config the objects
 nodes_dict = {}
 for n in graph.nodes(data=True):
-    if 'mrai' in n[1]:
+    if 'mrai' in n[1] and mrai:
         if directories:
             new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/', n[1]['mrai'])
         else:

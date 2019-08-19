@@ -17,6 +17,7 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
+import constants
 from constants import *
 import os.path
 
@@ -106,6 +107,14 @@ class Edge:
         if len(lst) > 0:
             client_list2 = "return bgp_next_hop ~ " + str(lst).replace("'", "") + ";"
 
+        mrai_content1 = ""
+        mrai_content2 = ""
+
+        if self.node1.mrai != 0:
+            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.node1.mrai, mrai_type=constants.mrai_type)
+        if self.node2.mrai != 0:
+            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.node2.mrai, mrai_type=constants.mrai_type)
+
         if self.type == "transit":
             # Write the exporter file
             self.write_session_static_exporter_uplinks(self.bgpSessionFile1, str(client_list), "h_" +
@@ -113,14 +122,14 @@ class Edge:
                                                        self.node1.get_external_addr(self.node2),
                                                        str(int(self.node1.name) + 1),
                                                        self.node2.get_external_addr(self.node1),
-                                                       str(int(self.node2.name) + 1), self.node1.mrai, str(1))
+                                                       str(int(self.node2.name) + 1), mrai_content1, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
             self.write_session_static_exporter_clients(self.bgpSessionFile2, "h_" + str(self.node2.name) + "_" + "h_"
                                                        + str(self.node1.name), self.node2.get_external_addr(self.node1),
                                                        str(int(self.node2.name) + 1),
                                                        self.node1.get_external_addr(self.node2),
-                                                       str(int(self.node1.name) + 1), self.node2.mrai, str(1))
+                                                       str(int(self.node1.name) + 1), mrai_content2, str(1))
             # Include file in the node main file
             self.node2.include_in_main(self.bgpSessionFile2_name)
         if self.type == "peer":
@@ -130,7 +139,7 @@ class Edge:
                                                      self.node1.get_external_addr(self.node2),
                                                      str(int(self.node1.name) + 1),
                                                      self.node2.get_external_addr(self.node1),
-                                                     str(int(self.node2.name) + 1), self.node1.mrai, str(1))
+                                                     str(int(self.node2.name) + 1), mrai_content1, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
             self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" + str(self.node2.name)
@@ -138,45 +147,45 @@ class Edge:
                                                      self.node2.get_external_addr(self.node1),
                                                      str(int(self.node2.name) + 1),
                                                      self.node1.get_external_addr(self.node2),
-                                                     str(int(self.node1.name) + 1), self.node2.mrai, str(1))
+                                                     str(int(self.node1.name) + 1), mrai_content2, str(1))
             # Include the file in the node main file
             self.node2.include_in_main(self.bgpSessionFile2_name)
 
     # Write session exporter with a predefined export politics
     def write_session_static_exporter_uplinks(self, file, clients_list, protocol_name, local_addr, local_as, neigh_addr,
-                                              neigh_as, mrai, bgp_local_pref):
+                                              neigh_as, mrai_content, bgp_local_pref):
         file.write(self.bgp_session_static_uplinks.format(rt_export_name="rt_export_" + protocol_name,
                                                           client_list=clients_list, filter_in_name="filter_in_" +
                                                           protocol_name, filter_out_name="filter_out_" + protocol_name,
                                                           peer_as_filter=neigh_as, protocol_name=protocol_name,
                                                           local_addr=local_addr, local_as=local_as,
                                                           peer_addr=neigh_addr, peer_as=neigh_as, hold_timer=HOLD_TIMER,
-                                                          mrai_timer=mrai, connect_retry_timer=CONNECT_RETRY_TIMER,
+                                                          mrai=mrai_content, connect_retry_timer=CONNECT_RETRY_TIMER,
                                                           connect_delay_timer=CONNECT_DELAY_TIMER,
                                                           startup_hold_timer=STARTUP_HOLD_TIMER,
                                                           local_pref=bgp_local_pref))
 
     def write_session_static_exporter_peers(self, file, clients_list, protocol_name, local_addr, local_as, neigh_addr,
-                                            neigh_as, mrai, bgp_local_pref):
+                                            neigh_as, mrai_content, bgp_local_pref):
         file.write(self.bgp_session_static_peers.format(rt_export_name="rt_export_" + protocol_name,
                                                         client_list=clients_list, filter_in_name="filter_in_" +
                                                         protocol_name, filter_out_name="filter_out_" + protocol_name,
                                                         peer_as_filter=neigh_as, protocol_name=protocol_name,
                                                         local_addr=local_addr, local_as=local_as, peer_addr=neigh_addr,
-                                                        peer_as=neigh_as, hold_timer=HOLD_TIMER, mrai_timer=mrai,
+                                                        peer_as=neigh_as, hold_timer=HOLD_TIMER, mrai=mrai_content,
                                                         connect_retry_timer=CONNECT_RETRY_TIMER,
                                                         connect_delay_timer=CONNECT_DELAY_TIMER,
                                                         startup_hold_timer=STARTUP_HOLD_TIMER,
                                                         local_pref=bgp_local_pref))
 
     def write_session_static_exporter_clients(self, file, protocol_name, local_addr, local_as, neigh_addr, neigh_as,
-                                              mrai, bgp_local_pref):
+                                              mrai_content, bgp_local_pref):
         file.write(self.bgp_session_static_clients.format(filter_in_name="filter_in_" + protocol_name,
                                                           filter_out_name="filter_out_" + protocol_name,
                                                           peer_as_filter=neigh_as, protocol_name=protocol_name,
                                                           local_addr=local_addr, local_as=local_as,
                                                           peer_addr=neigh_addr, peer_as=neigh_as, hold_timer=HOLD_TIMER,
-                                                          mrai_timer=mrai, connect_retry_timer=CONNECT_RETRY_TIMER,
+                                                          mrai=mrai_content, connect_retry_timer=CONNECT_RETRY_TIMER,
                                                           connect_delay_timer=CONNECT_DELAY_TIMER,
                                                           startup_hold_timer=STARTUP_HOLD_TIMER,
                                                           local_pref=bgp_local_pref))
