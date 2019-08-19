@@ -140,7 +140,7 @@ class Edge:
                                                      self.node1.get_external_addr(self.node2),
                                                      str(int(self.node1.name) + 1), self.node2.mrai, str(1))
             # Include the file in the node main file
-            self.node1.include_in_main(self.bgpSessionFile1_name)
+            self.node2.include_in_main(self.bgpSessionFile2_name)
 
     # Write session exporter with a predefined export politics
     def write_session_static_exporter_uplinks(self, file, clients_list, protocol_name, local_addr, local_as, neigh_addr,

@@ -30,6 +30,7 @@
             neighbor {peer_addr} as {peer_as};
             hold time {hold_timer};
             mrai time {mrai_timer};
+            mrai type 1;
             ipv4{{
                 import filter {filter_in_name};
                 # export where proto = "export_protocol";
