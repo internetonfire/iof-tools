@@ -36,6 +36,7 @@ BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_PEERS = "templates/bgpSession_static_r
 BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_CLIENTS = "templates/bgpSession_static_route_template_clients.template"
 BIRD_TEMPLATE_PATH = "templates/bird_template.template"
 MRAI_TEMPLATE_FILE = "templates/mrai.template"
+NETWORK_TEMPLATE_PATH = "network_config.template"
 
 TYPE_KEY = "type"
 

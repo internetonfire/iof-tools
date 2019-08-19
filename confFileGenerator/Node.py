@@ -19,7 +19,7 @@
 import ipaddress
 from constants import *
 import os.path
-
+from jinja2 import Environment, FileSystemLoader
 
 class Node:
     nodeIpAddr_network = ipaddress.ip_network(u'200.0.0.0/8')
@@ -61,6 +61,7 @@ class Node:
         self.exportedNetworks = []
         self.exportedNetworks_str = ""
         self.log_file_name = "log_h_" + str(self.name) + ".log"
+        self.network_file_name = "network-config-node-" + str(self.name) + ".sh"
 
         self.eth_dict = {}
         self.customer = {}
@@ -111,6 +112,17 @@ class Node:
                                       device_conf_path=DEVICE_CONF_PATH,
                                       filter_conf_path=FILTER_CONF_PATH,
                                       bgp_session_export_path="", bgp_session_path=""))
+
+    def write_network_configuration(self):
+        # Write the network configuration of the node
+        env = Environment(loader=FileSystemLoader('templates/'))
+        baseline = env.get_template(NETWORK_TEMPLATE_PATH)
+        ip_addresses = []
+        for _,ip in self.eth_dict.items():
+            ip_addresses.append(str(ip))
+        rendered_template = baseline.render(name=self.name,ipaddresses=ip_addresses)
+        with open(self.outFolder + self.network_file_name, "w") as netfd:
+            netfd.write(rendered_template)
 
     def delete_export_file(self):
         if os.path.isfile(self.outFolder + self.sessionExporterFile_name):
