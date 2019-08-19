@@ -41,6 +41,8 @@ Not mandatory args:
 *    --nnodes [number]: redefine the default number of nodes used to create the file, if the file already exists this parameter will be ignored
 *    --directories: this args does not require parameters, if present the output will be formatted to folders for each bird node
 *    --help, -h: show this help
+*    --nomrai: this option will override the mrai in the graphml file and preclude mrai commands to be in the conf file
+*    --mraitype: define the type of mrai that will be used in the conf files, default is 0
 
 Example complete command:
 
@@ -48,3 +50,6 @@ Example complete command:
 
 This command generate the file graph.graphml if it does not exists and will be used only 10 nodes (instead of 20, default for new files).
 Will be used the 'out' directory to save the files, and thanks to `--directories` all files will be moved to the corresponding directory. 
+with this command will also be inserted the commands for mrai, to avoid this is possible to use the following command:
+
+`python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories --nomrai`
