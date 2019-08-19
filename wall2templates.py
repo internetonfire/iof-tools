@@ -21,6 +21,16 @@ node_template = """<node client_id="%s" exclusive="true" \
     <disk_image name="urn:publicid:IDN+wall2.ilabt.iminds.be+image+emulab-ops:UBUNTU18-64-STD"/>
   </sliver_type>
   <location xmlns="http://jfed.iminds.be/rspec/ext/jfed/1" x="%f" y="%f"/>
+  <interface client_id="%s:if0">
+      <ip address="192.168.0.1" netmask="255.255.255.0" type="ipv4"/>
+    </interface>
   <!--hardware_type="%s"-->
 </node>\n"""
 
+network_header = """<link client_id="link0">
+    <component_manager name="urn:publicid:IDN+wall2.ilabt.iminds.be+authority+cm"/>
+"""
+network_template = """   <interface_ref client_id="%s:if0"/>\n"""
+
+network_footer = """   <link_type name="lan"/>
+  </link>"""

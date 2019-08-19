@@ -11,7 +11,7 @@ import sys
 
 from const import AVAILABLE, COMPONENT_ID, COMPONENT_NAME, FOOTER_TEMPLATE, \
     HARDWARE_TYPE, HEADER_TEMPLATE, LOCATION, NAME, NODE, NODE_TEMPLATE, NOW, \
-    TRUE, X, Y, Z
+    TRUE, X, Y, Z, NETWORK_HEADER, NETWORK_FOOTER, NETWORK_TEMPLATE
 
 
 def matches(name, filters, nodes):
@@ -50,13 +50,14 @@ def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
     e = it.root
 
     t = __import__('%stemplates' % testbed, globals(), locals(),
-                   [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE])
+                   [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE, NETWORK_HEADER, NETWORK_FOOTER, NETWORK_TEMPLATE])
     h = 40
     w = 120
     xs = 100
     ys = 100
 
     xml = ""
+    xmlnetwork = ""
 
     for node in e.findall(NODE):
         name = node.get(COMPONENT_NAME)
@@ -89,11 +90,12 @@ def fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware_types,
             domain = component_id.split("+")[1]
             hostname = "{}.{}".format(name, domain)
             xml += t.node_template % \
-                (name, component_id, xs + col * w, ys + row * h, hw)
+                (name, component_id, xs + col * w, ys + row * h, name, hw)
+            xmlnetwork += t.network_template % (name)
             if dump_file != "":
                 df.write("%s\n" % name)
             n += 1
-    return n, xml
+    return n, xml, xmlnetwork
 
 
 parser = ArgumentParser()
@@ -145,7 +147,7 @@ else:
 dump_file = args.dump
 
 t = __import__('%stemplates' % testbeds[0], globals(), locals(),
-               [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE])
+               [NODE_TEMPLATE, HEADER_TEMPLATE, FOOTER_TEMPLATE, NETWORK_HEADER, NETWORK_FOOTER, NETWORK_TEMPLATE])
 
 df = None
 if dump_file != "":
@@ -155,9 +157,12 @@ print(t.header_template)
 
 n = 0
 for testbed in testbeds:
-    n, xml = fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware,
+    n, xmlnode,xmlnetwork = fetch_nodes(testbed, n, use_hardware, filters, nodes, hardware,
                          dump_file, df)
-    print(xml)
+    print(xmlnode)
+    print(t.network_header)
+    print(xmlnetwork)
+    print(t.network_footer)
 
 print(t.footer_template)
 
