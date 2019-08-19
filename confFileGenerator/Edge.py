@@ -27,9 +27,38 @@ class Edge:
     nodeIpNetworks_externalEth = list(ipaddress.ip_network(u'10.0.0.0/12').subnets(new_prefix=30))
     counter_external_networks = 0
 
-    def __init__(self, node1, node2, _type, out1, out2):
+    def __init__(self, node1, node2, _type, addresses, out1, out2):
+        if len(addresses) != 2:
+            raise exception('invalid addresses parameter, addresses is a list of exactly two str ips')
+
         self.node1 = node1
         self.node2 = node2
+        if addresses[0] != "" and addresses[1] != "":
+            self.node1Eth = ipaddress.IPv4Interface(addresses[0])
+            self.node2Eth = ipaddress.IPv4Interface(addresses[1])
+
+            if self.node1Eth.network != self.node2Eth.network:
+                raise Exception('invalid addresses parameter, addresses needs to belong to the same network')
+            if self.node1Eth.netmask != self.node2Eth.netmask or int(self.node1Eth.netmask) != 4294967292:
+                raise Exception('invalid addresses parameter, addresses needs to belong to a /30 network')
+
+            self.edge_network = self.node1Eth.network
+            self.node1.set_new_external_addr(self.node2, self.node1Eth.ip)
+            self.node2.set_new_external_addr(self.node1, self.node2Eth.ip)
+        else:
+            # If this edge was not created before I need a new network, and to assign the addresses
+            # to the node interfaces
+            if self.counter_external_networks < len(self.nodeIpNetworks_externalEth) and \
+                    (self.node1.get_external_addr(self.node2) is None and self.node2.get_external_addr(
+                        self.node1) is None):
+                # Get the network
+                self.edge_network = Edge.nodeIpNetworks_externalEth[Edge.counter_external_networks]
+                Edge.counter_external_networks += 1
+                # Assign addresses
+                self.node1.set_new_external_addr(self.node2, self.edge_network[1])
+                self.node2.set_new_external_addr(self.node1, self.edge_network[2])
+            elif self.counter_external_networks >= len(self.nodeIpNetworks_externalEth):
+                raise ValueError('No more networks available for edges')
         self.type = _type
         self.outFolder1 = out1
         self.outFolder2 = out2
@@ -47,18 +76,6 @@ class Edge:
             self.bgp_session_static_peers = bgp_file.read()
         with open(BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_CLIENTS, "r") as bgp_file:
             self.bgp_session_static_clients = bgp_file.read()
-
-        # If this edge was not created before I need a new network, and to assign the addresses to the node interfaces
-        if self.counter_external_networks < len(self.nodeIpNetworks_externalEth) and \
-                (self.node1.get_external_addr(self.node2) is None and self.node2.get_external_addr(self.node1) is None):
-            # Get the network
-            self.edge_network = Edge.nodeIpNetworks_externalEth[Edge.counter_external_networks]
-            Edge.counter_external_networks += 1
-            # Assign addresses
-            self.node1.set_new_external_addr(self.node2, self.edge_network[1])
-            self.node2.set_new_external_addr(self.node1, self.edge_network[2])
-        elif self.counter_external_networks >= len(self.nodeIpNetworks_externalEth):
-            raise ValueError('No more networks available for edges')
 
         # Add the node to the node set depending on the edge type
         if self.type == "transit":

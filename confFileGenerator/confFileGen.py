@@ -92,11 +92,19 @@ for n in graph.nodes(data=True):
 # I read all the edges and config the objects
 edges_dict = {}
 for edg in graph.edges(data=True):
+    ipAddrEth1 = ""
+    ipAddrEth2 = ""
+
+    if {'ip_eth_n1', 'ip_eth_n2'}.issubset(edg[2]):
+        ipAddrEth1 = edg[2]['ip_eth_n1']
+        ipAddrEth2 = edg[2]['ip_eth_n2']
+
     if directories:
-        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], outDir + '/h_' + nodes_dict[edg[0]].name + '/',
-                        outDir + '/h_' + nodes_dict[edg[1]].name + '/')
+        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
+                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/')
     else:
-        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], outDir, outDir)
+        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
+                        outDir, outDir)
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies
