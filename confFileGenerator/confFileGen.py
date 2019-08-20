@@ -31,6 +31,7 @@ outDir = ""
 directories = False
 mrai = True
 ipnetworks = ""
+preferences = ""
 networks = True
 
 options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
@@ -43,7 +44,8 @@ options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'mraitype=',
                                                       'prepath=',
                                                       'ipnetworksgraph=',
-                                                      'noautomaticnetworks'
+                                                      'noautomaticnetworks',
+                                                      'preferences='
                                                       ])
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
@@ -71,6 +73,8 @@ for opt, arg in options:
         ipnetworks = str(arg)
     if opt in '--noautomaticnetworks':
         networks = False
+    if opt in '--preferences':
+        preferences = str(arg)
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -133,12 +137,17 @@ for edg in graph.edges(data=True):
         ipAddrEth1 = edg[2]['ip_eth_n1']
         ipAddrEth2 = edg[2]['ip_eth_n2']
 
+    pref = 1
+    if {preferences}.issubset(edg[2]):
+        pref = int(edg[2][preferences])
+
     if directories:
         new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/')
+                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/',
+                        pref=pref)
     else:
         new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir, outDir)
+                        outDir, outDir, pref=pref)
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies
