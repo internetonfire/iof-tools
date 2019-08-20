@@ -45,7 +45,7 @@ Not mandatory args:
 *    --mraitype: define the type of mrai that will be used in the conf files, default is 0
 *    --prepath: path used in front of all files (use the path where the conf files will be saved), default is "/etc/bird/"
 *    --ipnetworksgraph: defines the name of the attribute defined in the graphml file that represents the network address list that will be shared, it needs to be a node attribute and since it's not possible to define a list inside a graphml attribute, network addresses should respect the following rule `[addr]/[netmask 8 to 24],[addr2]/[netmask], ecc`, **no checks are performed between networks**
-*    --noautomaticnetworks: if a C node have 0 netowrks defined with ipnetworksgraph or if ipnetworksgraph is not defined, an automatic network will be assigned to the node, with this param the automatic network will not be assigned, so a C could share 0 networks
+*    --noautomaticnetworks: if a C node has 0 netowrks defined with ipnetworksgraph or if ipnetworksgraph is not defined, an automatic network will be assigned to the node, with this param the automatic network will not be assigned, so a C could share 0 networks
 
 Example complete command:
 
