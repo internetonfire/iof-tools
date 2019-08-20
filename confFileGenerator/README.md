@@ -56,3 +56,7 @@ Will be used the 'out' directory to save the files, and thanks to `--directories
 with this command will also be inserted the commands for mrai, to avoid this is possible to use the following command:
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories --nomrai`
+
+###Graph example
+
+Inside the file `graphExample` there is an example of graph with all the attributes needed to use the advanced options
