@@ -89,18 +89,20 @@ class Node:
             addr_list.append(str(node.get_external_addr(self)))
         return addr_list
 
-    def add_addr_to_export(self):
-        if Node.counter_networks < len(Node.nodeIpNetworks_network):
+    def add_addr_to_export(self, ipNetworksToShare = ""):
+        if Node.counter_networks < len(Node.nodeIpNetworks_network) and ipNetworksToShare == "":
             self.exportedNetworks.append(Node.nodeIpNetworks_network[Node.counter_networks])
             Node.counter_networks += 1
+        elif ipNetworksToShare != "":
+            network = ipaddress.ip_network(ipNetworksToShare)
+            self.exportedNetworks.append(network)
         else:
             raise ValueError('No more networks free')
-        self.delete_export_file()
+        # self.delete_export_file()
 
-        self.exportedNetworks_str += "route " + str(self.exportedNetworks[-1]) + " via \"lo\";\n\t\t\t"
+        self.exportedNetworks_str += "route " + str(self.exportedNetworks[-1]) + " via \"lo\";\n\t\t\t\t\t\t"
 
         self.write_export_file()
-        self.include_in_main(self.sessionExporterFile_name)
 
     def write_main_file(self):
         # Write the template inside the file

@@ -30,6 +30,8 @@ gname = ""
 outDir = ""
 directories = False
 mrai = True
+ipnetworks = ""
+networks = True
 
 options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'out=',
@@ -39,7 +41,9 @@ options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'h',
                                                       'nomrai',
                                                       'mraitype=',
-                                                      'prepath='
+                                                      'prepath=',
+                                                      'ipnetworksgraph=',
+                                                      'noautomaticnetworks'
                                                       ])
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
@@ -63,6 +67,10 @@ for opt, arg in options:
         constants.mrai_type = int(arg)
     if opt in '--prepath':
         constants.PREPATH = str(arg)
+    if opt in '--ipnetworksgraph':
+        ipnetworks = str(arg)
+    if opt in '--noautomaticnetworks':
+        networks = False
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -86,6 +94,10 @@ if directories:
 # I read all the nodes and I config the objects
 nodes_dict = {}
 for n in graph.nodes(data=True):
+    ipNetworksToShare = []
+    if ipnetworks in n[1]:
+        ipNetworksToShare = n[1][ipnetworks].split(',')
+
     if 'mrai' in n[1] and mrai:
         if directories:
             new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/', n[1]['mrai'])
@@ -98,7 +110,17 @@ for n in graph.nodes(data=True):
             new_node = Node(n[0], n[1]['type'], outDir)
     # If the node is of type c it will share some addresses
     if n[1][TYPE_KEY] == 'C':
-        new_node.add_addr_to_export()
+        if len(ipNetworksToShare) == 1:
+            new_node.add_addr_to_export(ipNetworksToShare[0])
+            new_node.include_in_main(new_node.sessionExporterFile_name)
+        elif len(ipNetworksToShare) > 1:
+            for net in ipNetworksToShare:
+                new_node.add_addr_to_export(net)
+            new_node.include_in_main(new_node.sessionExporterFile_name)
+        elif networks and len(ipNetworksToShare) == 0:
+            new_node.add_addr_to_export()
+            new_node.include_in_main(new_node.sessionExporterFile_name)
+
     nodes_dict[n[0]] = new_node
 
 # I read all the edges and config the objects
