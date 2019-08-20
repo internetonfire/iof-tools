@@ -58,6 +58,11 @@ with this command will also be inserted the commands for mrai, to avoid this is 
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories --nomrai`
 
+Is possible to set the interface addresses for each link, with the attributes:
+* ip_eth_n1
+* ip_eth_n1
+The two ip needs to be part of the same `/30` network, **there is no check between couple of interfaces that networks addresses are not already in use**  
+
 ###Graph example
 
 Inside the file `graphExample` there is an example of graph with all the attributes needed to use the advanced options
