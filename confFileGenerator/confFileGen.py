@@ -38,7 +38,8 @@ options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'help',
                                                       'h',
                                                       'nomrai',
-                                                      'mraitype='
+                                                      'mraitype=',
+                                                      'prepath='
                                                       ])
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
@@ -60,6 +61,8 @@ for opt, arg in options:
         mrai = False
     if opt in '--mraitype':
         constants.mrai_type = int(arg)
+    if opt in '--prepath':
+        constants.PREPATH = str(arg)
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):

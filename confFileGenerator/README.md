@@ -43,6 +43,7 @@ Not mandatory args:
 *    --help, -h: show this help
 *    --nomrai: this option will override the mrai in the graphml file and preclude mrai commands to be in the conf file
 *    --mraitype: define the type of mrai that will be used in the conf files, default is 0
+*    --prepath: path used in front of all files (use the path where the conf files will be saved), default is "/etc/bird/"
 
 Example complete command:
 

@@ -17,6 +17,7 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
+import constants
 from constants import *
 import os.path
 from jinja2 import Environment, FileSystemLoader
@@ -105,12 +106,12 @@ class Node:
         # Write the template inside the file
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
-            self.bird_template.format(log_file_path="/etc/bird/"+self.log_file_name, log_mode=LOG_MODE,
+            self.bird_template.format(log_file_path=constants.PREPATH+self.log_file_name, log_mode=LOG_MODE,
                                       dbg_mode=DBG_MODE, dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
-                                      kernel_conf_path=KERNEL_CONF_PATH,
-                                      direct_conf_path=DIRECT_CONF_PATH,
-                                      device_conf_path=DEVICE_CONF_PATH,
-                                      filter_conf_path=FILTER_CONF_PATH,
+                                      kernel_conf_path=constants.PREPATH + KERNEL_CONF_PATH,
+                                      direct_conf_path=constants.PREPATH + DIRECT_CONF_PATH,
+                                      device_conf_path=constants.PREPATH + DEVICE_CONF_PATH,
+                                      filter_conf_path=constants.PREPATH + FILTER_CONF_PATH,
                                       bgp_session_export_path="", bgp_session_path=""))
 
     def write_network_configuration(self):
@@ -134,7 +135,7 @@ class Node:
                                                                         addr_to_export=self.exportedNetworks_str))
 
     def include_in_main(self, file_name):
-        self.mainOutFile.write("include  \"/etc/bird/" + file_name + "\";\n")
+        self.mainOutFile.write("include  \"" + constants.PREPATH + file_name + "\";\n")
 
     def set_new_external_addr(self, neighbor_node, addr):
         self.eth_dict[str(neighbor_node.name)] = addr
