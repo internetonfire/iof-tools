@@ -19,5 +19,5 @@ ip link set dev br-tap{{name}} up
 
 # Add ip addresses related to this AS
 {% for i in ipaddresses -%}
-ip netns exec ns{{name}} {{ i }}/30 dev tap{{name}}
+ip netns exec ns{{name}} ip address add {{ i }}/30 dev tap{{name}}
 {% endfor -%}
