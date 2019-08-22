@@ -137,9 +137,17 @@ for edg in graph.edges(data=True):
         ipAddrEth1 = edg[2]['ip_eth_n1']
         ipAddrEth2 = edg[2]['ip_eth_n2']
 
-    pref = 1
+    pref = []
     if {preferences}.issubset(edg[2]):
-        pref = int(edg[2][preferences])
+        multiPrf = [int(i) for i in edg[2][preferences].split(',')]
+        if len(multiPrf) == 1:
+            pref.append(multiPrf[0])
+            pref.append(multiPrf[0])
+        elif len(multiPrf) == 2:
+            pref = multiPrf
+        else:
+            raise exception('Invalid number of preferences values, for bidirection preference you need to insert 1 '
+                            'value, for two differents values you need to insert two values, like "1,2"')
 
     if directories:
         new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],

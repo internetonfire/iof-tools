@@ -7,6 +7,7 @@
   <key attr.name="regions" attr.type="string" for="node" id="d1" />
   <key attr.name="type" attr.type="string" for="node" id="d0" />
   <key attr.name="ipNetworksToShare" attr.type="string" for="node" id="d6" />
+  <key attr.name="pref" attr.type="string" for="edge" id="d7" />
   <graph edgedefault="directed">
     <node id="6">
       <data key="d0">T</data>
@@ -54,36 +55,43 @@
     </node>
     <edge source="0" target="4">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.1/30</data>
       <data key="d5">10.0.0.2/30</data>
     </edge>
     <edge source="1" target="4">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.14/30</data>
       <data key="d5">10.0.0.13/30</data>
     </edge>
     <edge source="2" target="5">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.5/30</data>
       <data key="d5">10.0.0.6/30</data>
     </edge>
     <edge source="3" target="5">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.9/30</data>
       <data key="d5">10.0.0.10/30</data>
     </edge>
     <edge source="4" target="6">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.17/30</data>
       <data key="d5">10.0.0.18/30</data>
     </edge>
     <edge source="5" target="7">
       <data key="d2">transit</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.22/30</data>
       <data key="d5">10.0.0.21/30</data>
     </edge>
     <edge source="6" target="7">
       <data key="d2">peer</data>
+      <data key="d7">5</data>
       <data key="d4">10.0.0.26/30</data>
       <data key="d5">10.0.0.25/30</data>
     </edge>
