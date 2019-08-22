@@ -28,21 +28,24 @@ class Edge:
     nodeIpNetworks_externalEth = list(ipaddress.ip_network(u'10.0.0.0/12').subnets(new_prefix=30))
     counter_external_networks = 0
 
-    def __init__(self, node1, node2, _type, addresses, out1, out2, pref=None):
-        if len(addresses) != 2:
-            raise exception('invalid addresses parameter, addresses is a list of exactly two str ips')
-
+    def __init__(self, node1, node2, edge, mrai, out1, out2):
         self.node1 = node1
         self.node2 = node2
 
-        if pref is None:
-            self.pref = [0, 0]
-        else:
-            self.pref = pref
+        self.mrai_node1 = 0
+        self.mrai_node2 = 0
 
-        if addresses[0] != "" and addresses[1] != "":
-            self.node1Eth = ipaddress.IPv4Interface(addresses[0])
-            self.node2Eth = ipaddress.IPv4Interface(addresses[1])
+        if mrai:
+            if node1.name == edge[2]['node_a']:
+                self.mrai_node1 = int(float(edge[2]['mrai_a'])*1000)
+                self.mrai_node2 = int(float(edge[2]['mrai_b'])*1000)
+            else:
+                self.mrai_node1 = int(float(edge[2]['mrai_b']) * 1000)
+                self.mrai_node2 = int(float(edge[2]['mrai_a']) * 1000)
+
+        if {'ip_eth_n1', 'ip_eth_n2'}.issubset(edge[2]):
+            self.node1Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n1'])
+            self.node2Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n2'])
 
             if self.node1Eth.network != self.node2Eth.network:
                 raise Exception('invalid addresses parameter, addresses needs to belong to the same network')
@@ -66,7 +69,9 @@ class Edge:
                 self.node2.set_new_external_addr(self.node1, self.edge_network[2])
             elif self.counter_external_networks >= len(self.nodeIpNetworks_externalEth):
                 raise ValueError('No more networks available for edges')
-        self.type = _type
+        if 'type' not in edge[2]:
+            raise ValueError("No type in edge, this arg is mandatory")
+        self.type = edge[2]['type']
         self.outFolder1 = out1
         self.outFolder2 = out2
 
@@ -116,10 +121,10 @@ class Edge:
         mrai_content1 = ""
         mrai_content2 = ""
 
-        if self.node1.mrai != 0:
-            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.node1.mrai, mrai_type=constants.mrai_type)
-        if self.node2.mrai != 0:
-            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.node2.mrai, mrai_type=constants.mrai_type)
+        if self.mrai_node1 != 0:
+            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.mrai_node1, mrai_type=constants.mrai_type)
+        if self.mrai_node2 != 0:
+            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.mrai_node2, mrai_type=constants.mrai_type)
 
         if self.type == "transit":
             # Write the exporter file
@@ -128,14 +133,14 @@ class Edge:
                                                        self.node1.get_external_addr(self.node2),
                                                        str(int(self.node1.name) + 1),
                                                        self.node2.get_external_addr(self.node1),
-                                                       str(int(self.node2.name) + 1), mrai_content1, str(self.pref[0]))
+                                                       str(int(self.node2.name) + 1), mrai_content1, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
             self.write_session_static_exporter_clients(self.bgpSessionFile2, "h_" + str(self.node2.name) + "_" + "h_"
                                                        + str(self.node1.name), self.node2.get_external_addr(self.node1),
                                                        str(int(self.node2.name) + 1),
                                                        self.node1.get_external_addr(self.node2),
-                                                       str(int(self.node1.name) + 1), mrai_content2, str(self.pref[1]))
+                                                       str(int(self.node1.name) + 1), mrai_content2, str(1))
             # Include file in the node main file
             self.node2.include_in_main(self.bgpSessionFile2_name)
         if self.type == "peer":
@@ -145,17 +150,16 @@ class Edge:
                                                      self.node1.get_external_addr(self.node2),
                                                      str(int(self.node1.name) + 1),
                                                      self.node2.get_external_addr(self.node1),
-                                                     str(int(self.node2.name) + 1), mrai_content1, str(self.pref[0]))
+                                                     str(int(self.node2.name) + 1), mrai_content1, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
             if not constants.doublepeering:
-                print("double peering not active")
                 self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" +
                                                          str(self.node2.name) + "_" + "h_" + str(self.node1.name),
                                                          self.node2.get_external_addr(self.node1),
                                                          str(int(self.node2.name) + 1),
                                                          self.node1.get_external_addr(self.node2),
-                                                         str(int(self.node1.name) + 1), mrai_content2, str(self.pref[1]))
+                                                         str(int(self.node1.name) + 1), mrai_content2, str(1))
                 # Include the file in the node main file
                 self.node2.include_in_main(self.bgpSessionFile2_name)
 

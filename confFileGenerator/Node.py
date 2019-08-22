@@ -17,7 +17,9 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
+# TODO this is not realy constants if i done this
 import constants
+# TODO usage of import * is discuraged
 from constants import *
 import os.path
 from jinja2 import Environment, FileSystemLoader
@@ -31,17 +33,23 @@ class Node:
     counter_networks = 1
     ClientList = []
 
-    def __init__(self, name, node_type, out_folder, mrai='0'):
-        self.name = name
-        self.type = node_type
-        self.mrai = int(float(mrai)*1000)
+    def __init__(self, node, out_folder, mrai='0'):
+        """
+
+        :param node:
+        :param out_folder:
+        """
+        self.name = node[0]
+        if 'type' not in node[1]:
+            raise ValueError("No type in node, this arg is mandatory")
+        self.type = node[1]['type']
 
         if self.type == "C":
             Node.ClientList.append(int(self.name)+1)
 
         self.outFolder = out_folder
         self.mainOutFileName = "bgp_h_" + str(self.name) + ".conf"
-        self.sessionExporterFile_name = "bgpSessionExporter_h_" + str(name) + ".conf"
+        self.sessionExporterFile_name = "bgpSessionExporter_h_" + str(self.name) + ".conf"
         if Node.counter_node < Node.nodeIpAddr_network.num_addresses - 1:
             self.router_addr = Node.nodeIpAddr_network[Node.counter_node]
             Node.counter_node += 1

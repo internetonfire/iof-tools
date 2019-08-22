@@ -60,8 +60,8 @@ for opt, arg in options:
         gname = arg
     if opt in '--out':
         outDir = arg
-    if opt in '--nnodes':
-        node_number = int(arg)
+    """if opt in '--nnodes':
+        node_number = int(arg)"""
     if opt in '--directories':
         directories = True
     if opt in '--nomrai':
@@ -80,9 +80,9 @@ for opt, arg in options:
         constants.doublepeering = True
 
 # If the graph file is not present it will be created with a predefined number of nodes
-if not os.path.isfile(gname):
+"""if not os.path.isfile(gname):
     small_g = internet_as_graph(node_number)
-    nx.write_graphml(small_g, gname)
+    nx.write_graphml(small_g, gname)"""
 
 # If the output dire does not exists it will be created
 if not os.path.isdir(outDir):
@@ -105,22 +105,13 @@ for n in graph.nodes(data=True):
     if ipnetworks in n[1]:
         ipNetworksToShare = n[1][ipnetworks].split(',')
 
-    if 'mrai' in n[1] and mrai:
-        if directories:
-            new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/', n[1]['mrai'])
-        else:
-            new_node = Node(n[0], n[1]['type'], outDir, n[1]['mrai'])
+    if directories:
+        new_node = Node(n, outDir + '/h_' + n[0] + '/')
     else:
-        if directories:
-            new_node = Node(n[0], n[1]['type'], outDir + '/h_' + n[0] + '/')
-        else:
-            new_node = Node(n[0], n[1]['type'], outDir)
+        new_node = Node(n, outDir)
     # If the node is of type c it will share some addresses
-    if n[1][TYPE_KEY] == 'C' or n[1][TYPE_KEY] == 'CP':
-        if len(ipNetworksToShare) == 1:
-            new_node.add_addr_to_export(ipNetworksToShare[0])
-            new_node.include_in_main(new_node.sessionExporterFile_name)
-        elif len(ipNetworksToShare) > 1:
+    if set(n[1][TYPE_KEY]).issubset({'C', 'CP', 'M'}):
+        if len(ipNetworksToShare) >= 1:
             for net in ipNetworksToShare:
                 new_node.add_addr_to_export(net)
             new_node.include_in_main(new_node.sessionExporterFile_name)
@@ -133,32 +124,28 @@ for n in graph.nodes(data=True):
 # I read all the edges and config the objects
 edges_dict = {}
 for edg in graph.edges(data=True):
-    ipAddrEth1 = ""
-    ipAddrEth2 = ""
 
-    if {'ip_eth_n1', 'ip_eth_n2'}.issubset(edg[2]):
-        ipAddrEth1 = edg[2]['ip_eth_n1']
-        ipAddrEth2 = edg[2]['ip_eth_n2']
-
-    pref = []
-    if {preferences}.issubset(edg[2]):
-        multiPrf = [int(i) for i in edg[2][preferences].split(',')]
-        if len(multiPrf) == 1:
-            pref.append(multiPrf[0])
-            pref.append(multiPrf[0])
-        elif len(multiPrf) == 2:
-            pref = multiPrf
+    if {'customer'}.issubset(edg[2]):
+        customer = edg[2]['customer']
+        if customer != "none":
+            n1 = nodes_dict[customer]
+            if edg[0] == customer:
+                n2 = nodes_dict[edg[1]]
+            else:
+                n2 = nodes_dict[edg[0]]
         else:
-            raise exception('Invalid number of preferences values, for bidirection preference you need to insert 1 '
-                            'value, for two differents values you need to insert two values, like "1,2"')
+            n1 = nodes_dict[edg[0]]
+            n2 = nodes_dict[edg[1]]
+    else:
+        raise Exception('customer not defined, standard not respected')
 
     if directories:
-        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/',
-                        pref=pref)
+        new_edge = Edge(n1, n2, edg, mrai,
+                        outDir + '/h_' + nodes_dict[edg[0]].name + '/',
+                        outDir + '/h_' + nodes_dict[edg[1]].name + '/',)
     else:
-        new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir, outDir, pref=pref)
+        new_edge = Edge(n1, n2, edg, mrai, outDir, outDir)
+
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies
@@ -166,7 +153,7 @@ for edg in edges_dict:
     edges_dict[edg].write_static_exporter()
 
 # Write the network config script
-for _,node in nodes_dict.items():
+for _, node in nodes_dict.items():
     node.write_network_configuration()
 
 # Copy the base files to the simulation directory
