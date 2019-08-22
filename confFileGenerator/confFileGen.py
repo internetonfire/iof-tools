@@ -31,6 +31,7 @@ outDir = ""
 directories = False
 mrai = True
 ipnetworks = ""
+preferences = ""
 networks = True
 
 options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
@@ -43,7 +44,9 @@ options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'mraitype=',
                                                       'prepath=',
                                                       'ipnetworksgraph=',
-                                                      'noautomaticnetworks'
+                                                      'noautomaticnetworks',
+                                                      'preferences=',
+                                                      'doublepeering'
                                                       ])
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
@@ -71,6 +74,10 @@ for opt, arg in options:
         ipnetworks = str(arg)
     if opt in '--noautomaticnetworks':
         networks = False
+    if opt in '--preferences':
+        preferences = str(arg)
+    if opt in '--doublepeering':
+        constants.doublepeering = True
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -109,7 +116,7 @@ for n in graph.nodes(data=True):
         else:
             new_node = Node(n[0], n[1]['type'], outDir)
     # If the node is of type c it will share some addresses
-    if n[1][TYPE_KEY] == 'C':
+    if n[1][TYPE_KEY] == 'C' or n[1][TYPE_KEY] == 'CP':
         if len(ipNetworksToShare) == 1:
             new_node.add_addr_to_export(ipNetworksToShare[0])
             new_node.include_in_main(new_node.sessionExporterFile_name)
@@ -133,12 +140,25 @@ for edg in graph.edges(data=True):
         ipAddrEth1 = edg[2]['ip_eth_n1']
         ipAddrEth2 = edg[2]['ip_eth_n2']
 
+    pref = []
+    if {preferences}.issubset(edg[2]):
+        multiPrf = [int(i) for i in edg[2][preferences].split(',')]
+        if len(multiPrf) == 1:
+            pref.append(multiPrf[0])
+            pref.append(multiPrf[0])
+        elif len(multiPrf) == 2:
+            pref = multiPrf
+        else:
+            raise exception('Invalid number of preferences values, for bidirection preference you need to insert 1 '
+                            'value, for two differents values you need to insert two values, like "1,2"')
+
     if directories:
         new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/')
+                        outDir + '/h_' + nodes_dict[edg[0]].name + '/', outDir + '/h_' + nodes_dict[edg[1]].name + '/',
+                        pref=pref)
     else:
         new_edge = Edge(nodes_dict[edg[0]], nodes_dict[edg[1]], edg[2]['type'], [ipAddrEth1, ipAddrEth2],
-                        outDir, outDir)
+                        outDir, outDir, pref=pref)
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies

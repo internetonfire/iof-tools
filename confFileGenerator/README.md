@@ -43,11 +43,12 @@ Not mandatory args:
 * --directories: this arg does not require parameters, if present the output will be formatted to folders, for each bird node
 * --help, -h: show this help
 * --nomrai: this option will override the mrai in the graphml file and preclude mrai commands to be in the conf file (To make the conf files compatibles with old bird daemons)
-* --mraitype: define the type of mrai that will be used in the conf files, default is 0
-* --prepath: path used in front of all files (use the path where the conf files will be saved), default is "/etc/bird/"
-* --ipnetworksgraph: defines the name of the attribute in the graphml file that represents the network address list that will be shared by anode, it needs to be a node attribute and since it's not possible to define a list inside a graphml attribute, network addresses should respect the following rule `[addr]/[netmask 8 to 24],[addr2]/[netmask], ecc`, **no checks are performed between networks**
+* --mraitype [value]: define the type of mrai that will be used in the conf files, default is 0
+* --prepath [value]: path used in front of all files (use the path where the conf files will be saved), default is "/etc/bird/"
+* --ipnetworksgraph [attr_name]: defines the name of the attribute in the graphml file that represents the network address list that will be shared by anode, it needs to be a node attribute and since it's not possible to define a list inside a graphml attribute, network addresses should respect the following rule `[addr]/[netmask 8 to 24],[addr2]/[netmask], ecc`, **no checks are performed between networks**
 * --noautomaticnetworks: if a C node has 0 networks defined with ipnetworksgraph or if ipnetworksgraph is not defined, an automatic network will be assigned to the node, with this param the automatic network will not be assigned, so a C could share 0 networks
-
+* --prefpreferences [attr_name]: name of the attribute that defines in the graphml file the preferences, if some edges does not have this attribute will be used the default value of 1, you can set a double value of pref with "pref1,pref2" for and edge A->B, the first value will be used for the relation A->B and the second one for the relation B->A, if only one value is specified "pref", it will be used for both relations
+* --doublepeering: if used this param will suppose to use a graphml file that have two edges for a peering relation, otherwise is supposed that the graphml have just one edge for the peering relation, and this edge will be used to create both relation files
 Example command:
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories`

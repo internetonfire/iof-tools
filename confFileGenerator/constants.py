@@ -46,24 +46,37 @@ outDir = "out/"
 src = "baseFiles/"
 node_number = 20
 mrai_type = 0
+doublepeering = False
 
 HELP_MESSAGE = """
-Conf file generator for bird written by Mattia Milani, mattia.milani@studenti.unitn.it
 Mandatory args are: 
-    --graph [file name] -> name of the graphml (only graphml files are accepted) file that will be used to generate the conf files, this file needs to be correctly formatted and created.
-                            Is possible to use the 'internet_as_graph()' function that can be found at: 'https://github.com/leonardomaccari/networkx/blob/degree_bug/networkx/generators/tests/test_internet_AS_graph.py'
-                            Only nodes of type 'C' generates routes
-                            type of edges:
-                                transit: the first node of this edge pay the second one to transit through it, so the relation is customer <-> servicer
-                                peer: the two nodes share a peer relation
-                            the sharing policy is based on witch node send the information:
-                                customer: shared with everyone
-                                servicer: shared with customers
-                                peer: shared with customers
-                            If this does not exists yet it will be created with a predefined number of nodes (20)
-    --out [folder name] -> folder where the conf files will be saved
+    --graph [file name]: name of the graphml (only graphml files are accepted) file that will be used to generate the conf files, this file needs to be correctly formatted and created. Only nodes of type 'C' generates routes. If this does not exists yet it will be created with a predefined number of nodes (20).
+    --out [folder name]: folder where the conf files will be saved
+
 Not mandatory args:
-    --nnodes [number]-> redefine the default number of nodes used to create the file, if the file already exists this parameter will be ignored
-    --directories -> this args does not require parameters, if present the output will be formatted to folders for each bird node
-    '--help', '-h' -> show this help
+    --nnodes [number]: redefine the default number of nodes used to create the file, if the file already exists this parameter will be ignored
+    --directories: this arg does not require parameters, if present the output will be formatted to folders, for each bird node
+    --help, -h: show this help
+    --nomrai: this option will override the mrai in the graphml file and preclude mrai commands to be in the conf file (To make the conf files compatibles with old bird daemons)
+    --mraitype: define the type of mrai that will be used in the conf files, default is 0
+    --prepath: path used in front of all files (use the path where the conf files will be saved), default is "/etc/bird/"
+    --ipnetworksgraph: defines the name of the attribute in the graphml file that represents the network address list that will be shared by anode, it needs to be a node attribute and since it's not possible to define a list inside a graphml attribute, network addresses should respect the following rule `[addr]/[netmask 8 to 24],[addr2]/[netmask], ecc`, **no checks are performed between networks**
+    --noautomaticnetworks: if a C node has 0 networks defined with ipnetworksgraph or if ipnetworksgraph is not defined, an automatic network will be assigned to the node, with this param the automatic network will not be assigned, so a C could share 0 networks
+    --prefpreferences [attr_name]: name of the attribute that defines in the graphml file the preferences, if some edges does not have this attribute will be used the default value of 1, you can set a double value of pref with "pref1,pref2" for and edge A->B, the first value will be used for the relation A->B and the second one for the relation B->A, if only one value is specified "pref", it will be used for both relations
+    --doublepeering: if used this param will suppose to use a graphml file that have two edges for a peering relation, otherwise is supposed that the graphml have just one edge for the peering relation, and this edge will be used to create both relation files
+
+Example command:
+
+`python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories`
+
+This command generate the file graph.graphml if it does not exists and will be used only 10 nodes (instead of 20, default for new files).
+Will be used the 'out' directory to save the files, and thanks to `--directories` all files will be moved to the corresponding directory. 
+with this command will also be inserted the commands for mrai, to avoid this is possible to use the following command:
+
+`python3 confFileGen.py --graph graph.graphml --out out/ --nnodes 10 --directories --nomrai`
+
+Is possible to set the interface addresses for each link, with the attributes:
+    ip_eth_n1
+    ip_eth_n1
+The two ip needs to be part of the same `/30` network, **there is no check between couple of interfaces that networks addresses are not already in use**  
 """
