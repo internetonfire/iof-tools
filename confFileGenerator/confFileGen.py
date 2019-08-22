@@ -45,7 +45,8 @@ options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
                                                       'prepath=',
                                                       'ipnetworksgraph=',
                                                       'noautomaticnetworks',
-                                                      'preferences='
+                                                      'preferences=',
+                                                      'doublepeering'
                                                       ])
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
@@ -75,6 +76,8 @@ for opt, arg in options:
         networks = False
     if opt in '--preferences':
         preferences = str(arg)
+    if opt in '--doublepeering':
+        constants.doublepeering = True
 
 # If the graph file is not present it will be created with a predefined number of nodes
 if not os.path.isfile(gname):
@@ -113,7 +116,7 @@ for n in graph.nodes(data=True):
         else:
             new_node = Node(n[0], n[1]['type'], outDir)
     # If the node is of type c it will share some addresses
-    if n[1][TYPE_KEY] == 'C':
+    if n[1][TYPE_KEY] == 'C' or n[1][TYPE_KEY] == 'CP':
         if len(ipNetworksToShare) == 1:
             new_node.add_addr_to_export(ipNetworksToShare[0])
             new_node.include_in_main(new_node.sessionExporterFile_name)

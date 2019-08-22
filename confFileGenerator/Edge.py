@@ -148,14 +148,16 @@ class Edge:
                                                      str(int(self.node2.name) + 1), mrai_content1, str(self.pref[0]))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
-            self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" +
-                                                     str(self.node2.name) + "_" + "h_" + str(self.node1.name),
-                                                     self.node2.get_external_addr(self.node1),
-                                                     str(int(self.node2.name) + 1),
-                                                     self.node1.get_external_addr(self.node2),
-                                                     str(int(self.node1.name) + 1), mrai_content2, str(self.pref[1]))
-            # Include the file in the node main file
-            self.node2.include_in_main(self.bgpSessionFile2_name)
+            if not constants.doublepeering:
+                print("double peering not active")
+                self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" +
+                                                         str(self.node2.name) + "_" + "h_" + str(self.node1.name),
+                                                         self.node2.get_external_addr(self.node1),
+                                                         str(int(self.node2.name) + 1),
+                                                         self.node1.get_external_addr(self.node2),
+                                                         str(int(self.node1.name) + 1), mrai_content2, str(self.pref[1]))
+                # Include the file in the node main file
+                self.node2.include_in_main(self.bgpSessionFile2_name)
 
     # Write session exporter with a predefined export politics
     def write_session_static_exporter_uplinks(self, file, clients_list, protocol_name, local_addr, local_as, neigh_addr,
