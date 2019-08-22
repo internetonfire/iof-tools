@@ -1,0 +1,7 @@
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Clear Namespace Config
+    become: true
+    command: ip -all netns delete 

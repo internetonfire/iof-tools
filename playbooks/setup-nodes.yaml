@@ -1,12 +1,14 @@
 ---
 - hosts: nodes
+  strategy: free
   gather_facts: true
 
   tasks:
     - name: Enable NAT
       become: true
       shell: wget -O - -q https://www.wall2.ilabt.iminds.be/enable-nat.sh | sudo bash
-      warn: false
+      args:
+        warn: false
     - name: set variables 1
       set_fact:
         home_dir: "{{ ansible_env.HOME }}"
@@ -69,3 +71,7 @@
     - name: add iface to bridge
       become: true
       command: "brctl addif br-iof {{ ifname }}"
+    - name: set bridge to UP
+      become: true
+      command: ip link set dev br-iof up
+
