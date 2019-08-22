@@ -24,6 +24,7 @@ LOCAL_PREF = "99"
 LOG_MODE = "all"
 DBG_MODE = "all"
 DBG_COMMANDS_MODE = "2"
+# TODO not constant
 PREPATH = "/etc/bird/"
 KERNEL_CONF_PATH = "kernel.conf"
 DIRECT_CONF_PATH = "direct.conf"
@@ -41,11 +42,16 @@ NETWORK_TEMPLATE_PATH = "network_config.template"
 
 TYPE_KEY = "type"
 
+ARGS = ['graph=', 'out=', 'nnodes=', 'directories', 'help', 'h', 'nomrai', 'mraitype=', 'prepath=', 'ipnetworksgraph=',
+        'noautomaticnetworks', 'preferences=', 'doublepeering']
+
 gname = "small_g.graphml"
 outDir = "out/"
 src = "baseFiles/"
 node_number = 20
+# TODO not constant
 mrai_type = 0
+# TODO not constant
 doublepeering = False
 
 HELP_MESSAGE = """

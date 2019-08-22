@@ -17,6 +17,7 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
+# TODO they are not realy constants if I do this
 import constants
 from constants import *
 import os.path
@@ -29,14 +30,18 @@ class Edge:
     counter_external_networks = 0
 
     def __init__(self, node1, node2, edge, mrai, out1, out2):
+        if 'type' not in edge[2]:
+            raise ValueError("No type in edge, this arg is mandatory")
+
         self.node1 = node1
         self.node2 = node2
 
         self.mrai_node1 = 0
         self.mrai_node2 = 0
 
+        # If mrai is required I have to set it to the right value in ms
         if mrai:
-            if node1.name == edge[2]['node_a']:
+            if self.node1.name == edge[2]['node_a']:
                 self.mrai_node1 = int(float(edge[2]['mrai_a'])*1000)
                 self.mrai_node2 = int(float(edge[2]['mrai_b'])*1000)
             else:
@@ -69,8 +74,7 @@ class Edge:
                 self.node2.set_new_external_addr(self.node1, self.edge_network[2])
             elif self.counter_external_networks >= len(self.nodeIpNetworks_externalEth):
                 raise ValueError('No more networks available for edges')
-        if 'type' not in edge[2]:
-            raise ValueError("No type in edge, this arg is mandatory")
+
         self.type = edge[2]['type']
         self.outFolder1 = out1
         self.outFolder2 = out2

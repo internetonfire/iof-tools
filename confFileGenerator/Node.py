@@ -24,6 +24,7 @@ from constants import *
 import os.path
 from jinja2 import Environment, FileSystemLoader
 
+
 class Node:
     nodeIpAddr_network = ipaddress.ip_network(u'200.0.0.0/8')
     counter_node = 1
@@ -31,25 +32,28 @@ class Node:
     # otherwise the configuration probably would drop all update packets.
     nodeIpNetworks_network = list(ipaddress.ip_network(u'100.0.0.0/8').subnets(new_prefix=24))
     counter_networks = 1
-    ClientList = []
 
-    def __init__(self, node, out_folder, mrai='0'):
+    def __init__(self, node, out_folder):
+        """
+        Class node initializer, this class is used to control bird configuration nodes
+
+        :param node: the node from networkx that you want to transform in a bird conf
+        :param out_folder: the output folder where to save the configuration of this node
         """
 
-        :param node:
-        :param out_folder:
-        """
-        self.name = node[0]
         if 'type' not in node[1]:
             raise ValueError("No type in node, this arg is mandatory")
+
+        self.name = node[0]
         self.type = node[1]['type']
-
-        if self.type == "C":
-            Node.ClientList.append(int(self.name)+1)
-
         self.outFolder = out_folder
+
+        # Major output file
         self.mainOutFileName = "bgp_h_" + str(self.name) + ".conf"
+        # Session exporter file
         self.sessionExporterFile_name = "bgpSessionExporter_h_" + str(self.name) + ".conf"
+
+        # Obtain the router id address
         if Node.counter_node < Node.nodeIpAddr_network.num_addresses - 1:
             self.router_addr = Node.nodeIpAddr_network[Node.counter_node]
             Node.counter_node += 1
@@ -83,31 +87,55 @@ class Node:
         return "{" + str(self.name) + "," + str(self.router_addr) + "}"
 
     def add_customer(self, node):
+        """
+        Function used to append a new customer node to this node customers dictionary
+        :param node: node object to append
+        """
         self.customer[node.name] = node
 
     def add_peer(self, node):
+        """
+        Function used to append a new peer node to this node peer dictionary
+        :param node: node object to append
+        """
         self.peer[node.name] = node
 
     def add_servicer(self, node):
+        """
+        Function used to append a new servicer node to this node servicer dictionary
+        :param node: node object to append
+        """
         self.servicer[node.name] = node
 
     def get_customers_addresses(self):
+        """
+        Function userd to get the list of all customers ips
+        :return: list of strings
+        """
         addr_list = []
         for node in self.customer.values():
             addr_list.append(str(node.get_external_addr(self)))
         return addr_list
 
-    def add_addr_to_export(self, ipNetworksToShare = ""):
-        if Node.counter_networks < len(Node.nodeIpNetworks_network) and ipNetworksToShare == "":
+    def add_addr_to_export(self, ip_networks_to_share=""):
+        """
+        Function used to append a new network address to share
+        No checks will be done on the address, only if it's a valid network address
+        :param ip_networks_to_share: this is an optional param that could be used to set manually the networks that
+                                     has to be shared
+        """
+        if Node.counter_networks < len(Node.nodeIpNetworks_network) and ip_networks_to_share == "":
+            # Automatic chose of the network address
             self.exportedNetworks.append(Node.nodeIpNetworks_network[Node.counter_networks])
             Node.counter_networks += 1
-        elif ipNetworksToShare != "":
-            network = ipaddress.ip_network(ipNetworksToShare)
+        elif ip_networks_to_share != "":
+            # manual chose of the network address
+            network = ipaddress.ip_network(ip_networks_to_share)
             self.exportedNetworks.append(network)
         else:
             raise ValueError('No more networks free')
-        # self.delete_export_file()
 
+        # Append the route
         self.exportedNetworks_str += "route " + str(self.exportedNetworks[-1]) + " via \"lo\";\n\t\t\t\t\t\t"
 
         self.write_export_file()

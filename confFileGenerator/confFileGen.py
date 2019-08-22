@@ -22,10 +22,12 @@ import os.path
 import shutil
 from Node import Node
 from Edge import Edge
+# TODO not realy constants if I do this
 import constants
 from constants import *
 import sys
 
+# TODO i don't like this variables here
 gname = ""
 outDir = ""
 directories = False
@@ -34,20 +36,7 @@ ipnetworks = ""
 preferences = ""
 networks = True
 
-options, remainder = getopt.getopt(sys.argv[1:], '', ['graph=',
-                                                      'out=',
-                                                      'nnodes=',
-                                                      'directories',
-                                                      'help',
-                                                      'h',
-                                                      'nomrai',
-                                                      'mraitype=',
-                                                      'prepath=',
-                                                      'ipnetworksgraph=',
-                                                      'noautomaticnetworks',
-                                                      'preferences=',
-                                                      'doublepeering'
-                                                      ])
+options, remainder = getopt.getopt(sys.argv[1:], '', ARGS)
 
 if set([x[0] for x in options]).issubset({'--help', '-h'}):
     print(HELP_MESSAGE)
@@ -80,11 +69,13 @@ for opt, arg in options:
         constants.doublepeering = True
 
 # If the graph file is not present it will be created with a predefined number of nodes
+# Creation of the file no more supported, you have to use the script made by luca:
+# https://github.com/AdvancedNetworkingSystems/AS_graph_generator/tree/undirected
 """if not os.path.isfile(gname):
     small_g = internet_as_graph(node_number)
     nx.write_graphml(small_g, gname)"""
 
-# If the output dire does not exists it will be created
+# If the output directory does not exists it will be created
 if not os.path.isdir(outDir):
     os.mkdir(outDir)
 else:
@@ -94,37 +85,45 @@ else:
 # I read the graph
 graph = read_graphml(gname)
 
-if directories:
-    for node in graph.nodes(data=True):
-        os.mkdir(outDir + 'h_' + node[0])
-
 # I read all the nodes and I config the objects
 nodes_dict = {}
 for n in graph.nodes(data=True):
+    # If the subdirectory system is enabled I have to create a directory for each node
+    out = outDir
+    if directories:
+        os.mkdir(outDir + 'h_' + n[0])
+        out = outDir + '/h_' + n[0] + '/'
+
+    # TODO move this to the Node class
+    # Get the networks list from the node
     ipNetworksToShare = []
     if ipnetworks in n[1]:
         ipNetworksToShare = n[1][ipnetworks].split(',')
 
-    if directories:
-        new_node = Node(n, outDir + '/h_' + n[0] + '/')
-    else:
-        new_node = Node(n, outDir)
-    # If the node is of type c it will share some addresses
+    # Node creation
+    new_node = Node(n, out)
+
+    # If the node is of type C/CP/M it can share some addresses
     if set(n[1][TYPE_KEY]).issubset({'C', 'CP', 'M'}):
+        # if there is pre-loaded addresses the node have to share them
         if len(ipNetworksToShare) >= 1:
             for net in ipNetworksToShare:
                 new_node.add_addr_to_export(net)
+            # Write in the main file the include to all the session exporters files
             new_node.include_in_main(new_node.sessionExporterFile_name)
+        # If there is no pre-loaded networks and the networks variable is True i can load 1 address manually
         elif networks and len(ipNetworksToShare) == 0:
             new_node.add_addr_to_export()
             new_node.include_in_main(new_node.sessionExporterFile_name)
-
-    nodes_dict[n[0]] = new_node
+    # Add the new node to the dictionary with its name
+    nodes_dict[new_node.name] = new_node
 
 # I read all the edges and config the objects
 edges_dict = {}
 for edg in graph.edges(data=True):
 
+    # TODO better solution with the attribute node_1 and node_2
+    # I need to understood wich one of the two nodes is the customer to catch the node 1 and the node 2
     if {'customer'}.issubset(edg[2]):
         customer = edg[2]['customer']
         if customer != "none":
@@ -139,13 +138,17 @@ for edg in graph.edges(data=True):
     else:
         raise Exception('customer not defined, standard not respected')
 
+    # Set the output directory
+    out1 = outDir
+    out2 = outDir
     if directories:
-        new_edge = Edge(n1, n2, edg, mrai,
-                        outDir + '/h_' + nodes_dict[edg[0]].name + '/',
-                        outDir + '/h_' + nodes_dict[edg[1]].name + '/',)
-    else:
-        new_edge = Edge(n1, n2, edg, mrai, outDir, outDir)
+        out1 = outDir + '/h_' + nodes_dict[edg[0]].name + '/'
+        out2 = outDir + '/h_' + nodes_dict[edg[1]].name + '/',
 
+    # Create the new edge
+    new_edge = Edge(n1, n2, edg, mrai, out1, out2)
+
+    # Insert the new edge in the dictionary
     edges_dict["h_" + str(new_edge.node1.name) + "_h_" + str(new_edge.node2.name)] = new_edge
 
 # Write the sharing policies
