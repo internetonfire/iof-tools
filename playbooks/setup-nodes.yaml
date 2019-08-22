@@ -74,4 +74,13 @@
     - name: set bridge to UP
       become: true
       command: ip link set dev br-iof up
+    - name: Arp cache tuning 3
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh3=65536 
+    - name: Arp cache tuning 2
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh2=65536
+    - name: Arp cache tuning 1
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
 
