@@ -4,55 +4,47 @@ import code
 import networkx as nx
 from collections import defaultdict
 
+
+def edge(e1, e2, etype, mrai1=30, mrai2=30, customer=None):
+    if etype == 'peer':
+        assert customer == None
+    elif etype == 'transit':
+        assert customer == e1 or customer == e2
+    redge = (e1, e2, {'type': etype, 'termination1': e1, 'termination2': e2,
+                      'mrai1': mrai1, 'mrai2': mrai2, 'customer': customer})
+    return redge
+
+
 G = nx.DiGraph()
 
-# 1-hop metric/weight
+etype = 'transit'
 myedges = []
-myedges += ('X4', 'Y3', {'weight': 1, 'type': 'transit'}),
-myedges += ('X4', 'X3', {'weight': 1, 'type': 'transit'}),
-myedges += ('X3', 'Y2', {'weight': 1, 'type': 'transit'}),
-myedges += ('X3', 'X2', {'weight': 1, 'type': 'transit'}),
-myedges += ('X2', 'Y1', {'weight': 1, 'type': 'transit'}),
-myedges += ('X2', 'X1', {'weight': 1, 'type': 'transit'}),
+myedges.append(edge('X4', 'Y3', etype, customer='X4', mrai1=7.5, mrai2=7.5))
+myedges.append(edge('X4', 'X3', etype, customer='X4', mrai1=7.5, mrai2=7.5))
+myedges.append(edge('Y3', 'X3', etype, customer='Y3', mrai1=7.5, mrai2=7.5))
 
-# they were originally unlabeled
-myedges += ('Y3', 'X3', {'weight': 1, 'type': 'transit'}),
-myedges += ('Y2', 'X2', {'weight': 1, 'type': 'transit'}),
-myedges += ('Y1', 'X1', {'weight': 1, 'type': 'transit'}),
+myedges.append(edge('X3', 'Y2', etype, customer='X3', mrai1=15.0, mrai2=15.0))
+myedges.append(edge('X3', 'X2', etype, customer='X3', mrai1=15.0, mrai2=15.0))
+myedges.append(edge('Y2', 'X2', etype, customer='Y2', mrai1=15.0, mrai2=15.0))
 
-# one link only from X1 to source, at run-time we will have
-# to increase the weight to trigger the exponential path-exploration
-myedges += ('X1', 'SOURCE', {'weight': 1, 'type': 'transit'}),
+myedges.append(edge('X2', 'Y1', etype, customer='X2', mrai1=30.0, mrai2=30.0))
+myedges.append(edge('X2', 'X1', etype, customer='X2', mrai1=30.0, mrai2=30.0))
+myedges.append(edge('Y1', 'X1', etype, customer='Y1', mrai1=30.0, mrai2=30.0))
+
 
 G.add_edges_from(myedges)
 
 attrs = defaultdict(dict)
 # Source export dest d
-attrs['SOURCE']['ipNetworksToShare'] = 'd'
-# Setting MRAI for all nodes
-attrs['SOURCE']['mrai'] = 16
-attrs['X1']['mrai'] = 8
-attrs['Y1']['mrai'] = 8
-attrs['X2']['mrai'] = 4
-attrs['Y2']['mrai'] = 4
-attrs['X3']['mrai'] = 2
-attrs['Y3']['mrai'] = 2
-attrs['X4']['mrai'] = 1
-
-# Type of nodes
-attrs['SOURCE']['type'] = 'C'
-attrs['X1']['type'] = 'M'
-attrs['Y1']['type'] = 'M'
-attrs['X2']['type'] = 'M'
-attrs['Y2']['type'] = 'M'
-attrs['X3']['type'] = 'M'
-attrs['Y3']['type'] = 'M'
-attrs['X4']['type'] = 'M'
-
+ntype = 'C'
+for n in G.nodes():
+    destinations = []
+    if n == 'X1':
+        destinations = ['100.0.0.0/24']
+    attrs[n]['destinations'] = ','.join(destinations)
+    attrs[n]['type'] = ntype
 
 nx.set_node_attributes(G, attrs)
 
-# G.nodes['SOURCE'].addAttribute("PrefixList"=['d'])
-
 nx.write_graphml(G, 'test.graphml')
-code.interact(local=dict(globals(), **locals()))
+#code.interact(local=dict(globals(), **locals()))
