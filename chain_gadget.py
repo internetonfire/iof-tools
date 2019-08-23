@@ -1,14 +1,20 @@
 import networkx as nx
 
 ATTR_NODE_TYPE = "type"
+ATTR_NODE_DESTINATIONS = "destinations"
 ATTR_EDGE_TYPE = "type"
+ATTR_EDGE_CUSTOMER = "customer"
+ATTR_EDGE_TERMINATION1 = "termination1"
+ATTR_EDGE_TERMINATION2 = "termination2"
+ATTR_EDGE_MRAI1 = "mrai1"
+ATTR_EDGE_MRAI2 = "mrai2"
 ATTR_TIMER = "mrai"
 DEFAULT_MRAI_TIMER = 30.0
 VALID_NODE_TYPES = ["T", "M", "CP", "C"]
 VALID_EDGE_TYPES = ["transit", "peer"]
 
 
-def gen_ring_with_outer(n_inner_ring, ring_index):
+def gen_ring_with_outer(n_inner_ring, ring_index, timer):
     """
     Generates a single ring for a chain gadget topology with the outer
     nodes. For more details on the parameters, see the gen_chain_gadget method.
@@ -17,28 +23,56 @@ def gen_ring_with_outer(n_inner_ring, ring_index):
     the highest index is the one that is connected to the destination node.
     This index is used to properly assign the ids to the node, so that the
     ring can simply be added to the complete topology graph.
+    :param timer: the MRAI timer to be assigned to nodes in this ring
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
-    g = nx.DiGraph()
+    g = nx.Graph()
     total_nodes = n_inner_ring * 2 + 3
+    id_delta = (total_nodes - 1) * ring_index
     # connect the inner part of the ring
     for i in range(0, total_nodes-2, 2):
-        g.add_edge(i+2, i)
+        g.add_edge(i+2+id_delta, i+id_delta)
+        attrs = {
+            (i+2+id_delta, i+id_delta): {
+                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_TERMINATION1: i+id_delta,
+                ATTR_EDGE_TERMINATION2: i+2+id_delta,
+                ATTR_EDGE_MRAI1: timer,
+                ATTR_EDGE_MRAI2: timer
+            }
+        }
+        nx.set_edge_attributes(g, attrs)
     # connect the outer part of the ring
     for i in range(0, total_nodes-1):
-        g.add_edge(i+1, i)
+        g.add_edge(i+1+id_delta, i+id_delta)
+        attrs = {
+            (i+1+id_delta, i+id_delta): {
+                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_TERMINATION1: i+id_delta,
+                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_MRAI1: timer,
+                ATTR_EDGE_MRAI2: timer
+            }
+        }
+        nx.set_edge_attributes(g, attrs)
     # connect the first node of the ring with all the inner nodes
     for i in range(2, total_nodes, 2):
-        g.add_edge(i, 0)
-    mapping = {}
-    for i in range(total_nodes):
-        mapping[i] = i + (total_nodes - 1) * ring_index
-    nx.relabel_nodes(g, mapping, copy=False)
+        g.add_edge(i+id_delta, 0+id_delta)
+        attrs = {
+            (i+id_delta, 0+id_delta): {
+                ATTR_EDGE_CUSTOMER: 0+id_delta,
+                ATTR_EDGE_TERMINATION1: i+id_delta,
+                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_MRAI1: timer,
+                ATTR_EDGE_MRAI2: timer
+            }
+        }
+        nx.set_edge_attributes(g, attrs)
     return g
 
 
-def gen_ring_without_outer(n_inner_ring, ring_index):
+def gen_ring_without_outer(n_inner_ring, ring_index, timer):
     """
     Generates a single ring for a chain gadget topology without the outer
     nodes. For more details on the parameters, see the gen_chain_gadget method.
@@ -47,25 +81,43 @@ def gen_ring_without_outer(n_inner_ring, ring_index):
     the highest index is the one that is connected to the destination node.
     This index is used to properly assign the ids to the node, so that the
     ring can simply be added to the complete topology graph.
+    :param timer: the MRAI timer to be assigned to nodes in this ring
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
-    g = nx.DiGraph()
+    g = nx.Graph()
     total_nodes = n_inner_ring + 2
+    id_delta = (total_nodes - 1) * ring_index
     # connect the inner part of the ring
     for i in range(total_nodes-1):
-        g.add_edge(i+1, i)
+        g.add_edge(i+1+id_delta, i+id_delta)
+        attrs = {
+            (i+1+id_delta, i+id_delta): {
+                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_TERMINATION1: i+id_delta,
+                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_MRAI1: timer,
+                ATTR_EDGE_MRAI2: timer
+            }
+        }
+        nx.set_edge_attributes(g, attrs)
     # connect the first node of the ring with all the inner nodes
     for i in range(2, total_nodes, 1):
-        g.add_edge(i, 0)
-    mapping = {}
-    for i in range(total_nodes):
-        mapping[i] = i + (total_nodes - 1) * ring_index
-    nx.relabel_nodes(g, mapping, copy=False)
+        g.add_edge(i+id_delta, 0+id_delta)
+        attrs = {
+            (i+id_delta, 0+id_delta): {
+                ATTR_EDGE_CUSTOMER: 0+id_delta,
+                ATTR_EDGE_TERMINATION1: i+id_delta,
+                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_MRAI1: timer,
+                ATTR_EDGE_MRAI2: timer
+            }
+        }
+        nx.set_edge_attributes(g, attrs)
     return g
 
 
-def gen_ring(n_inner_ring, ring_index, add_outer):
+def gen_ring(n_inner_ring, ring_index, add_outer, timer):
     """
     Generates a single ring for a chain gadget topology. For more details on
     the parameters, see the gen_chain_gadget method.
@@ -75,13 +127,14 @@ def gen_ring(n_inner_ring, ring_index, add_outer):
     This index is used to properly assign the ids to the node, so that the
     ring can simply be added to the complete topology graph.
     :param add_outer: if set to true, adds the outer nodes as well
+    :param timer: the MRAI timer to be set to all nodes in the ring
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
     if add_outer:
-        g = gen_ring_with_outer(n_inner_ring, ring_index)
+        g = gen_ring_with_outer(n_inner_ring, ring_index, timer)
     else:
-        g = gen_ring_without_outer(n_inner_ring, ring_index)
+        g = gen_ring_without_outer(n_inner_ring, ring_index, timer)
     return g
 
 
@@ -141,16 +194,18 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
         raise Exception("Invalid edge type '{}' specified. Please choose a "
                         "value in {}".format(edge_type,
                                              ', '.join(VALID_EDGE_TYPES)))
-    g = nx.DiGraph()
+    g = nx.Graph()
     for i in range(n_rings):
-        ring = gen_ring(n_inner, i, add_outer)
         if set_timer:
             timer = DEFAULT_MRAI_TIMER * pow(2, -(n_rings - i - 1))
-            nx.set_node_attributes(ring, timer, ATTR_TIMER)
-            min_node = min(ring.nodes)
-            min_node_timer = {ATTR_TIMER: timer/2}
-            nx.set_node_attributes(ring, {min_node: min_node_timer})
+        else:
+            timer = DEFAULT_MRAI_TIMER
+        ring = gen_ring(n_inner, i, add_outer, timer)
         g = nx.compose(g, ring)
     nx.set_node_attributes(g, node_type, ATTR_NODE_TYPE)
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
+    nx.set_node_attributes(g, "", ATTR_NODE_DESTINATIONS)
+    nx.set_node_attributes(g, {
+        len(g.nodes)-1: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
+    })
     return g
