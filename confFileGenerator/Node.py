@@ -17,8 +17,6 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
-# TODO this is not realy constants if i done this
-import constants
 # TODO usage of import * is discuraged
 from constants import *
 import os.path
@@ -33,7 +31,7 @@ class Node:
     nodeIpNetworks_network = list(ipaddress.ip_network(u'100.0.0.0/8').subnets(new_prefix=24))
     counter_networks = 1
 
-    def __init__(self, node, out_folder):
+    def __init__(self, node, out_folder, variables):
         """
         Class node initializer, this class is used to control bird configuration nodes
 
@@ -47,6 +45,12 @@ class Node:
         self.name = node[0]
         self.type = node[1]['type']
         self.outFolder = out_folder
+
+        self.variables = variables
+
+        self.ipNetworksToShare = ""
+        if self.variables.ipNetworks in node[1]:
+            self.ipNetworksToShare = node[1][variables.ipNetworks].split(',')
 
         # Major output file
         self.mainOutFileName = "bgp_h_" + str(self.name) + ".conf"
@@ -144,12 +148,12 @@ class Node:
         # Write the template inside the file
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
-            self.bird_template.format(log_file_path=constants.PREPATH+self.log_file_name, log_mode=LOG_MODE,
+            self.bird_template.format(log_file_path=self.variables.PREPATH+self.log_file_name, log_mode=LOG_MODE,
                                       dbg_mode=DBG_MODE, dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
-                                      kernel_conf_path=constants.PREPATH + KERNEL_CONF_PATH,
-                                      direct_conf_path=constants.PREPATH + DIRECT_CONF_PATH,
-                                      device_conf_path=constants.PREPATH + DEVICE_CONF_PATH,
-                                      filter_conf_path=constants.PREPATH + FILTER_CONF_PATH,
+                                      kernel_conf_path=self.variables.PREPATH + KERNEL_CONF_PATH,
+                                      direct_conf_path=self.variables.PREPATH + DIRECT_CONF_PATH,
+                                      device_conf_path=self.variables.PREPATH + DEVICE_CONF_PATH,
+                                      filter_conf_path=self.variables.PREPATH + FILTER_CONF_PATH,
                                       bgp_session_export_path="", bgp_session_path=""))
 
     def write_network_configuration(self):
@@ -157,9 +161,9 @@ class Node:
         env = Environment(loader=FileSystemLoader('templates/'))
         baseline = env.get_template(NETWORK_TEMPLATE_PATH)
         ip_addresses = []
-        for _,ip in self.eth_dict.items():
+        for _, ip in self.eth_dict.items():
             ip_addresses.append(str(ip))
-        rendered_template = baseline.render(name=self.name,ipaddresses=ip_addresses)
+        rendered_template = baseline.render(name=self.name, ipaddresses=ip_addresses)
         with open(self.outFolder + self.network_file_name, "w") as netfd:
             netfd.write(rendered_template)
 
@@ -173,7 +177,7 @@ class Node:
                                                                         addr_to_export=self.exportedNetworks_str))
 
     def include_in_main(self, file_name):
-        self.mainOutFile.write("include  \"" + constants.PREPATH + file_name + "\";\n")
+        self.mainOutFile.write("include  \"" + self.variables.PREPATH + file_name + "\";\n")
 
     def set_new_external_addr(self, neighbor_node, addr):
         self.eth_dict[str(neighbor_node.name)] = addr
@@ -182,3 +186,16 @@ class Node:
         if str(neighbor_node.name) in self.eth_dict.keys():
             return self.eth_dict[str(neighbor_node.name)]
         return None
+
+    def install_networks(self):
+        """
+        Function used to install all the predefined networks inside the node, if networks are not predefined
+        A predefined networks pool will be used, only if this is not denied by an explicit command
+        """
+        if set(self.type).issubset(SHARINGSET):
+            if len(self.ipNetworksToShare) >= 1:
+                for net in self.ipNetworksToShare:
+                    self.add_addr_to_export(net)
+            elif self.variables.networks and len(self.ipNetworksToShare) == 0:
+                self.add_addr_to_export()
+            self.include_in_main(self.sessionExporterFile_name)

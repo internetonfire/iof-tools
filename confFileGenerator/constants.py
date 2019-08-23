@@ -24,8 +24,6 @@ LOCAL_PREF = "99"
 LOG_MODE = "all"
 DBG_MODE = "all"
 DBG_COMMANDS_MODE = "2"
-# TODO not constant
-PREPATH = "/etc/bird/"
 KERNEL_CONF_PATH = "kernel.conf"
 DIRECT_CONF_PATH = "direct.conf"
 DEVICE_CONF_PATH = "device.conf"
@@ -48,11 +46,8 @@ ARGS = ['graph=', 'out=', 'nnodes=', 'directories', 'help', 'h', 'nomrai', 'mrai
 gname = "small_g.graphml"
 outDir = "out/"
 src = "baseFiles/"
+SHARINGSET = {'C', 'CP', 'M'}
 node_number = 20
-# TODO not constant
-mrai_type = 0
-# TODO not constant
-doublepeering = False
 
 HELP_MESSAGE = """
 Mandatory args are: 

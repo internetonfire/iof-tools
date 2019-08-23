@@ -17,8 +17,6 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import ipaddress
-# TODO they are not realy constants if I do this
-import constants
 from constants import *
 import os.path
 
@@ -29,7 +27,7 @@ class Edge:
     nodeIpNetworks_externalEth = list(ipaddress.ip_network(u'10.0.0.0/12').subnets(new_prefix=30))
     counter_external_networks = 0
 
-    def __init__(self, node1, node2, edge, mrai, out1, out2):
+    def __init__(self, node1, node2, edge, out1, out2, variables):
         if 'type' not in edge[2]:
             raise ValueError("No type in edge, this arg is mandatory")
 
@@ -39,8 +37,10 @@ class Edge:
         self.mrai_node1 = 0
         self.mrai_node2 = 0
 
+        self.variables = variables
+
         # If mrai is required I have to set it to the right value in ms
-        if mrai:
+        if self.variables.mrai:
             if self.node1.name == edge[2]['node_a']:
                 self.mrai_node1 = int(float(edge[2]['mrai_a'])*1000)
                 self.mrai_node2 = int(float(edge[2]['mrai_b'])*1000)
@@ -126,9 +126,9 @@ class Edge:
         mrai_content2 = ""
 
         if self.mrai_node1 != 0:
-            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.mrai_node1, mrai_type=constants.mrai_type)
+            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.mrai_node1, mrai_type=self.variables.mrai_type)
         if self.mrai_node2 != 0:
-            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.mrai_node2, mrai_type=constants.mrai_type)
+            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.mrai_node2, mrai_type=self.variables.mrai_type)
 
         if self.type == "transit":
             # Write the exporter file
@@ -157,7 +157,7 @@ class Edge:
                                                      str(int(self.node2.name) + 1), mrai_content1, str(1))
             # Include the file in the node main file
             self.node1.include_in_main(self.bgpSessionFile1_name)
-            if not constants.doublepeering:
+            if not self.variables.doublePeering:
                 self.write_session_static_exporter_peers(self.bgpSessionFile2, str(client_list2), "h_" +
                                                          str(self.node2.name) + "_" + "h_" + str(self.node1.name),
                                                          self.node2.get_external_addr(self.node1),
