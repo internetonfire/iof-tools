@@ -9,6 +9,7 @@
           # return bgp_next_hop ~ [ 100.1.1.1, 100.1.1.2, 200.1.1.1 ];
           # Clients list
           {client_list}
+          reject;
         }}
 
         filter {filter_in_name}
