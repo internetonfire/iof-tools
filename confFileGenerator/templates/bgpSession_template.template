@@ -9,6 +9,7 @@
             ipv4{{
                 import filter bgp_in;
                 export all;
+                next hop self;
             }};
             direct;
             connect retry time {connect_retry_timer};

@@ -23,6 +23,7 @@
                 import filter {filter_in_name};
                 # export where proto = "export_protocol";
                 export filter {filter_out_name};
+                next hop self;
             }};
             direct;
             connect retry time {connect_retry_timer};
