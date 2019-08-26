@@ -119,8 +119,8 @@ for edg in graph.edges(data=True):
     out1 = variables.outDir
     out2 = variables.outDir
     if variables.directories:
-        out1 = variables.outDir + '/h_' + nodes_dict[edg[0]].name + '/'
-        out2 = variables.outDir + '/h_' + nodes_dict[edg[1]].name + '/'
+        out1 = variables.outDir + '/h_' + n1.name + '/'
+        out2 = variables.outDir + '/h_' + n2.name + '/'
         out1.replace("//", "/")
         out2.replace("//", "/")
 
