@@ -148,8 +148,9 @@ class Node:
         # Write the template inside the file
         open(self.outFolder + self.log_file_name, "a").close()
         self.mainOutFile.write(
-            self.bird_template.format(log_file_path=self.variables.PREPATH+self.log_file_name, log_mode=LOG_MODE,
-                                      dbg_mode=DBG_MODE, dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
+            self.bird_template.format(log_file_path=self.variables.PREPATH+self.log_file_name,
+                                      log_mode=self.variables.log_mode, dbg_mode=DBG_MODE,
+                                      dbg_commands_mode=DBG_COMMANDS_MODE, addr=self.router_addr,
                                       kernel_conf_path=self.variables.PREPATH + KERNEL_CONF_PATH,
                                       direct_conf_path=self.variables.PREPATH + DIRECT_CONF_PATH,
                                       device_conf_path=self.variables.PREPATH + DEVICE_CONF_PATH,

@@ -61,6 +61,8 @@ for opt, arg in options:
         preferences = str(arg)"""
     if opt in '--doublepeering':
         variables.doublePeering = True
+    if opt in '--fatallog':
+        variables.log_mode = "{fatal}"
 
 # If the graph file is not present it will be created with a predefined number of nodes
 # Creation of the file no more supported, you have to use the script made by luca:

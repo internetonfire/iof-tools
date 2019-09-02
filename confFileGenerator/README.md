@@ -48,6 +48,8 @@ Not mandatory args:
 * --noautomaticnetworks: if a C node has 0 networks defined with ipnetworksgraph or if ipnetworksgraph is not defined, an automatic network will be assigned to the node, with this param the automatic network will not be assigned, so a C could share 0 networks
 * ~~--prefpreferences [attr_name]: name of the attribute that defines in the graphml file the preferences, if some edges does not have this attribute will be used the default value of 1, you can set a double value of pref with "pref1,pref2" for and edge A->B, the first value will be used for the relation A->B and the second one for the relation B->A, if only one value is specified "pref", it will be used for both relations~~
 * --doublepeering: if used this param will suppose to use a graphml file that have two edges for a peering relation, otherwise is supposed that the graphml have just one edge for the peering relation, and this edge will be used to create both relation files
+* --fatallog: force the log to use only the FATAL set of errors
+
 Example command:
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --directories`

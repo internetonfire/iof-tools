@@ -30,6 +30,7 @@ class NotConstantsObj(object):
         self._mrai = True
         self._ipNetworks = ""
         self._networks = True
+        self._log_mode = "all"
 
     @property
     def doublePeering(self):
@@ -138,3 +139,15 @@ class NotConstantsObj(object):
     @networks.deleter
     def networks(self):
         del self._networks
+
+    @property
+    def log_mode(self):
+        return self._log_mode
+
+    @log_mode.setter
+    def log_mode(self, value):
+        self._log_mode = value
+
+    @log_mode.deleter
+    def log_mode(self):
+        del self._log_mode
