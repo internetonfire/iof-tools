@@ -48,6 +48,12 @@ src = "baseFiles/"
 SHARINGSET = {'C', 'CP', 'M'}
 node_number = 20
 
+NODE_A = "termination1"
+NODE_B = "termination2"
+
+MRAI_A = "mrai1"
+MRAI_B = "mrai2"
+
 HELP_MESSAGE = """
 Mandatory args are: 
     --graph [file name]: name of the graphml (only graphml files are accepted) file that will be used to generate the conf files, this file needs to be correctly formatted and created. Only nodes of type 'C' generates routes. If this does not exists yet it will be created with a predefined number of nodes (20).

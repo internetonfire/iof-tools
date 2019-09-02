@@ -41,12 +41,12 @@ class Edge:
 
         # If mrai is required I have to set it to the right value in ms
         if self.variables.mrai:
-            if self.node1.name == edge[2]['node_a']:
-                self.mrai_node1 = int(float(edge[2]['mrai_a'])*1000)
-                self.mrai_node2 = int(float(edge[2]['mrai_b'])*1000)
+            if self.node1.name == edge[2][NODE_A]:
+                self.mrai_node1 = int(float(edge[2][MRAI_A])*1000)
+                self.mrai_node2 = int(float(edge[2][MRAI_B])*1000)
             else:
-                self.mrai_node1 = int(float(edge[2]['mrai_b']) * 1000)
-                self.mrai_node2 = int(float(edge[2]['mrai_a']) * 1000)
+                self.mrai_node1 = int(float(edge[2][MRAI_B]) * 1000)
+                self.mrai_node2 = int(float(edge[2][MRAI_A]) * 1000)
 
         if {'ip_eth_n1', 'ip_eth_n2'}.issubset(edge[2]):
             self.node1Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n1'])

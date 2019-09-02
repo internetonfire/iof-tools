@@ -197,6 +197,7 @@ class Node:
             if len(self.ipNetworksToShare) >= 1:
                 for net in self.ipNetworksToShare:
                     self.add_addr_to_export(net)
+                self.include_in_main(self.sessionExporterFile_name)
             elif self.variables.networks and len(self.ipNetworksToShare) == 0:
                 self.add_addr_to_export()
-            self.include_in_main(self.sessionExporterFile_name)
+                self.include_in_main(self.sessionExporterFile_name)

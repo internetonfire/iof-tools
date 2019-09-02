@@ -106,8 +106,8 @@ for edg in graph.edges(data=True):
     if {'customer'}.issubset(edg[2]):
         customer = edg[2]['customer']
         if customer != "none":
-            n1 = nodes_dict[customer]
-            if edg[0] == customer:
+            n1 = nodes_dict[str(customer)]
+            if edg[0] == str(customer):
                 n2 = nodes_dict[edg[1]]
             else:
                 n2 = nodes_dict[edg[0]]
