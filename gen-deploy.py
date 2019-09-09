@@ -10,6 +10,7 @@ DEPLOY_TEMPLATE = "templates/ansible-deploy.template"
 # TODO: ask for a "savedirectory" on input and place everything there
 DEPLOY_OUTFILE = "deploy.yaml"
 ASLIST_OUTFILE = "as.json"
+NODELIST_OUTFILE = "nodi.json"
 
 def getASDistributionbyCpu(num_as,node_files):
     """
@@ -36,7 +37,8 @@ def getASDistributionbyCpu(num_as,node_files):
     as_list = []
     if as_per_cpu < 1:
         as_per_cpu = 1
-
+    print(num_cpus)
+    print(as_per_cpu)
     # Deploy an even number of ases on the nodes
     as_to_deploy = 1
     for n in node_list:
@@ -63,7 +65,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     parser.add_argument("-b","--birdconf",dest="birdconf",
-                        default="",action="store",required=True,
+                        default="",action="store",
                         help="Directory containing the bird config files, generated with the --directories flag")
     parser.add_argument("-n","--nodeconf",dest="nodeconf",
                         default="cpu_info",action="store",
@@ -83,7 +85,7 @@ if __name__ == "__main__":
     #print(num_as)
 
     node_list, as_list = getASDistributionbyCpu(num_as,node_files)
-    #print(node_list)
+    print(node_list)
     #print(as_list)
 
     # Given the AS to physical node assignment, we can now generate the deployment scripts.
@@ -94,8 +96,11 @@ if __name__ == "__main__":
     for n in node_list:
         node_file_path = bird_conf_dir + n['name'] + ".sh"
         node_run_file_path = bird_conf_dir + n['name'] + "-run.sh"
+        node_get_logs_path = bird_conf_dir + n['name'] + "-getlogs.sh"
         node_script = "#!/bin/sh\n\n"
         run_script = node_script
+        node_get_logs = node_script
+        node_get_logs += "mkdir $1/%s-logs\n" % (n['name'])
 
         for a in n['as_list']:
             node_id = a - 1
@@ -104,11 +109,20 @@ if __name__ == "__main__":
             run_cmd = "cd $1/h_%d" % (node_id)
             run_cmd += " && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id)
             run_script += run_cmd
+            run_script += "sleep 0.5\n"
+            getlogs_cmd = "mv $1/h_%d/log_h_%d.log $1/node%d-logs && touch $1/h_%d/log_h_%d.log\n" % (node_id,node_id,node_id,
+                                                                                                      node_id,node_id)
+            node_get_logs += getlogs_cmd
+
+        node_get_logs += "tar -cz $1/%s-logs -f $1/%s-logs.tgz\n" % (n['name'],n['name'])
+        node_get_logs += "rm -rf $1/%s-logs\n" % (n['name'])
 
         with open(node_file_path,"w") as nw_fd:
             nw_fd.write(node_script)
         with open(node_run_file_path,"w") as nr_fd:
             nr_fd.write(run_script)
+        with open(node_get_logs_path,"w") as nl_fd:
+            nl_fd.write(node_get_logs)
 
     # Copying all the files is too slow, so we pack up all the config directory
     tar_file_name = bird_conf_dir[:-1] + ".tgz"
@@ -129,3 +143,6 @@ if __name__ == "__main__":
 
     with open(ASLIST_OUTFILE, "w") as as_fd:
         as_fd.write(json.dumps(as_list, indent=2, sort_keys=True))
+
+    with open(NODELIST_OUTFILE, "w") as nodi_fd:
+        nodi_fd.write(json.dumps(node_list, indent=2, sort_keys=True))
