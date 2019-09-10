@@ -40,7 +40,8 @@
     - git:
         repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
         dest: "{{ bird_dir }}"
-        version: "milani/bird-2.0.1"
+        version: "MRAI"
+#        version: "milani/bird-2.0.1"
     - name: run autoreconf
       command: autoreconf
       args:
