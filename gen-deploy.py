@@ -110,11 +110,12 @@ if __name__ == "__main__":
             run_cmd += " && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id)
             run_script += run_cmd
             run_script += "sleep 0.5\n"
-            getlogs_cmd = "mv $1/h_%d/log_h_%d.log $1/node%d-logs && touch $1/h_%d/log_h_%d.log\n" % (node_id,node_id,node_id,
+            getlogs_cmd = "mv $1/h_%d/log_h_%d.log $1/%s-logs/ && touch $1/h_%d/log_h_%d.log\n" % (node_id,node_id,n['name'],
                                                                                                       node_id,node_id)
             node_get_logs += getlogs_cmd
 
-        node_get_logs += "tar -cz $1/%s-logs -f $1/%s-logs.tgz\n" % (n['name'],n['name'])
+        node_get_logs += "cd $1\n"
+        node_get_logs += "tar -cz %s-logs -f $1/%s-logs.tgz\n" % (n['name'],n['name'])
         node_get_logs += "rm -rf $1/%s-logs\n" % (n['name'])
 
         with open(node_file_path,"w") as nw_fd:
