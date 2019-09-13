@@ -206,6 +206,6 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
     nx.set_node_attributes(g, "", ATTR_NODE_DESTINATIONS)
     nx.set_node_attributes(g, {
-        len(g.nodes)-1: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
+        0: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
     })
     return g
