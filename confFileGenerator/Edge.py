@@ -41,7 +41,7 @@ class Edge:
 
         # If mrai is required I have to set it to the right value in ms
         if self.variables.mrai:
-            if self.node1.name == edge[2][NODE_A]:
+            if self.node1.name == str(edge[2][NODE_A]):
                 self.mrai_node1 = int(float(edge[2][MRAI_A])*1000)
                 self.mrai_node2 = int(float(edge[2][MRAI_B])*1000)
             else:
