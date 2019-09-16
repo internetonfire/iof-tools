@@ -26,7 +26,7 @@ class Node(object):
 
     '''
     Configure ha 3 compiti:
-    1. Far capire alla RT che sino i vicini del nodo, per poter
+    1. Far capire alla RT chi siano i vicini del nodo, per poter
     settare gli MRAI x-VICINO, x-destinazione
     2. Mettere in canna i primi update da mandare, 
       relativi ai prefissi esportati da questo nodo.
@@ -45,7 +45,7 @@ class Node(object):
             self.rxQueue.push(self_update)
         # apertura file di log
         self.logfile = open(self.sim_dir + "/" + self.ID + "_log.csv", 'a')
-        self.logfile.write("TIME|EVENT_TYPE|PREFIX|AS_PATH"+'\n')
+        self.logfile.write("TIME|EVENT_TYPE|FROM|PREFIX|AS_PATH"+'\n')
 
     def toString(self):
         s = PrettyTable()
@@ -63,7 +63,7 @@ class Node(object):
     def log(self, evlog):
         self.events_memory.append(evlog)
         #to_write = json.dumps(event_describer)
-        self.logfile.write('|'.join([str(evlog.time), evlog.evType,
+        self.logfile.write('|'.join([str(evlog.time), evlog.evType, evlog.evFrom,
                                      evlog.prefix, evlog.as_path])+'\n')
 
         '''
@@ -99,7 +99,6 @@ class Node(object):
         update = (self.ID, rt4update)
         pyneigh.rxQueue.push(update)
         # 2. and 3.
-        #code.interact(local=dict(globals(), **locals()))
         self.RT[route.prefix]['MRAIs'][neigh] = time + self.neighs[neigh]['mrai']
         self.RT[route.prefix]['SHARED_FLAG'][neigh] = True
 
@@ -107,7 +106,7 @@ class Node(object):
         #print(self.ID, ": processing Received Updates")
         while not self.rxQueue.isEmpty():
             update = self.rxQueue.pop()
-            self.log(EventLog(time, 'UpdateRX',
+            self.log(EventLog(time, 'UpdateRX', update[0],
                               update[1].prefix, update[1].as_path()))
             self.processUpdate(update, time)
 
@@ -122,6 +121,9 @@ class Node(object):
             current_preference = self.RT[route.prefix]['PREFERENCE']
             if route_preference > current_preference:
                 self.RT.install_route(route, sender, route_preference, time)
+            '''ATTENZIONE:
+            da capire come gestire withdraw o un peggioramento della preference da parte dello stesso
+            vicino (tipo cambio path offerto!) Qui bisogna triggerare l'installazione delle backup-routes '''
 
         # Capire se ci sono aggiornamenti da propagare
         for neigh in self.neighs:

@@ -33,11 +33,6 @@ class RoutingTable(object):
     def set_neighbours(self, neighs):
         self.neighs = neighs
 
-        '''Stiamo sicuramente aggiornando una rotta (appena imparata, o migliorata)
-        Le cose da fare sono:
-        - 
-        '''
-
     def dumps(self):
         s = PrettyTable()
         s.field_names = ["PREFIX", "AS_PATH", "NH", "PREFERENCE"]

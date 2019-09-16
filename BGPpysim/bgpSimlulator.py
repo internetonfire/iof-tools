@@ -65,14 +65,6 @@ class bgpSim(object):
         for nodeID in self.nodes:
             sched.schedule_event(
                 1.0 + self.jitter(), {'actor': nodeID, 'action': 'CHECK_RX'})
-            '''if self.nodes[nodeID].exportPrefixes:
-                # Primo annuncio a tutti i vicini
-                for prefix in self.nodes[nodeID].exportPrefixes:
-                    for neigh in self.nodes[nodeID].neighs:
-                        route = Route(prefix, {'AS_PATH': nodeID})
-                        sched.schedule_event(
-                            0.0 + self.jitter(), {'actor': nodeID,
-                                           'action': 'MRAI_DEADLINE', 'route': route, 'neigh': neigh})'''
 
     def runSimulation(self):
         sched = EventScheduler()
