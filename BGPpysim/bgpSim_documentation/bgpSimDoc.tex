@@ -1,0 +1,173 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Stylish Article
+% LaTeX Template
+% Version 2.1 (1/10/15)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% Mathias Legrand (legrand.mathias@gmail.com) 
+% With extensive modifications by:
+% Vel (vel@latextemplates.com)
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[fleqn,10pt]{SelfArx} % Document font size and equations flushed left
+\usepackage[english]{babel} % Specify a different language here - english by default
+
+\setlength{\columnsep}{0.55cm} % Distance between the two columns of text
+\setlength{\fboxrule}{0.75pt} % Width of the border around the abstract
+
+\definecolor{color1}{RGB}{0,0,90} % Color of the article title and sections
+\definecolor{color2}{RGB}{0,20,20} % Color of the boxes behind the abstract and headings
+
+\usepackage{hyperref} % Required for hyperlinks
+\hypersetup{hidelinks,colorlinks,breaklinks=true,urlcolor=color2,citecolor=color1,linkcolor=color1,bookmarksopen=false,pdftitle={Title},pdfauthor={Author}}
+
+\usepackage[capitalise]{cleveref}
+% 
+\usepackage[colorinlistoftodos,prependcaption,textsize=small]{todonotes}
+%----------------------------------------------------------------------------------------
+%	ARTICLE INFORMATION
+%----------------------------------------------------------------------------------------
+
+\JournalInfo{ANS report} % Journal information
+\Archive{BGP sim} % Additional notes (e.g. copyright, DOI, review/research article)
+
+\PaperTitle{BGP pySim documentation} % Article title
+
+\Authors{Lorenzo Ghiro} % Authors
+%\affiliation{\textsuperscript{1}\textit{Department of Biology, University of Examples, London, United Kingdom}} % Author affiliation
+%\affiliation{\textsuperscript{2}\textit{Department of Chemistry, University of Examples, London, United Kingdom}} % Author affiliation
+%\affiliation{*\textbf{Corresponding author}: john@smith.com} % Corresponding author
+
+\Keywords{} % Keywords - if you don't want any simply remove all the text between the curly brackets
+\newcommand{\keywordname}{Keywords} % Defines the keywords heading name
+
+\Abstract{A python simulator has been developed to replicate the exponential path exploration problem described in \cite{fabrikant2011there}. The simulator workflow and kind of events, together with the BGP node logic implemented by the pySim, are described in this document.}
+
+\begin{document}
+\flushbottom % Makes all text pages the same height
+\maketitle % Print the title and abstract box
+%\tableofcontents % Print the contents section
+\thispagestyle{empty} % Removes page numbering from the first page
+
+\section{Simulator high-level architecture} 
+%\addcontentsline{toc}{section}{Introduction}
+The simulator requires:
+\begin{enumerate}[noitemsep]
+  \item The network topology, described by a graphml file (\textsf{--graphml})
+  \item The output folder
+\end{enumerate}
+
+\subsection*{Initialization}
+The graphml is parsed to:
+\begin{enumerate}[noitemsep]
+  \item initialize node objects with their TYPE and prefixes to be exported
+  \item setup neighbourhood relationships. This includes peering or customer/provider role assignment and per-neigh MRAI assignment
+\end{enumerate}
+At node initialization, prefixes exported by nodes are put in those nodes' receiving buffer. Then, for all nodes, a 'CHECK-RX' event is triggered so that nodes install those prefixes in their RT and can start advertising them. 
+
+\subsection*{pySim main loop and events}
+Events are described by a tuple of the form: (\textit{actor}, \textit{action}, \textit{params}). The actor is a nodeID indicating which node should perform an action, with all info necessary to perform the action contained in \textit{params}. Actions can be of 2 kinds:
+
+\begin{enumerate}[noitemsep]
+ \item 'CHECK-RX': the actor controls whether new updates are in its rx-buffer, and process them.
+ \item 'MRAI-DEADLINE': the actor MRAI deadline for advertising a given prefix expired, so the node send an update immediately
+\end{enumerate}
+
+The logic of processing and sending updates is described in \cref{sec:nodeLogic} about Node logic implementation.
+
+\section{Node implementation}\label{sec:nodeLogic}
+
+\subsection*{Node attributes}
+A node has/is described by, and keeps updated the following:
+\begin{enumerate}[noitemsep]
+  \item nodeID and nodeType
+  \item \textbf{rxQueue}: the updates receiveing buffer
+  \item \textbf{neighs}: a dictionry with neighID as keys and 'realtion' and MRAI as neighbour attributes
+  \item \textbf{exportPrefixes}: a list of prefixes exported by this node
+  \item \textbf{RoutingTable}: an object with convenient methods to install routes and to remeber received updates, so to be ready to install backup routes
+\end{enumerate}
+
+\subsubsection*{Routing table}
+A routing table is a dictionary indexed by known prefixes. For each prefix these info are kept updated:
+\begin{enumerate}[noitemsep]
+  \item NH and AS-PATH
+  \item PREFERENCE, computed according to the \textbf{policy function}\footnote{The policy function comes as a separate py file, to ease extension and multiple versions implementation in the future}
+  \item MRAIs: a dictionary indexed by neighbours' ids. For each neigh the time after which is possible to send an update is maintained.
+  \item SHARED-FLAG: again a per-neigh indexed dictionary. A flag per neighbour is maintained to remember if an update has been or not already sent to this neigh for this prefix. Thanks to these flags and assuming no losses in sending updates over TCP connections, we will see the network "\textit{silent}" at convergence.
+\end{enumerate}
+
+
+\subsection*{SENDING updates}
+After receiving an update, a node may decide to send and update for these reasons:
+\begin{enumerate}[noitemsep]
+  \item the route is new
+  \item some route's attributes changed
+\end{enumerate}
+If the MRAI for this prefix with a given neighbour is expired, the update can be really sent, appending the sender-id to the route's AS-PATH and pushing the update in the neigh's rxQueue.\\
+After sending an update for a given prefix to a given neigh, the SHARED-FLAG in the RT[prefix][SHARED-FLAGs][neigh] must be set to TRUE and \textbf{the MRAI must be updated}!
+
+\subsection*{PROCESSING received updates}
+Periodically (each second +- jitter), every node flushes its receiving buffer processing all found updates. The update processing workflow is:
+\begin{enumerate}[noitemsep]
+  \item Compute PREFERENCE applying the policy function to the route's attributes
+  \item Proceed with a standard Bellman-Ford, installing the route if it is new or with a strictly higher preference.
+  \item If preference is decreasing or a withraw is received, a node must consider to install a backup route!
+  \todo[inline]{Come triggerare l'installazione delle backup routes? Mattia questo e' il punto su cui dovremo ragionare tanto domani :)}
+\end{enumerate}
+
+
+
+
+
+
+
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+\phantomsection
+\bibliographystyle{IEEEtran}
+\bibliography{sample}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
+
+
+%----------------------------------------------------------------------------------------
+
+
+%\begin{figure*}[ht]\centering % Using \begin{figure*} makes the figure take up the entire width of the page
+%\includegraphics[width=\linewidth]{view}
+%\caption{Wide Picture}
+%\label{fig:view}
+%\end{figure*}
+
+
+
+%\begin{table}[hbt]
+%\caption{Table of Grades}
+%\centering
+%\begin{tabular}{llr}
+%\toprule
+%\multicolumn{2}{c}{Name} \\
+%\cmidrule(r){1-2}
+%First name & Last Name & Grade \\
+%\midrule
+%John & Doe & $7.5$ \\
+%Richard & Miles & $2$ \\
+%\bottomrule
+%\end{tabular}
+%\label{tab:label}
+%\end{table}
