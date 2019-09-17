@@ -35,9 +35,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+2+id_delta, i+id_delta)
         attrs = {
             (i+2+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+2+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+2+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+2+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+2+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -48,9 +48,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+1+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+1+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+1+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -61,9 +61,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(0+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -93,9 +93,9 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+1+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+1+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+1+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -106,9 +106,9 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(0+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
