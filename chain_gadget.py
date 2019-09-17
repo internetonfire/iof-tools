@@ -139,7 +139,7 @@ def gen_ring(n_inner_ring, ring_index, add_outer, timer):
 
 
 def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit",
-                     set_timer=False):
+                     set_timer=False, min_mrai=None):
     """
     Generates a chain gadget topology as in Fig. 3 of the Fabrikant-Rexford
     paper (https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5935139). As
@@ -180,6 +180,7 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     :param set_timer: if set to true, adds the MRAI timer to the set of node
     attributes following the indications within the paper (a timer which
     value decreases exponentially with the ring id)
+    :param min_mrai: minimum MRAI value to be used
     :return: a networkx graph following the chain gadget topology
     """
     if n_rings < 1:
@@ -194,12 +195,17 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
         raise Exception("Invalid edge type '{}' specified. Please choose a "
                         "value in {}".format(edge_type,
                                              ', '.join(VALID_EDGE_TYPES)))
+    mrai = DEFAULT_MRAI_TIMER
+    if min_mrai is not None:
+        computed_min_mrai = DEFAULT_MRAI_TIMER / 2**(n_rings-1)
+        if computed_min_mrai < min_mrai:
+            mrai = min_mrai * 2**(n_rings-1)
     g = nx.Graph()
     for i in range(n_rings):
         if set_timer:
-            timer = DEFAULT_MRAI_TIMER * pow(2, -(n_rings - i - 1))
+            timer = mrai * pow(2, -(n_rings - i - 1))
         else:
-            timer = DEFAULT_MRAI_TIMER
+            timer = mrai
         ring = gen_ring(n_inner, i, add_outer, timer)
         g = nx.compose(g, ring)
     nx.set_node_attributes(g, node_type, ATTR_NODE_TYPE)

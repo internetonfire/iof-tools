@@ -19,6 +19,14 @@ parser.add_argument("-w", "--write-to", dest="writeto",
                     default="chain_gadget.graphml", action="store",
                     help="Output graphml file where the graph will be written "
                          "to")
+parser.add_argument("-b", "--min-mrai", dest="min_mrai", default=None,
+                    action="store", type=float,
+                    help="Set the minimum MRAI value that can be used. If the "
+                         "minimum value computed starting from the default "
+                         "(30s) larger than the minimum provided, then this "
+                         "parameter is ignored. Otherwise the default value "
+                         "is adapted so that the minimum timer corresponds to "
+                         "the given minimum value")
 args = parser.parse_args()
 
 n_rings = args.rings
@@ -28,6 +36,7 @@ set_timer = args.mrai
 node_type = args.type
 edge_type = "transit"
 output_file = args.writeto
+min_mrai = args.min_mrai
 
 if n_rings < 1:
     print("The number of rings must be at least 1")
@@ -43,5 +52,5 @@ if edge_type not in VALID_EDGE_TYPES:
     exit(1)
 
 g = gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type,
-                     set_timer)
+                     set_timer, min_mrai)
 nx.write_graphml(g, output_file)
