@@ -35,7 +35,7 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+2+id_delta, i+id_delta)
         attrs = {
             (i+2+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_CUSTOMER: i+2+id_delta,
                 ATTR_EDGE_TERMINATION1: i+id_delta,
                 ATTR_EDGE_TERMINATION2: i+2+id_delta,
                 ATTR_EDGE_MRAI1: timer,
@@ -48,7 +48,7 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_CUSTOMER: i+1+id_delta,
                 ATTR_EDGE_TERMINATION1: i+id_delta,
                 ATTR_EDGE_TERMINATION2: i+1+id_delta,
                 ATTR_EDGE_MRAI1: timer,
@@ -61,7 +61,7 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: i+id_delta,
                 ATTR_EDGE_TERMINATION1: i+id_delta,
                 ATTR_EDGE_TERMINATION2: 0+id_delta,
                 ATTR_EDGE_MRAI1: timer,
@@ -93,7 +93,7 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
+                ATTR_EDGE_CUSTOMER: i+1+id_delta,
                 ATTR_EDGE_TERMINATION1: i+id_delta,
                 ATTR_EDGE_TERMINATION2: i+1+id_delta,
                 ATTR_EDGE_MRAI1: timer,
@@ -106,7 +106,7 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: i+id_delta,
                 ATTR_EDGE_TERMINATION1: i+id_delta,
                 ATTR_EDGE_TERMINATION2: 0+id_delta,
                 ATTR_EDGE_MRAI1: timer,
@@ -206,6 +206,6 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
     nx.set_node_attributes(g, "", ATTR_NODE_DESTINATIONS)
     nx.set_node_attributes(g, {
-        0: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
+        len(g.nodes)-1: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
     })
     return g
