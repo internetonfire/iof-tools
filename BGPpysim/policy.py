@@ -47,15 +47,16 @@ def policy(nodeID, route):
 
 
 if __name__ == "__main__":
-    route = ('dest', {'AS_PATH': 'X1,X2'})
+    route = Route('dest', {'AS_PATH': 'X1,X2'})
     while(1):
-        cost = policy(route)
+        #code.interact(local=dict(globals(), **locals()))
+        cost = policy('Y1', route)
         bincost = bin(cost)[2:]
-        print("The cost of", route[1]['AS_PATH'], "is:")
+        print("The cost of", route.attr['AS_PATH'], "is:")
         print("DEC =", cost, "\tBIN =", bincost)
         print("insert new AS_PATH to continue.")
-        route[1]['AS_PATH'] = input()
-#code.interact(local=dict(globals(), **locals()))
+        route.attr['AS_PATH'] = input()
+
 
 '''# Preference Table
     prefTab = {

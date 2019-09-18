@@ -13,7 +13,7 @@ import shutil
 from util.routing_table import Route
 import code  # code.interact(local=dict(globals(), **locals()))
 
-MAX_DURATION = 100
+MAX_DURATION = 10000
 
 
 class bgpSim(object):
@@ -21,6 +21,7 @@ class bgpSim(object):
     def __init__(self, graph, sim_dir):
         self.G = graph
         self.sim_dir = sim_dir
+        self.sched = EventScheduler()
         self.initNodes(G)
 
     def initNodes(self, G):
@@ -34,7 +35,8 @@ class bgpSim(object):
                 node_type = n[1]['type']
             if 'destinations' in n[1]:
                 prefixes = n[1]['destinations'].split(',')
-            nodes[node_id] = Node(node_id, self.sim_dir, node_type, prefixes)
+            nodes[node_id] = Node(node_id, self.sim_dir,
+                                  self.sched, node_type, prefixes)
 
         # Edge attributes
         for e in self.G.edges(data=True):
@@ -58,17 +60,13 @@ class bgpSim(object):
                     'relation': 'customer', 'mrai': p2c, 'pynode': nodes[c]}
         self.nodes = nodes
 
-    def jitter(self):
-        return [-1, 1][random.randrange(2)]*random.uniform(0, 0.866)
-
     def scedule_initial_events(self, sched):
         for nodeID in self.nodes:
-            sched.schedule_event(
-                1.0 + self.jitter(), {'actor': nodeID, 'action': 'CHECK_RX'})
+            sched.schedule_event(1.0 + sched.jitter(),
+                                 {'actor': nodeID, 'action': 'CHECK_RX'})
 
     def runSimulation(self):
-        sched = EventScheduler()
-        self.scedule_initial_events(sched)
+        sched = self.sched
         print("Simulation started")
         time = 0
         with tqdm(total=MAX_DURATION) as pbar:
@@ -80,13 +78,13 @@ class bgpSim(object):
                 if event['action'] == 'CHECK_RX':
                     node.processRXupdates(sched.elapsed_time())
                     # reschedule same event of type 'CHECK_RX'
-                    sched.schedule_event(current_time + self.jitter(), event)
+                    # sched.schedule_event(1.0 + sched.jitter(), event)
                 elif event['action'] == 'MRAI_DEADLINE':
                     node.sendUpdate(
-                        event['route'], event['neigh'], sched.elapsed_time())
+                        event['prefix'], event['neigh'], sched.elapsed_time())
                 sleep(0.1)
                 time += 10
-                pbar.update(1)
+                pbar.update(sched.step())
 
 
 def config_out_path(outPath):
@@ -119,9 +117,28 @@ if __name__ == '__main__':
 
     # Initialize simulator and start simulation
     sim = bgpSim(G, sim_dir)
+    sim.scedule_initial_events(sim.sched)
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
     for n in sim.nodes.values():
         print("RT of NODE: "+n.ID)
         n.RT.dumps()
-    code.interact(local=dict(globals(), **locals()))
+    #code.interact(local=dict(globals(), **locals()))
+
+    time = sim.sched.elapsed_time()
+    x1 = sim.nodes['X1']
+    prefix = x1.exportPrefixes[0]
+    route = Route(prefix, {'AS_PATH': 'P'})
+    x1.RT.install_route(route, x1.ID, 1, time)
+    for neigh in x1.neighs:
+        event = {'actor': x1.ID, 'action': 'MRAI_DEADLINE',
+                 'prefix': prefix, 'neigh': neigh}
+        sim.sched.schedule_event(
+            time + x1.neighs[neigh]['mrai'] + sim.sched.jitter(positive=True), event)
+    print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
+    sim.runSimulation()
+    #code.interact(local=dict(globals(), **locals()))
+    print("FINISHED AGAIN SIMULATION...")
+    for n in sim.nodes.values():
+        print("RT of NODE: "+n.ID)
+        n.RT.dumps()

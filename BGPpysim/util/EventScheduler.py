@@ -1,4 +1,5 @@
 import heapq
+import random
 
 class EventScheduler:
         def __init__(self):
@@ -7,6 +8,12 @@ class EventScheduler:
                 self.last = 0
                 self._step = 0
                 self.counter = 0
+
+        def jitter(self, positive=True):
+            if positive:
+                return random.uniform(0, 0.0166)
+            else:
+                return [-1, 1][random.randrange(2)]*random.uniform(0, 0.866)
 
         def schedule_event(self, interval, e):
                 t = self.time + interval

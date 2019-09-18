@@ -10,16 +10,19 @@ class Route(object):
         self.prefix = prefix
         self. attr = attr
 
+    def __str__(self):
+        return "<"+self.prefix+", "+str(self.attr)+">"
+
     def as_path(self):
         return self.attr['AS_PATH']
 
 
 class RoutingTable(object):
 
-    def __init__(self):
-        self.rt = {}
-        self.__flag_change = False
-        pass
+    def __init__(self, node):
+        self.rt = defaultdict(dict)
+        self.adjRIBin = defaultdict(dict)
+        self.node = node
 
     def __contains__(self, key):
         return key in self.rt
@@ -41,24 +44,28 @@ class RoutingTable(object):
                        ['NH'], self.rt[p]['PREFERENCE']])
         print(s)
 
-    def install_route(self, route, sender, route_preference, time):
-        prefix, NH, as_path, preference = route.prefix, sender, route.as_path(), route_preference
-        new_route = route.prefix not in self.rt
-        self.rt[prefix] = {'NH': NH, 'AS_PATH': as_path,
-                           'PREFERENCE': preference}
-        if new_route:
+    def update_adjRIBin(self, sender, route):
+        self.adjRIBin[route.prefix][sender] = route
 
-            self.rt[route.prefix]['MRAIs'] = defaultdict(int)
-            self.rt[route.prefix]['SHARED_FLAG'] = defaultdict(
-                bool)  # chiavi nuove nascono con valore False
+    def install_route(self, route, sender, rt_preference, time):
+        prefix, NH, as_path, preference = route.prefix, sender, route.as_path(), rt_preference
+        new_route = prefix not in self.rt
+        if not new_route:
+            entry = self.rt[prefix]
+            modified = (NH, as_path, preference) != (
+                entry['NH'], entry['AS_PATH'], entry['PREFERENCE'])
+        self.rt[prefix].update({'NH': NH, 'AS_PATH': as_path,
+                                'PREFERENCE': preference
+                                })
+        if new_route:
+            self.rt[prefix]['MRAIs'] = {}
             for neigh in self.neighs:
                 # virtualmente scaduto! :)
-                self.rt[route.prefix]['MRAIs'][neigh] = time
-        else:
+                self.rt[prefix]['MRAIs'][neigh] = time
+        if new_route or modified:
             # non modifico l'MRAI pre-esistente, aspetto che scada...
             # ma setto shared_flag = False per tutti, perchè con nessuno
             # ho gia condiviso la nuova rotta appena installata
-            self.rt[route.prefix]['SHARED_FLAG'] = defaultdict(
-                bool)  # chiavi nuove nascono con valore False
-            self.rt[route.prefix]['PREFERENCE'] = preference
-        #code.interact(local=dict(globals(), **locals()))
+            self.rt[prefix]['SHARED_FLAG'] = defaultdict(bool)
+            self.node.log(EventLog(time, 'INSTALLED_ROUTE', NH,
+                                   prefix, as_path, bin(preference)[2:]))
