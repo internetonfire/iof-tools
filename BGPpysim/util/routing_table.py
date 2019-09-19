@@ -44,7 +44,8 @@ class RoutingTable(object):
                        ['NH'], self.rt[p]['PREFERENCE']])
         print(s)
 
-    def update_adjRIBin(self, sender, route):
+    def update_adjRIBin(self, update):
+        sender, route = update
         self.adjRIBin[route.prefix][sender] = route
 
     def install_route(self, route, sender, rt_preference, time):

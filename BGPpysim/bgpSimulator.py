@@ -74,7 +74,6 @@ class bgpSim(object):
                 event = sched.pop_event()
                 current_time = sched.elapsed_time()
                 node = self.nodes[event['actor']]
-                # code.interact(local=dict(globals(), **locals()))
                 if event['action'] == 'CHECK_RX':
                     node.processRXupdates(sched.elapsed_time())
                     # reschedule same event of type 'CHECK_RX'
@@ -82,17 +81,19 @@ class bgpSim(object):
                 elif event['action'] == 'MRAI_DEADLINE':
                     node.sendUpdate(
                         event['prefix'], event['neigh'], sched.elapsed_time())
-                sleep(0.1)
+                sleep(0.05)
                 time += 10
                 pbar.update(sched.step())
 
 
-def config_out_path(outPath):
+def config_out_path(outPath, graphName):
     if not os.path.exists(outPath):
         raise Exception("\u001b[31mCannot find the outpath you provided!\n")
     else:
         start = datetime.datetime.now().strftime("%Hh%Mm%Ss_%d-%m-%Y")
-        cdir = outPath + '/' + 'bgpSim_' + start
+        expCode = random.randint(0, 999)
+        cdir = outPath + '/' + 'bgpSim_' + \
+            graphName + '_' + str(expCode)+'_' + start
         if os.path.exists(cdir):
             shutil.rmtree(cdir)
         os.makedirs(cdir)
@@ -110,8 +111,9 @@ if __name__ == '__main__':
                         help="Output folder for simulation")
     args = parser.parse_args()
     graph_path = args.graph
+    graphName = graph_path.split('/')[-1].strip('.graphml')
     output_folder = args.writeto
-    sim_dir = config_out_path(output_folder)
+    sim_dir = config_out_path(output_folder, graphName)
 
     G = nx.read_graphml(path=graph_path)
 
@@ -123,7 +125,6 @@ if __name__ == '__main__':
     for n in sim.nodes.values():
         print("RT of NODE: "+n.ID)
         n.RT.dumps()
-    #code.interact(local=dict(globals(), **locals()))
 
     time = sim.sched.elapsed_time()
     x1 = sim.nodes['X1']
@@ -134,8 +135,10 @@ if __name__ == '__main__':
         event = {'actor': x1.ID, 'action': 'MRAI_DEADLINE',
                  'prefix': prefix, 'neigh': neigh}
         sim.sched.schedule_event(
-            time + x1.neighs[neigh]['mrai'] + sim.sched.jitter(positive=True), event)
+            16 + x1.neighs[neigh]['mrai'] + sim.sched.jitter(positive=True), event)
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
+    for node in sim.nodes.values():
+        node.setLogging(True)
     sim.runSimulation()
     #code.interact(local=dict(globals(), **locals()))
     print("FINISHED AGAIN SIMULATION...")

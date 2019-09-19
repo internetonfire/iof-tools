@@ -23,7 +23,11 @@ class Node(object):
         self.exportPrefixes = prefixes
         # MRAI da configurare, XdestXneigh
         self.events_memory = []
+        self.logging=False
         self.configure()
+
+    def setLogging(self, flag):
+        self.logging=flag
 
     '''
     Configure ha 3 compiti:
@@ -62,6 +66,8 @@ class Node(object):
         print(s)
 
     def log(self, evlog):
+        if not self.logging:
+            return
         self.events_memory.append(evlog)
         #to_write = json.dumps(event_describer)
         self.logfile.write('|'.join([str(evlog.time), evlog.evType, evlog.evFrom,
@@ -99,7 +105,7 @@ class Node(object):
         update = (self.ID, rt4update)
         pyneigh.rxQueue.push(update)
         self.sched.schedule_event(
-            time + 1.0 + self.sched.jitter(), {'actor': neigh, 'action': 'CHECK_RX'})
+            1.0 + self.sched.jitter(), {'actor': neigh, 'action': 'CHECK_RX'})
         # 2.
         self.RT[prefix]['MRAIs'][neigh] = time + \
             self.neighs[neigh]['mrai']
@@ -107,17 +113,17 @@ class Node(object):
                  'prefix': prefix, 'neigh': neigh}
         
         self.sched.schedule_event(
-            time + self.neighs[neigh]['mrai'] + self.sched.jitter(positive=True), event)
+            self.neighs[neigh]['mrai'] + self.sched.jitter(positive=True), event)
         # 3.
         self.RT[prefix]['SHARED_FLAG'][neigh] = True
 
     def processRXupdates(self, time):
-        #print(self.ID, ": processing Received Updates")
         while not self.rxQueue.isEmpty():
             update = self.rxQueue.pop()
             self.log(EventLog(time, 'UpdateRX', update[0],
                               update[1].prefix, update[1].as_path()))
-            self.processUpdate(update, time)
+            self.RT.update_adjRIBin(update)
+        self.selectInstall(time)
 
     '''Da BGP RFC`
     The Decision Process takes place in three distinct phases, each
@@ -135,11 +141,9 @@ class Node(object):
     performed within this phase.
     '''
 
-    def processUpdate(self, update, time):
-        sender, route = update
-        prefix = route.prefix
-        self.RT.update_adjRIBin(sender, route)
-
+    def selectInstall(self, time):
+        code.interact(local=dict(globals(), **locals()))
+        prefix = list(self.RT.adjRIBin.keys())[0]
         # Phase 1,2: compute preferences, then select&install the best
         best_rt, learned_by, max_pref, = None, None, float('-inf')
         for sender, route in self.RT.adjRIBin[prefix].items():
