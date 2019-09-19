@@ -17,17 +17,15 @@ class Node(object):
         self.sched = sched
         self.nodeType = node_type
         self.RT = RT(self)
-        self.rxQueue = MyQueue()
         self.neighs = defaultdict(dict)
         # self.policies?
         self.exportPrefixes = prefixes
         # MRAI da configurare, XdestXneigh
         self.events_memory = []
-        self.logging=False
-        self.configure()
+        self.logging = False
 
     def setLogging(self, flag):
-        self.logging=flag
+        self.logging = flag
 
     '''
     Configure ha 3 compiti:
@@ -46,8 +44,7 @@ class Node(object):
         # autoricezione prefissi da esportare
         for prefix in self.exportPrefixes:
             route = Route(prefix, {'AS_PATH': ''})
-            self_update = (self.ID, route)
-            self.rxQueue.push(self_update)
+            self.decisionProcess(0, (self.ID, route))
         # apertura file di log
         self.logfile = open(self.sim_dir + "/" + self.ID + "_log.csv", 'a')
         self.logfile.write("TIME|EVENT_TYPE|FROM|PREFIX|AS_PATH|BINPREF"+'\n')
@@ -74,55 +71,46 @@ class Node(object):
                                      evlog.prefix, evlog.as_path, evlog.binPref])+'\n')
         self.logfile.flush()
 
-        '''
-        - route da annunciare
-        - vicino a cui mandiamo l'annuncio
-        '''
-
-    def sendUpdate(self, prefix, neigh, time):
-        try:
-            if self.RT[prefix]['SHARED_FLAG'][neigh]:
-                return
-        except:
-            code.interact(local=dict(globals(), **locals()))
+    def sendUpdate(self, prefix, neigh, now):
+        if self.RT[prefix]['SHARED_FLAG'][neigh]:
+            return
         mrai = self.RT[prefix]['MRAIs'][neigh]
-        if mrai <= time:  # mrai scaduto! ready2fire!
-            self.really_send_update(prefix, neigh, time)
+        # mrai scaduto! ready2fire!
+        if mrai <= now:
+            self.really_send_update(prefix, neigh, now)
         else:
             print("\u001b[31mWait mrai to fire")
 
-    def really_send_update(self, prefix, neigh, time):
+    def really_send_update(self, prefix, neigh, now):
         '''really send:
-        1. creare l'update e metterlo nel bufferRX del vicino
+        1. creare l'update e metterlo e farglielo ricevere al vicino
         2. impostare l'MRAI per questa rotta con questo vicino
         3. flaggare la rotta come comunicata a questo vicino'''
         # 1.
         pyneigh = self.neighs[neigh]['pynode']
-        rt4update = Route(prefix, {})
         rasp = self.RT[prefix]['AS_PATH']
         newAS_PATH = rasp + ',' + self.ID if rasp != "" else self.ID
-        rt4update.attr['AS_PATH'] = newAS_PATH
+        rt4update = Route(prefix, {'AS_PATH': newAS_PATH})
         update = (self.ID, rt4update)
-        pyneigh.rxQueue.push(update)
-        self.sched.schedule_event(
-            0.1 + self.sched.jitter(), {'actor': neigh, 'action': 'CHECK_RX'})
+        # pyneigh.rxQueue.push(update)
+        pyneigh.processRXupdates(update, now)
         # 2.
-        self.RT[prefix]['MRAIs'][neigh] = time + \
+        self.RT[prefix]['MRAIs'][neigh] = now + \
             self.neighs[neigh]['mrai']
-        event = {'actor': self.ID, 'action': 'DISSEMINATE',
-                 'prefix': prefix}
+        event = {'actor': self.ID, 'action': 'DECISION_PROCESS', 'update': None}
         self.sched.schedule_event(
-            self.neighs[neigh]['mrai'] + self.sched.jitter(positive=True), event)
+            self.neighs[neigh]['mrai'] + self.sched.jitter(), event)
         # 3.
         self.RT[prefix]['SHARED_FLAG'][neigh] = True
 
-    def processRXupdates(self, time):
-        while not self.rxQueue.isEmpty():
-            update = self.rxQueue.pop()
-            self.log(EventLog(time, 'UpdateRX', update[0],
-                              update[1].prefix, update[1].as_path()))
-            self.RT.update_adjRIBin(update)
-        self.selectInstall(time)
+    def processRXupdates(self, update, now):
+        self.log(EventLog(now, 'RECEPTION', update[0],
+                          update[1].prefix, update[1].as_path()))
+        # Processing, by model, takes non-zero time. This is why I
+        # schedule a decision process after short-time
+        event = {'actor': self.ID,
+                 'action': 'DECISION_PROCESS', 'update': update}
+        self.sched.schedule_event(self.sched.jitter(), event)
 
     '''Da BGP RFC`
     The Decision Process takes place in three distinct phases, each
@@ -140,23 +128,21 @@ class Node(object):
     performed within this phase.
     '''
 
-    def selectInstall(self, time):
-        #HARD CODING!!! so che ho solo una destinazione nella RT
-        prefix = list(self.RT.adjRIBin.keys())[0]
-        # Phase 1,2: compute preferences, then select&install the best
-        best_rt, learned_by, max_pref, = None, None, float('-inf')
-        for sender, route in self.RT.adjRIBin[prefix].items():
-            rt_preference = policy(self.ID, route)
-            if rt_preference > max_pref:
-                best_rt, learned_by, max_pref = route, sender, rt_preference
-        self.RT.install_route(best_rt, learned_by, max_pref, time)
-        # Processing, by model, takes non-zero time. Schedule
-        # dissemination after short-time to implement the non-zero processing time
-        event = {'actor': self.ID, 'action': 'DISSEMINATE',
-                 'prefix': prefix}
-        self.sched.schedule_event(self.sched.jitter(), event)
+    def decisionProcess(self, now, update=None):
+        # HARD CODING!!! so che ho solo una destinazione nella RT
+        prefix = update[1].prefix if update else list(self.RT.adjRIBin.keys())[0]
+        if update:
+            self.RT.update_adjRIBin(update)
+            # Phase 1,2: compute preferences, then select&install the best
+            best_rt, learned_by, max_pref, = None, None, float('-inf')
+            for sender, route in self.RT.adjRIBin[prefix].items():
+                rt_preference = policy(self.ID, route)
+                if rt_preference > max_pref:
+                    best_rt, learned_by, max_pref = route, sender, rt_preference
+            self.RT.install_route(best_rt, learned_by, max_pref, now)
+        self.disseminate(prefix, now)
 
-    def disseminate(self, prefix, time):
+    def disseminate(self, prefix, now):
         for neigh in self.neighs:
             if not self.RT[prefix]['SHARED_FLAG'][neigh]:
                 myNeighIsMy = self.neighs[neigh]['relation']
@@ -166,4 +152,4 @@ class Node(object):
                     nei seguenti casi:
                     - se ho imparato la rotta da un provider OR peer ==> manda ai miei customer
                     - se mi arriva da un customer ==> manda a tutti tranne a chi me l'ha mandata'''
-                    self.sendUpdate(prefix, neigh, time)
+                    self.sendUpdate(prefix, neigh, now)

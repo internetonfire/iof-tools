@@ -64,6 +64,7 @@ class RoutingTable(object):
                 # virtualmente scaduto! :)
                 self.rt[prefix]['MRAIs'][neigh] = time
         if new_route or modified:
+            # print("\tINSTALLED",prefix,"with AS_PATH",as_path)
             # non modifico l'MRAI pre-esistente, aspetto che scada...
             # ma setto shared_flag = False per tutti, perchè con nessuno
             # ho gia condiviso la nuova rotta appena installata

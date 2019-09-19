@@ -74,7 +74,7 @@ The graphml is parsed to:
   \item initialize node objects with their TYPE and prefixes to be exported
   \item setup neighbourhood relationships. This includes peering or customer/provider role assignment and per-neigh default-MRAI assignment
 \end{enumerate}
-At node initialization, prefixes exported by nodes are put in those nodes' receiving buffer. Then, for all nodes, a 'CHECK-RX' event is triggered so that nodes install those prefixes in their RT and can start advertising them. 
+At boot, node's 
 
 \subsection*{pySim main loop and events}
 Events are described by a tuple of the form: (\textit{actor}, \textit{action}, \textit{params}). The actor is a nodeID indicating which node should perform an action, with all info necessary to perform the action contained in \textit{params}. Actions can be of 2 kinds:

@@ -59,27 +59,26 @@ class bgpSim(object):
                 nodes[p].neighs[c] = {
                     'relation': 'customer', 'mrai': p2c, 'pynode': nodes[c]}
         self.nodes = nodes
+        for n in nodes.values():
+            n.configure()
 
-    def scedule_initial_events(self, sched):
+    '''def scedule_initial_events(self, sched):
         for nodeID in self.nodes:
             if self.nodes[nodeID].exportPrefixes:
                 sched.schedule_event(0.1 + sched.jitter(),
-                                     {'actor': nodeID, 'action': 'CHECK_RX'})
+                                     {'actor': nodeID, 'action': 'CHECK_RX'})'''
 
     def runSimulation(self):
         sched = self.sched
         print("Simulation started")
+        #code.interact(local=dict(globals(), **locals()))
         with tqdm(total=MAX_DURATION) as pbar:
             while(sched.elapsed_time() < MAX_DURATION and len(sched.queue) > 0):
                 event = sched.pop_event()
                 current_time = sched.elapsed_time()
                 node = self.nodes[event['actor']]
-                if event['action'] == 'CHECK_RX':
-                    node.processRXupdates(sched.elapsed_time())
-                    # reschedule same event of type 'CHECK_RX'
-                    # sched.schedule_event(1.0 + sched.jitter(), event)
-                elif event['action'] == 'DISSEMINATE':
-                    node.disseminate(event['prefix'], sched.elapsed_time())
+                if event['action'] == 'DECISION_PROCESS':
+                    node.decisionProcess(sched.elapsed_time(), event['update'])
                 sleep(0.05)
                 pbar.update(sched.step())
 
@@ -117,7 +116,6 @@ if __name__ == '__main__':
 
     # Initialize simulator and start simulation
     sim = bgpSim(G, sim_dir)
-    sim.scedule_initial_events(sim.sched)
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
     for n in sim.nodes.values():
@@ -130,13 +128,12 @@ if __name__ == '__main__':
     prefix = x1.exportPrefixes[0]
     route = Route(prefix, {'AS_PATH': 'P'})
     x1.RT.install_route(route, x1.ID, 1, time)
-    event = {'actor': x1.ID, 'action': 'DISSEMINATE','prefix': prefix}
+    event = {'actor': x1.ID, 'action': 'DECISION_PROCESS','update': (x1.ID, route)}
     sim.sched.schedule_event(16, event)
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
     for node in sim.nodes.values():
         node.setLogging(True)
     sim.runSimulation()
-    #code.interact(local=dict(globals(), **locals()))
     print("FINISHED AGAIN SIMULATION...")
     for n in sim.nodes.values():
         print("RT of NODE: "+n.ID)

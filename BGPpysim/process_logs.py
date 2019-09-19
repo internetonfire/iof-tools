@@ -19,7 +19,7 @@ for file in glob.glob(folder+"/*.csv"):
     if node == 'X1':
         continue
     data = pd.read_csv(file, sep='|')
-    updatesCounter = len(data[data.EVENT_TYPE == 'UpdateRX'])
+    updatesCounter = len(data[data.EVENT_TYPE == 'RECEPTION'])
     routeInstallmentCounter = len(data[data.EVENT_TYPE == 'INSTALLED_ROUTE'])
     upC += updatesCounter
     instC += routeInstallmentCounter
@@ -76,7 +76,7 @@ colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#a65628','#f781bf',
 counter = 0
 for node in node2events:
     events = node2events[node]
-    uprx=events[events.EVENT_TYPE=='UpdateRX']
+    uprx=events[events.EVENT_TYPE=='RECEPTION']
     instrt=events[events.EVENT_TYPE=='INSTALLED_ROUTE']
     plt.plot(uprx.TIME, [counter]*len(uprx.TIME), '+', c=colors[counter], markersize=12)
     plt.plot(instrt.TIME, [counter]*len(instrt.TIME), 'X', c=colors[counter])
