@@ -105,7 +105,7 @@ class Node(object):
         update = (self.ID, rt4update)
         pyneigh.rxQueue.push(update)
         self.sched.schedule_event(
-            1.0 + self.sched.jitter(), {'actor': neigh, 'action': 'CHECK_RX'})
+            0.1 + self.sched.jitter(), {'actor': neigh, 'action': 'CHECK_RX'})
         # 2.
         self.RT[prefix]['MRAIs'][neigh] = time + \
             self.neighs[neigh]['mrai']

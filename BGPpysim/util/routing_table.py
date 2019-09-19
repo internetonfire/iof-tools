@@ -41,7 +41,7 @@ class RoutingTable(object):
         s.field_names = ["PREFIX", "AS_PATH", "NH", "PREFERENCE"]
         for p in self.rt:
             s.add_row([p, self.rt[p]['AS_PATH'], self.rt[p]
-                       ['NH'], self.rt[p]['PREFERENCE']])
+                       ['NH'], bin(self.rt[p]['PREFERENCE'])[2:]])
         print(s)
 
     def update_adjRIBin(self, update):
