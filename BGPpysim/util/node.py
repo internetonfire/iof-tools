@@ -109,9 +109,8 @@ class Node(object):
         # 2.
         self.RT[prefix]['MRAIs'][neigh] = time + \
             self.neighs[neigh]['mrai']
-        event = {'actor': self.ID, 'action': 'MRAI_DEADLINE',
-                 'prefix': prefix, 'neigh': neigh}
-        
+        event = {'actor': self.ID, 'action': 'DISSEMINATE',
+                 'prefix': prefix}
         self.sched.schedule_event(
             self.neighs[neigh]['mrai'] + self.sched.jitter(positive=True), event)
         # 3.
@@ -142,7 +141,7 @@ class Node(object):
     '''
 
     def selectInstall(self, time):
-        #code.interact(local=dict(globals(), **locals()))
+        #HARD CODING!!! so che ho solo una destinazione nella RT
         prefix = list(self.RT.adjRIBin.keys())[0]
         # Phase 1,2: compute preferences, then select&install the best
         best_rt, learned_by, max_pref, = None, None, float('-inf')
@@ -151,14 +150,19 @@ class Node(object):
             if rt_preference > max_pref:
                 best_rt, learned_by, max_pref = route, sender, rt_preference
         self.RT.install_route(best_rt, learned_by, max_pref, time)
+        # Processing, by model, takes non-zero time. Schedule
+        # dissemination after short-time to implement the non-zero processing time
+        event = {'actor': self.ID, 'action': 'DISSEMINATE',
+                 'prefix': prefix}
+        self.sched.schedule_event(self.sched.jitter(), event)
 
-        # Phase 3: routes dissemination
+    def disseminate(self, prefix, time):
         for neigh in self.neighs:
             if not self.RT[prefix]['SHARED_FLAG'][neigh]:
                 myNeighIsMy = self.neighs[neigh]['relation']
                 # policy propagazione update in base a relazioni tra nodi e loro tipo...
                 if myNeighIsMy == 'customer':
-                    '''Da implementare anche, in futuro, la propgazione
+                    '''Da implementare anche, in futuro, la propagazione
                     nei seguenti casi:
                     - se ho imparato la rotta da un provider OR peer ==> manda ai miei customer
                     - se mi arriva da un customer ==> manda a tutti tranne a chi me l'ha mandata'''

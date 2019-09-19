@@ -64,12 +64,11 @@ class bgpSim(object):
         for nodeID in self.nodes:
             if self.nodes[nodeID].exportPrefixes:
                 sched.schedule_event(0.1 + sched.jitter(),
-                                 {'actor': nodeID, 'action': 'CHECK_RX'})
+                                     {'actor': nodeID, 'action': 'CHECK_RX'})
 
     def runSimulation(self):
         sched = self.sched
         print("Simulation started")
-        time = 0
         with tqdm(total=MAX_DURATION) as pbar:
             while(sched.elapsed_time() < MAX_DURATION and len(sched.queue) > 0):
                 event = sched.pop_event()
@@ -79,11 +78,9 @@ class bgpSim(object):
                     node.processRXupdates(sched.elapsed_time())
                     # reschedule same event of type 'CHECK_RX'
                     # sched.schedule_event(1.0 + sched.jitter(), event)
-                elif event['action'] == 'MRAI_DEADLINE':
-                    node.sendUpdate(
-                        event['prefix'], event['neigh'], sched.elapsed_time())
+                elif event['action'] == 'DISSEMINATE':
+                    node.disseminate(event['prefix'], sched.elapsed_time())
                 sleep(0.05)
-                time += 10
                 pbar.update(sched.step())
 
 
@@ -126,17 +123,15 @@ if __name__ == '__main__':
     for n in sim.nodes.values():
         print("RT of NODE: "+n.ID)
         n.RT.dumps()
-
+    
+    #code.interact(local=dict(globals(), **locals()))
     time = sim.sched.elapsed_time()
     x1 = sim.nodes['X1']
     prefix = x1.exportPrefixes[0]
     route = Route(prefix, {'AS_PATH': 'P'})
     x1.RT.install_route(route, x1.ID, 1, time)
-    for neigh in x1.neighs:
-        event = {'actor': x1.ID, 'action': 'MRAI_DEADLINE',
-                 'prefix': prefix, 'neigh': neigh}
-        sim.sched.schedule_event(
-            16 + x1.neighs[neigh]['mrai'] + sim.sched.jitter(positive=True), event)
+    event = {'actor': x1.ID, 'action': 'DISSEMINATE','prefix': prefix}
+    sim.sched.schedule_event(16, event)
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
     for node in sim.nodes.values():
         node.setLogging(True)

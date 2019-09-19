@@ -36,7 +36,7 @@ print(t)
 allRTinstallments=[]
 ft = PrettyTable()
 ft.field_names = ['TIME', 'Y1', 'X2', 'Y2', 'X3', 'Y3', 'X4']
-ft.add_row([float('0.000'), '1', '1', '11', '11', '111', '111'])
+ft.add_row([float('0.000'), '1', '11', '11', '111', '111', '1111'])
 for node in node2events:
     events = node2events[node]
     inst = events[events.EVENT_TYPE == 'INSTALLED_ROUTE']

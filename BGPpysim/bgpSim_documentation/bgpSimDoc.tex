@@ -72,7 +72,7 @@ The simulator requires:
 The graphml is parsed to:
 \begin{enumerate}[noitemsep]
   \item initialize node objects with their TYPE and prefixes to be exported
-  \item setup neighbourhood relationships. This includes peering or customer/provider role assignment and per-neigh MRAI assignment
+  \item setup neighbourhood relationships. This includes peering or customer/provider role assignment and per-neigh default-MRAI assignment
 \end{enumerate}
 At node initialization, prefixes exported by nodes are put in those nodes' receiving buffer. Then, for all nodes, a 'CHECK-RX' event is triggered so that nodes install those prefixes in their RT and can start advertising them. 
 
@@ -81,7 +81,7 @@ Events are described by a tuple of the form: (\textit{actor}, \textit{action}, \
 
 \begin{enumerate}[noitemsep]
  \item 'CHECK-RX': the actor controls whether new updates are in its rx-buffer, and process them.
- \item 'MRAI-DEADLINE': the actor MRAI deadline for advertising a given prefix expired, so the node send an update immediately
+ \item 'MRAI-DEADLINE': the actor's MRAI deadline for advertising a given prefix expired, so the actor sends an update immediately
 \end{enumerate}
 
 The logic of processing and sending updates is described in \cref{sec:nodeLogic} about Node logic implementation.
@@ -105,6 +105,7 @@ A routing table is a dictionary indexed by known prefixes. For each prefix these
   \item PREFERENCE, computed according to the \textbf{policy function}\footnote{The policy function comes as a separate py file, to ease extension and multiple versions implementation in the future}
   \item MRAIs: a dictionary indexed by neighbours' ids. For each neigh the time after which is possible to send an update is maintained.
   \item SHARED-FLAG: again a per-neigh indexed dictionary. A flag per neighbour is maintained to remember if an update has been or not already sent to this neigh for this prefix. Thanks to these flags and assuming no losses in sending updates over TCP connections, we will see the network "\textit{silent}" at convergence.
+  \item adjRIBin: again per-neigh dict. The last update sent by the indexed neigh for the given prefix is maintained here
 \end{enumerate}
 
 
@@ -120,10 +121,10 @@ After sending an update for a given prefix to a given neigh, the SHARED-FLAG in 
 \subsection*{PROCESSING received updates}
 Periodically (each second +- jitter), every node flushes its receiving buffer processing all found updates. The update processing workflow is:
 \begin{enumerate}[noitemsep]
-  \item Compute PREFERENCE applying the policy function to the route's attributes
-  \item Proceed with a standard Bellman-Ford, installing the route if it is new or with a strictly higher preference.
-  \item If preference is decreasing or a withraw is received, a node must consider to install a backup route!
-  \todo[inline]{Come triggerare l'installazione delle backup routes? Mattia questo e' il punto su cui dovremo ragionare tanto domani :)}
+  \item Put received updates in the adjRIBin
+  \item Phase 1: Compute PREFERENCE applying the policy function to all updates 
+  \item Phase 2: For each destination (in our case just one), select and install the route with higher preference
+  \item Phase 3: if the best\&installed route is related to a new or modified route, then the installing routine set the SHARED-FLAG of this route to False (i.e. not shared yet), and must be advertised. The sending routine is performed for the prefix.
 \end{enumerate}
 
 
