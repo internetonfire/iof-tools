@@ -142,7 +142,7 @@ class Node(object):
     '''
 
     def selectInstall(self, time):
-        code.interact(local=dict(globals(), **locals()))
+        #code.interact(local=dict(globals(), **locals()))
         prefix = list(self.RT.adjRIBin.keys())[0]
         # Phase 1,2: compute preferences, then select&install the best
         best_rt, learned_by, max_pref, = None, None, float('-inf')

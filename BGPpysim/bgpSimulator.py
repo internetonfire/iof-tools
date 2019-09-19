@@ -62,7 +62,8 @@ class bgpSim(object):
 
     def scedule_initial_events(self, sched):
         for nodeID in self.nodes:
-            sched.schedule_event(1.0 + sched.jitter(),
+            if self.nodes[nodeID].exportPrefixes:
+                sched.schedule_event(1.0 + sched.jitter(),
                                  {'actor': nodeID, 'action': 'CHECK_RX'})
 
     def runSimulation(self):
