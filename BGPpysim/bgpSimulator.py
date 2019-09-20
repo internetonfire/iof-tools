@@ -62,12 +62,6 @@ class bgpSim(object):
         for n in nodes.values():
             n.configure()
 
-    '''def scedule_initial_events(self, sched):
-        for nodeID in self.nodes:
-            if self.nodes[nodeID].exportPrefixes:
-                sched.schedule_event(0.1 + sched.jitter(),
-                                     {'actor': nodeID, 'action': 'CHECK_RX'})'''
-
     def runSimulation(self):
         sched = self.sched
         print("Simulation started")
@@ -75,7 +69,6 @@ class bgpSim(object):
         with tqdm(total=MAX_DURATION) as pbar:
             while(sched.elapsed_time() < MAX_DURATION and len(sched.queue) > 0):
                 event = sched.pop_event()
-                current_time = sched.elapsed_time()
                 node = self.nodes[event['actor']]
                 if event['action'] == 'DECISION_PROCESS':
                     node.decisionProcess(sched.elapsed_time(), event['update'])

@@ -22,11 +22,27 @@ def policy(nodeID, route):
     LOWEST_PREF = 0
     if 'AS_PATH' not in route.attr:
         return LOWEST_PREF
-    aspath = route.as_path() + "," + nodeID
+    aspath = route.as_path()+ ',' + nodeID
     state = 'START'
     bs = ""
-    #code.interact(local=dict(globals(), **locals()))
     for c in aspath.split(","):
+        if state == 'START' and 'P' in c:
+            state = 'M'
+        elif state == 'START' and 'X' in c:
+            bs += '1'
+            state = 'R'
+        elif state == 'M' and 'X' in c:
+            bs += '0'
+            state = 'R'
+        elif state == 'R' and 'X' in c:
+            bs += '1'
+        elif state == 'R' and 'Y' in c:
+            bs += '0'
+            state = 'MX'
+        elif state == 'MX' and 'X' in c:
+            state = 'R'
+
+    '''for c in aspath.split(","):
         if state == 'START' and 'X' in c:
             bs += '1'
             state = 'A'
@@ -42,19 +58,34 @@ def policy(nodeID, route):
         elif state == 'C' and 'X' in c:
             bs += '1'
             state = 'A'
-    #print('BS =', bs)
+            '''
+    #code.interact(local=dict(globals(), **locals()))
+    if state=='MX':
+        bs=bs[:-1]
+    #code.interact(local=dict(globals(), **locals()))
     return int('0b'+bs, 2)
 
 
+def test():
+    route = Route('dest', {'AS_PATH': 'P,X1,X2,Y2,X3,Y3'})
+    cost = policy('X4', route)
+    bincost = bin(cost)[2:]
+    assert bincost == 0
+
+
 if __name__ == "__main__":
-    route = Route('dest', {'AS_PATH': 'X1,X2'})
+    # test()
+    route = Route('dest', {'AS_PATH': 'P,X1,X2,Y2,X3,Y3'})
+    nodeid='X4'
     while(1):
-        #code.interact(local=dict(globals(), **locals()))
-        cost = policy('Y1', route)
+        cost = policy(nodeid, route)
         bincost = bin(cost)[2:]
-        print("The cost of", route.attr['AS_PATH'], "is:")
+        print("The cost of", route.attr['AS_PATH'], 'for', nodeid, "is:")
         print("DEC =", cost, "\tBIN =", bincost)
-        print("insert new AS_PATH to continue.")
+        #print("insert new AS_PATH to continue.")
+        print('new nodeid')
+        nodeid = input()
+        print('new aspath')
         route.attr['AS_PATH'] = input()
 
 

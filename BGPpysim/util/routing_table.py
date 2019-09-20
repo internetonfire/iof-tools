@@ -51,10 +51,12 @@ class RoutingTable(object):
     def install_route(self, route, sender, rt_preference, time):
         prefix, NH, as_path, preference = route.prefix, sender, route.as_path(), rt_preference
         new_route = prefix not in self.rt
+        modified=False
         if not new_route:
             entry = self.rt[prefix]
-            modified = (NH, as_path, preference) != (
-                entry['NH'], entry['AS_PATH'], entry['PREFERENCE'])
+            modified = (NH, as_path, preference) != (entry['NH'], entry['AS_PATH'], entry['PREFERENCE'])
+            #if modified and self.node.ID=='X4':
+            #    code.interact(local=dict(globals(), **locals()))
         self.rt[prefix].update({'NH': NH, 'AS_PATH': as_path,
                                 'PREFERENCE': preference
                                 })

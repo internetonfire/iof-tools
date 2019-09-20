@@ -72,8 +72,7 @@ class Node(object):
         self.logfile.flush()
 
     def sendUpdate(self, prefix, neigh, now):
-        if self.RT[prefix]['SHARED_FLAG'][neigh]:
-            return
+        assert not self.RT[prefix]['SHARED_FLAG'][neigh]
         mrai = self.RT[prefix]['MRAIs'][neigh]
         # mrai scaduto! ready2fire!
         if mrai <= now:
@@ -81,18 +80,17 @@ class Node(object):
         else:
             print("\u001b[31mWait mrai to fire")
 
-    def really_send_update(self, prefix, neigh, now):
-        '''really send:
+    '''really send:
         1. creare l'update e metterlo e farglielo ricevere al vicino
         2. impostare l'MRAI per questa rotta con questo vicino
         3. flaggare la rotta come comunicata a questo vicino'''
+    def really_send_update(self, prefix, neigh, now):
         # 1.
         pyneigh = self.neighs[neigh]['pynode']
         rasp = self.RT[prefix]['AS_PATH']
         newAS_PATH = rasp + ',' + self.ID if rasp != "" else self.ID
         rt4update = Route(prefix, {'AS_PATH': newAS_PATH})
         update = (self.ID, rt4update)
-        # pyneigh.rxQueue.push(update)
         pyneigh.processRXupdates(update, now)
         # 2.
         self.RT[prefix]['MRAIs'][neigh] = now + \
@@ -108,9 +106,12 @@ class Node(object):
                           update[1].prefix, update[1].as_path()))
         # Processing, by model, takes non-zero time. This is why I
         # schedule a decision process after short-time
+        addj = 0
+        if self.ID.startswith('Y'):
+            addj=0.001
         event = {'actor': self.ID,
                  'action': 'DECISION_PROCESS', 'update': update}
-        self.sched.schedule_event(self.sched.jitter(), event)
+        self.sched.schedule_event(addj+self.sched.jitter(), event)
 
     '''Da BGP RFC`
     The Decision Process takes place in three distinct phases, each
