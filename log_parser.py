@@ -2,7 +2,7 @@
 import argparse
 import datetime
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 log_types = ['FATAL', 'RECONF']
@@ -18,6 +18,9 @@ class WrongFileName(Exception):
 
 args = None
 
+def print_in_columns(data, width=15, separator=','):
+    print(separator.join([str(d).ljust(width) for d in data]))
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -26,6 +29,8 @@ def parse_args():
                         action='store_true')
     parser.add_argument('-c', help='Compute convergence delay', default=False,
                         action='store_true')
+    parser.add_argument('-t', help='compute the number of updates generated',
+                        default=False, action='store_true')
     global args
     args = parser.parse_args()
 
@@ -105,8 +110,15 @@ def compute_convergence_time(data):
     return None, None
 
 
-def print_in_columns(data, width=15, separator=','):
-    print(separator.join([str(d).ljust(width) for d in data]))
+def compute_updates_number(data):
+    updates = Counter()
+    min_secs = int((data[0][0] - datetime.datetime(1970, 1, 1)).total_seconds())
+    max_secs = int((data[-1][0] - datetime.datetime(1970, 1, 1,)).total_seconds())
+    for (t, d) in data:
+        secs = int((t - datetime.datetime(1970, 1, 1)).total_seconds())
+        if d['type'] == 'UPDATE_TX':
+            updates[secs] += 1
+    return updates, min_secs, max_secs
 
 
 def main():
@@ -119,6 +131,11 @@ def main():
             convergence_time, first_log = compute_convergence_time(data)
             AS_data[AS_number]['convergence_time'] = convergence_time
             AS_data[AS_number]['first_log'] = first_log
+        if args.t:
+            updates, min_secs, max_secs = compute_updates_number(data)
+            AS_data[AS_number]['updates'] = updates
+            AS_data[AS_number]['min_secs'] = min_secs
+            AS_data[AS_number]['max_secs'] = max_secs
 
     if args.c:
         print_in_columns(['AS', 'convergence_time'])
@@ -134,6 +151,24 @@ def main():
             else:
                 print_line = [AS_number, -1]
             print_in_columns(print_line)
+        print('\n\n')
+
+    if args.t:
+        if reconf_time:
+            reconf_secs = int((reconf_time - datetime.datetime(1970, 1, 1)).total_seconds())
+        else:
+            reconf_secs = min([AS_data[x]['min_secs'] for x in AS_data])
+        end_secs_secs = max([AS_data[x]['max_secs'] for x in AS_data])
+        print_in_columns(['time'] + sorted(AS_data.keys()) + ['sum'], width=4)
+        for i in range(min_secs, max_secs):
+            print_list = [str(i-min_secs)]
+            tot_udp = 0
+            for (AS_number, c_data) in sorted(AS_data.items()):
+                upd = c_data['updates'].get(i, 0)
+                tot_udp += upd
+                print_list.append(str(upd))
+            print_list.append(tot_udp)
+            print_in_columns(print_list, width=4)
 
 
 main()
