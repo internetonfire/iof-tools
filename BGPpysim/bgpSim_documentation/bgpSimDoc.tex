@@ -136,12 +136,38 @@ then will send updates. The full decision process is illustrated by \cref{fig:de
 
 \section{First results}
 
-Based on the usual topology (\cref{})
+Based on the usual topology (\cref{fig:fabrex}), I tested 3 configurations:
+\begin{itemize}[noitemsep]
+  \item \textit{a)} MRAI DECREASING (cut by 2) from d to X4. \\$\quad$e.g. $ X_1, Y_1 = 8s \quad X_2, Y_2 = 4s$... 
+  \item \textit{b)} MRAI reversed   (2x) from d to X4 \\$\quad$e.g. $ X_1, Y_1 = 2s \quad X_2, Y_2 = 4s$... 
+  \item \textit{b)} MRAI=0 for all
+\end{itemize}
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{figures/fabrex.png}
 \caption{The usual reference topology}
-\label{fig:decisionprocess}
+\label{fig:fabrex}
+\end{figure}
+
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[]
+\begin{tabular}{@{}crrr@{}}
+\toprule
+\textbf{Scenario} & \multicolumn{1}{c}{\textbf{\#Updates}} & \multicolumn{1}{c}{\textbf{\begin{tabular}[c]{@{}c@{}}\#RT\\ INSTALLMENTs\end{tabular}}} & \multicolumn{1}{c}{\textbf{\begin{tabular}[c]{@{}c@{}}CONV\\ TIME {[}sec{]}\end{tabular}}} \\ \midrule
+\textit{a}        & 21                                     & 21                                                                                       & 30                                                                                         \\
+\textit{b}        & 15                                     & 15                                                                                       & 32                                                                                         \\
+\textit{c}        & 18                                     & 15                                                                                       & 16                                                                                         \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section{Processing Logs}
+The simulator comes with a script for processing simulation's logs. The script produces these kind of summary:
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/output.png}
+\caption{Output from processing script. $X_1$ is not processed as it is the node that triggers the storm of updates.}
+\label{fig:fabrex}
 \end{figure}
 
 %----------------------------------------------------------------------------------------
