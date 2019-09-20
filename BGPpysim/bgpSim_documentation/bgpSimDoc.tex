@@ -33,6 +33,7 @@
 \hypersetup{hidelinks,colorlinks,breaklinks=true,urlcolor=color2,citecolor=color1,linkcolor=color1,bookmarksopen=false,pdftitle={Title},pdfauthor={Author}}
 
 \usepackage[capitalise]{cleveref}
+\usepackage{float}
 % 
 \usepackage[colorinlistoftodos,prependcaption,textsize=small]{todonotes}
 %----------------------------------------------------------------------------------------
@@ -64,27 +65,16 @@
 %\addcontentsline{toc}{section}{Introduction}
 The simulator requires:
 \begin{enumerate}[noitemsep]
-  \item The network topology, described by a graphml file (\textsf{--graphml})
+  \item The network topology, described by a graphml file
   \item The output folder
 \end{enumerate}
 
-\subsection*{Initialization}
+\section{Initialization}
 The graphml is parsed to:
 \begin{enumerate}[noitemsep]
   \item initialize node objects with their TYPE and prefixes to be exported
   \item setup neighbourhood relationships. This includes peering or customer/provider role assignment and per-neigh default-MRAI assignment
 \end{enumerate}
-At boot, node's 
-
-\subsection*{pySim main loop and events}
-Events are described by a tuple of the form: (\textit{actor}, \textit{action}, \textit{params}). The actor is a nodeID indicating which node should perform an action, with all info necessary to perform the action contained in \textit{params}. Actions can be of 2 kinds:
-
-\begin{enumerate}[noitemsep]
- \item 'CHECK-RX': the actor controls whether new updates are in its rx-buffer, and process them.
- \item 'MRAI-DEADLINE': the actor's MRAI deadline for advertising a given prefix expired, so the actor sends an update immediately
-\end{enumerate}
-
-The logic of processing and sending updates is described in \cref{sec:nodeLogic} about Node logic implementation.
 
 \section{Node implementation}\label{sec:nodeLogic}
 
@@ -92,8 +82,7 @@ The logic of processing and sending updates is described in \cref{sec:nodeLogic}
 A node has/is described by, and keeps updated the following:
 \begin{enumerate}[noitemsep]
   \item nodeID and nodeType
-  \item \textbf{rxQueue}: the updates receiveing buffer
-  \item \textbf{neighs}: a dictionry with neighID as keys and 'realtion' and MRAI as neighbour attributes
+  \item \textbf{neighs}: a dictionry with neighID as keys and \textit{(relation, mrai)} as neighbour attributes
   \item \textbf{exportPrefixes}: a list of prefixes exported by this node
   \item \textbf{RoutingTable}: an object with convenient methods to install routes and to remeber received updates, so to be ready to install backup routes
 \end{enumerate}
@@ -104,35 +93,56 @@ A routing table is a dictionary indexed by known prefixes. For each prefix these
   \item NH and AS-PATH
   \item PREFERENCE, computed according to the \textbf{policy function}\footnote{The policy function comes as a separate py file, to ease extension and multiple versions implementation in the future}
   \item MRAIs: a dictionary indexed by neighbours' ids. For each neigh the time after which is possible to send an update is maintained.
-  \item SHARED-FLAG: again a per-neigh indexed dictionary. A flag per neighbour is maintained to remember if an update has been or not already sent to this neigh for this prefix. Thanks to these flags and assuming no losses in sending updates over TCP connections, we will see the network "\textit{silent}" at convergence.
-  \item adjRIBin: again per-neigh dict. The last update sent by the indexed neigh for the given prefix is maintained here
+  \item SHARED-FLAG: again a per-neigh indexed dictionary. A flag per neighbour is maintained to remember if an update has been sent or not to this neigh for this prefix. Thanks to these flags and assuming no losses in sending updates over TCP connections, we will see the network "\textit{silent}" at convergence.
+  \item adjRIBin: again per-neigh dict. The last update received from the indexed neigh for the given prefix is maintained here
 \end{enumerate}
-
-
-\subsection*{SENDING updates}
-After receiving an update, a node may decide to send and update for these reasons:
-\begin{enumerate}[noitemsep]
-  \item the route is new
-  \item some route's attributes changed
-\end{enumerate}
-If the MRAI for this prefix with a given neighbour is expired, the update can be really sent, appending the sender-id to the route's AS-PATH and pushing the update in the neigh's rxQueue.\\
-After sending an update for a given prefix to a given neigh, the SHARED-FLAG in the RT[prefix][SHARED-FLAGs][neigh] must be set to TRUE and \textbf{the MRAI must be updated}!
 
 \subsection*{PROCESSING received updates}
-Periodically (each second +- jitter), every node flushes its receiving buffer processing all found updates. The update processing workflow is:
+When a node receives an update, it schedules its own "state-transition" after a short delay. This delay model the non-zero time required to process an update.
+After this delay, the node run a (instantaneous) DECISION-PROCESS, deciding what to do with the received update. This process may trigger the sending of an update.
+
+\subsection*{SENDING updates}
+The send-update routine is responsible to disseminate those routes that, compared to the last sent update, are new or have been modified (modified once or multiple time).
+The send-update can fail therefore if:
 \begin{enumerate}[noitemsep]
-  \item Put received updates in the adjRIBin
-  \item Phase 1: Compute PREFERENCE applying the policy function to all updates 
-  \item Phase 2: For each destination (in our case just one), select and install the route with higher preference
-  \item Phase 3: if the best\&installed route is related to a new or modified route, then the installing routine set the SHARED-FLAG of this route to False (i.e. not shared yet), and must be advertised. The sending routine is performed for the prefix.
+  \item the route-to-announce has been already shared with neighbours
+  \item the mrai for the announced prefix (with a given neigh), has not expired
 \end{enumerate}
 
+\section{Decision Process}
 
+Nodes react to only one kind of event, called: DECISION-PROCESS. The event is scheduled when nodes receive an update or set an mrai.
+In the first case, the DECISION-PROCESS starts after a little delay, modelling the non-zero processing time \cite{fabrikant2011there}.
+In the 2nd case, the DECISION-PROCESS is triggered when an mrai expires so that, if a node has a route still not shared with neighbour, 
+then will send updates. The full decision process is illustrated by \cref{fig:decisionprocess}.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/workflow}
+\caption{Decision Process. In grey the main actions of a node, in green the actions triggered for neighbouring node.}
+\label{fig:decisionprocess}
+\end{figure}
 
+\paragraph{Workflow}
+\begin{enumerate}[noitemsep]
+  \item Put received updates in the adjRIBin
+  \item Phase 1: Compute PREFERENCE applying the policy function to all updates in adjRIBin 
+  \item Phase 2: For each destination (in our case just one), select and install the route with higher preference. 
+    	If the best\&installed route is related to a new or modified route, then the installing routine sets the 
+    	SHARED-FLAG of this route to False (i.e. not shared yet, an advertisement must be sent).
+  \item Phase 3 (Dissemination): The node tries to send updates about routes that have been not shared yet. Fails if MRAI is not expired.
+  		In case of success, the SHARED-FLAG is reset to True and MRAI is reset as well.
+\end{enumerate}
 
+\section{First results}
 
-
+Based on the usual topology (\cref{})
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/fabrex.png}
+\caption{The usual reference topology}
+\label{fig:decisionprocess}
+\end{figure}
 
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
