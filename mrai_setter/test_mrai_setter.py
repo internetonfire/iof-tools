@@ -11,6 +11,15 @@ def almost_equal(x, y, eps=0.05):
 class TestStrategyGenerator():
     @classmethod
     def setup_class(cls):
+        cls.small_saw = nx.Graph()
+        cls.small_saw.add_edge('x1', 'x2', type='transit', customer='x1')
+        cls.small_saw.add_edge('x2', 'x3', type='transit', customer='x2')
+
+        cls.small_saw.add_edge('x1', 'y1', type='transit', customer='x1')
+        cls.small_saw.add_edge('y1', 'x2', type='transit', customer='y1')
+        cls.small_saw.add_edge('x2', 'y2', type='transit', customer='x2')
+        cls.small_saw.add_edge('y2', 'x3', type='transit', customer='y2')
+
         cls.saw = nx.Graph()
         cls.saw.add_edge('x1', 'x2', type='transit', customer='x1')
         cls.saw.add_edge('x2', 'x3', type='transit', customer='x2')
@@ -72,6 +81,12 @@ class TestStrategyGenerator():
 
 
     def test_fabrikant_levels(self):
+        levels = pg.fabrikant_levels(self.small_saw, 'x1')
+        assert(levels['x1'] == 0)
+        assert(levels['x2'] == 1)
+        assert(levels['x3'] == 2)
+        assert(levels['y1'] == 0)
+        assert(levels['y2'] == 1)
         levels = pg.fabrikant_levels(self.saw, 'x1')
         assert(levels['x1'] == 0)
         assert(levels['x2'] == 1)
@@ -120,6 +135,13 @@ class TestStrategyGenerator():
         return ss/cnt
 
     def test_fabrikant_strategy(self):
+        pg.apply_fabrikant_strategy(self.small_saw, 'x1')
+        almost_equal(self.get_node_mrai(self.small_saw, 'x1'), 30)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x2'), 15)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x3'), 7.5)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y1'), 30)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y2'), 15)
+
         pg.apply_fabrikant_strategy(self.saw, 'x1')
         almost_equal(self.get_node_mrai(self.saw, 'x1'), 30)
         almost_equal(self.get_node_mrai(self.saw, 'x2'), 15)
@@ -138,4 +160,3 @@ class TestStrategyGenerator():
         almost_equal(self.get_node_mrai(self.saw, 'y1'), 0.5)
         almost_equal(self.get_node_mrai(self.saw, 'y2'), 1)
         almost_equal(self.get_node_mrai(self.saw, 'y3'), 1.5)
-

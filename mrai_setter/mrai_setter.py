@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author: Luca Baldesi 2019
 
 import sys
@@ -101,13 +101,13 @@ def apply_simpleheuristic_strategy(G, adv_node):
             visited_nodes.add(j)
 
             e = G.edges[(i,j)]
-            if e['customer'] == i:
+            if str(e['customer']) == i:
                 for z in nx.neighbors(G, j):
                     if z != i and z not in visited_nodes:
                         fifo.add((j, z))
             else:
                 for z in nx.neighbors(G, j):
-                    if G.edges[(j, z)]['customer'] == z and z not in visited_nodes:
+                    if str(G.edges[(j, z)]['customer']) == z and z not in visited_nodes:
                         fifo.add((j, z))
 
 
@@ -128,7 +128,7 @@ def apply_milanicent_strategy(G, adv_node):
         i, j = fifo.pop()
         if j not in visited_nodes:
             e = G.edges[(i,j)]
-            if e['customer'] == j:  # we are in phase 3
+            if str(e['customer']) == j:  # we are in phase 3
                 set_node_mrai(G, j, T*cent[j]/2)
             elif G.nodes[j]['type'] == 'T':  # we are in phase 2
                 set_node_mrai(G, j, T/2)
@@ -136,13 +136,13 @@ def apply_milanicent_strategy(G, adv_node):
                 set_node_mrai(G, j, T*(2-cent[j])/2)
             visited_nodes.add(j)
 
-            if e['customer'] == i:
+            if str(e['customer']) == i:
                 for z in nx.neighbors(G, j):
                     if z != i and z not in visited_nodes:
                         fifo.add((j, z))
             else:
                 for z in nx.neighbors(G, j):
-                    if G.edges[(j, z)]['customer'] == z and z not in visited_nodes:
+                    if str(G.edges[(j, z)]['customer']) == z and z not in visited_nodes:
                         fifo.add((j, z))
 
 
@@ -165,7 +165,7 @@ def apply_milanicent2_strategy(G, adv_node):
         i, j = fifo.pop()
         if j not in visited_nodes:
             e = G.edges[(i,j)]
-            if e['customer'] == j:  # we are in phase 3
+            if str(e['customer']) == j:  # we are in phase 3
                 set_node_mrai(G, j, T*cent[j]/2)
             elif G.nodes[j]['type'] == 'T':  # we are in phase 2
                 set_node_mrai(G, j, T/2)
@@ -173,13 +173,13 @@ def apply_milanicent2_strategy(G, adv_node):
                 set_node_mrai(G, j, T*(2-cent[j])/2)
             visited_nodes.add(j)
 
-            if e['customer'] == i:
+            if str(e['customer']) == i:
                 for z in nx.neighbors(G, j):
                     if z != i and z not in visited_nodes:
                         fifo.add((j, z))
             else:
                 for z in nx.neighbors(G, j):
-                    if G.edges[(j, z)]['customer'] == z and z not in visited_nodes:
+                    if str(G.edges[(j, z)]['customer']) == z and z not in visited_nodes:
                         fifo.add((j, z))
 
 
@@ -229,7 +229,7 @@ def fabrikant_levels(G, adv_node):
                 i = to_explore.pop()
                 for j in nx.neighbors(G, i):
                     e = G.edges[(i,j)]
-                    if e['type'] == 'transit' and e['customer'] == i:
+                    if e['type'] == 'transit' and str(e['customer']) == i:
                         if j not in self.level:
                             self.level[j] = self.level[i] + 1
                         else:

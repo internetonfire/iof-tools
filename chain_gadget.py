@@ -35,9 +35,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+2+id_delta, i+id_delta)
         attrs = {
             (i+2+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+2+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+2+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+2+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -48,9 +48,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+1+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+1+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -61,9 +61,9 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: 0+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(0+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -93,9 +93,9 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+1+id_delta, i+id_delta)
         attrs = {
             (i+1+id_delta, i+id_delta): {
-                ATTR_EDGE_CUSTOMER: i+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: i+1+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+1+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(i+1+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -106,9 +106,9 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
         g.add_edge(i+id_delta, 0+id_delta)
         attrs = {
             (i+id_delta, 0+id_delta): {
-                ATTR_EDGE_CUSTOMER: 0+id_delta,
-                ATTR_EDGE_TERMINATION1: i+id_delta,
-                ATTR_EDGE_TERMINATION2: 0+id_delta,
+                ATTR_EDGE_CUSTOMER: str(i+id_delta),
+                ATTR_EDGE_TERMINATION1: str(i+id_delta),
+                ATTR_EDGE_TERMINATION2: str(0+id_delta),
                 ATTR_EDGE_MRAI1: timer,
                 ATTR_EDGE_MRAI2: timer
             }
@@ -139,7 +139,7 @@ def gen_ring(n_inner_ring, ring_index, add_outer, timer):
 
 
 def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit",
-                     set_timer=False):
+                     set_timer=False, min_mrai=None):
     """
     Generates a chain gadget topology as in Fig. 3 of the Fabrikant-Rexford
     paper (https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5935139). As
@@ -180,6 +180,7 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     :param set_timer: if set to true, adds the MRAI timer to the set of node
     attributes following the indications within the paper (a timer which
     value decreases exponentially with the ring id)
+    :param min_mrai: minimum MRAI value to be used
     :return: a networkx graph following the chain gadget topology
     """
     if n_rings < 1:
@@ -194,18 +195,23 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
         raise Exception("Invalid edge type '{}' specified. Please choose a "
                         "value in {}".format(edge_type,
                                              ', '.join(VALID_EDGE_TYPES)))
+    mrai = DEFAULT_MRAI_TIMER
+    if min_mrai is not None:
+        computed_min_mrai = DEFAULT_MRAI_TIMER / 2**(n_rings-1)
+        if computed_min_mrai < min_mrai:
+            mrai = min_mrai * 2**(n_rings-1)
     g = nx.Graph()
     for i in range(n_rings):
         if set_timer:
-            timer = DEFAULT_MRAI_TIMER * pow(2, -(n_rings - i - 1))
+            timer = mrai * pow(2, -(n_rings - i - 1))
         else:
-            timer = DEFAULT_MRAI_TIMER
+            timer = mrai
         ring = gen_ring(n_inner, i, add_outer, timer)
         g = nx.compose(g, ring)
     nx.set_node_attributes(g, node_type, ATTR_NODE_TYPE)
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
     nx.set_node_attributes(g, "", ATTR_NODE_DESTINATIONS)
     nx.set_node_attributes(g, {
-        0: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
+        len(g.nodes)-1: {ATTR_NODE_DESTINATIONS: "100.0.0.0/24"}
     })
     return g
