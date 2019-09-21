@@ -49,8 +49,12 @@ class Edge:
                 self.mrai_node2 = int(float(edge[2][MRAI_A]) * 1000)
 
         if {'ip_eth_n1', 'ip_eth_n2'}.issubset(edge[2]):
-            self.node1Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n1'])
-            self.node2Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n2'])
+            if self.node1.name == str(edge[2][NODE_A]):
+                self.node1Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n1'])
+                self.node2Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n2'])
+            else:
+                self.node1Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n2'])
+                self.node2Eth = ipaddress.IPv4Interface(edge[2]['ip_eth_n1'])
 
             if self.node1Eth.network != self.node2Eth.network:
                 raise Exception('invalid addresses parameter, addresses needs to belong to the same network')

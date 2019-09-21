@@ -36,11 +36,12 @@ BGP_SESSION_STATIC_EXPORTER_TEMPLATE_PATH_CLIENTS = "templates/bgpSession_static
 BIRD_TEMPLATE_PATH = "templates/bird_template.template"
 MRAI_TEMPLATE_FILE = "templates/mrai.template"
 NETWORK_TEMPLATE_PATH = "network_config.template"
+PREF_COMMON_FILTER = "templates/commonFilters.template"
 
 TYPE_KEY = "type"
 
 ARGS = ['graph=', 'out=', 'nnodes=', 'directories', 'help', 'h', 'nomrai', 'mraitype=', 'prepath=', 'ipnetworksgraph=',
-        'noautomaticnetworks', 'preferences=', 'doublepeering', 'fatallog']
+        'noautomaticnetworks', 'preferences=', 'doublepeering', 'fatallog', 'prefevaluator=']
 
 gname = "small_g.graphml"
 outDir = "out/"

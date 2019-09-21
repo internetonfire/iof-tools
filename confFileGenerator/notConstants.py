@@ -32,6 +32,8 @@ class NotConstantsObj(object):
         self._networks = True
         self._log_mode = "all"
 
+        self._pref_eval = ""
+
     @property
     def doublePeering(self):
         return self._doublePeering
@@ -151,3 +153,15 @@ class NotConstantsObj(object):
     @log_mode.deleter
     def log_mode(self):
         del self._log_mode
+
+    @property
+    def pref_eval(self):
+        return self._pref_eval
+
+    @pref_eval.setter
+    def pref_eval(self, value):
+        self._pref_eval = value
+
+    @pref_eval.deleter
+    def pref_eval(self):
+        del self._pref_eval

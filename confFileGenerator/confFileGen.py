@@ -63,6 +63,8 @@ for opt, arg in options:
         variables.doublePeering = True
     if opt in '--fatallog':
         variables.log_mode = "{fatal}"
+    if opt in '--prefevaluator':
+        variables.pref_eval = str(arg)
 
 # If the graph file is not present it will be created with a predefined number of nodes
 # Creation of the file no more supported, you have to use the script made by luca:
@@ -139,6 +141,22 @@ for edg in edges_dict:
 # Write the network config script
 for _, node in nodes_dict.items():
     node.write_network_configuration()
+
+with open(PREF_COMMON_FILTER, "r") as filter_file:
+    filter_template = filter_file.read()
+with open(variables.pref_eval, "r") as prefFile:
+    prefFunctionName = prefFile.readline().split(' ')[-1].split('(')[0]
+commonFiltersFile = open("baseFiles/commonFilters.conf", 'w')
+if variables.pref_eval != "":
+    shutil.copy(variables.pref_eval, "baseFiles/prefFile.conf")
+    variables.pref_eval = "prefFile.conf"
+    commonFiltersFile.write(
+        filter_template.format(IMPORT_BGP_PREF="include \"" + variables.pref_eval + "\";",
+                               BGP_PREF_FUNCTION=prefFunctionName + "();"))
+else:
+    commonFiltersFile.write(
+        filter_template.format(IMPORT_BGP_PREF="", BGP_PREF_FUNCTION=""))
+commonFiltersFile.close()
 
 # Copy the base files to the simulation directory
 if not variables.directories:
