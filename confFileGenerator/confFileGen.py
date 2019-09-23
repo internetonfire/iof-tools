@@ -144,10 +144,10 @@ for _, node in nodes_dict.items():
 
 with open(PREF_COMMON_FILTER, "r") as filter_file:
     filter_template = filter_file.read()
-with open(variables.pref_eval, "r") as prefFile:
-    prefFunctionName = prefFile.readline().split(' ')[-1].split('(')[0]
 commonFiltersFile = open("baseFiles/commonFilters.conf", 'w')
 if variables.pref_eval != "":
+    with open(variables.pref_eval, "r") as prefFile:
+        prefFunctionName = prefFile.readline().split(' ')[-1].split('(')[0]
     shutil.copy(variables.pref_eval, "baseFiles/prefFile.conf")
     variables.pref_eval = "prefFile.conf"
     commonFiltersFile.write(
