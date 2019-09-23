@@ -8,13 +8,14 @@ ATTR_EDGE_TERMINATION1 = "termination1"
 ATTR_EDGE_TERMINATION2 = "termination2"
 ATTR_EDGE_MRAI1 = "mrai1"
 ATTR_EDGE_MRAI2 = "mrai2"
+ATTR_EDGE_WEIGHT = "fabrikant_weight"
 ATTR_TIMER = "mrai"
 DEFAULT_MRAI_TIMER = 30.0
 VALID_NODE_TYPES = ["T", "M", "CP", "C"]
 VALID_EDGE_TYPES = ["transit", "peer"]
 
 
-def gen_ring_with_outer(n_inner_ring, ring_index, timer):
+def gen_ring_with_outer(n_inner_ring, ring_index, timer, weight=False):
     """
     Generates a single ring for a chain gadget topology with the outer
     nodes. For more details on the parameters, see the gen_chain_gadget method.
@@ -24,6 +25,7 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
     This index is used to properly assign the ids to the node, so that the
     ring can simply be added to the complete topology graph.
     :param timer: the MRAI timer to be assigned to nodes in this ring
+    :param weight: add edge weight as in the Fabrikant paper
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
@@ -69,10 +71,18 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer):
             }
         }
         nx.set_edge_attributes(g, attrs)
+    if weight:
+        for i in range(2, total_nodes, 2):
+            attrs = {
+                (i+id_delta, 0+id_delta): {
+                    ATTR_EDGE_WEIGHT: i//2-1
+                }
+            }
+            nx.set_edge_attributes(g, attrs)
     return g
 
 
-def gen_ring_without_outer(n_inner_ring, ring_index, timer):
+def gen_ring_without_outer(n_inner_ring, ring_index, timer, weight=False):
     """
     Generates a single ring for a chain gadget topology without the outer
     nodes. For more details on the parameters, see the gen_chain_gadget method.
@@ -82,6 +92,7 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
     This index is used to properly assign the ids to the node, so that the
     ring can simply be added to the complete topology graph.
     :param timer: the MRAI timer to be assigned to nodes in this ring
+    :param weight: add edge weight as in the Fabrikant paper
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
@@ -114,10 +125,19 @@ def gen_ring_without_outer(n_inner_ring, ring_index, timer):
             }
         }
         nx.set_edge_attributes(g, attrs)
+    if weight:
+        for i in range(1, total_nodes, 1):
+            attrs = {
+                (i+id_delta, 0+id_delta): {
+                    ATTR_EDGE_WEIGHT: i-1
+                }
+            }
+            nx.set_edge_attributes(g, attrs)
+
     return g
 
 
-def gen_ring(n_inner_ring, ring_index, add_outer, timer):
+def gen_ring(n_inner_ring, ring_index, add_outer, timer, weight=False):
     """
     Generates a single ring for a chain gadget topology. For more details on
     the parameters, see the gen_chain_gadget method.
@@ -128,18 +148,19 @@ def gen_ring(n_inner_ring, ring_index, add_outer, timer):
     ring can simply be added to the complete topology graph.
     :param add_outer: if set to true, adds the outer nodes as well
     :param timer: the MRAI timer to be set to all nodes in the ring
+    :param weight: add edge weight as in the Fabrikant paper
     :return: a networkx topology representing the ring with index
     "ring_index" to be added to the complete chain topology
     """
     if add_outer:
-        g = gen_ring_with_outer(n_inner_ring, ring_index, timer)
+        g = gen_ring_with_outer(n_inner_ring, ring_index, timer, weight)
     else:
-        g = gen_ring_without_outer(n_inner_ring, ring_index, timer)
+        g = gen_ring_without_outer(n_inner_ring, ring_index, timer, weight)
     return g
 
 
 def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit",
-                     set_timer=False, min_mrai=None):
+                     set_timer=False, min_mrai=None, weight=False):
     """
     Generates a chain gadget topology as in Fig. 3 of the Fabrikant-Rexford
     paper (https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5935139). As
@@ -181,6 +202,7 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
     attributes following the indications within the paper (a timer which
     value decreases exponentially with the ring id)
     :param min_mrai: minimum MRAI value to be used
+    :param weight: add edge weight as in the Fabrikant paper
     :return: a networkx graph following the chain gadget topology
     """
     if n_rings < 1:
@@ -206,7 +228,7 @@ def gen_chain_gadget(n_rings, n_inner, add_outer, node_type, edge_type="transit"
             timer = mrai * pow(2, -(n_rings - i - 1))
         else:
             timer = mrai
-        ring = gen_ring(n_inner, i, add_outer, timer)
+        ring = gen_ring(n_inner, i, add_outer, timer, weight)
         g = nx.compose(g, ring)
     nx.set_node_attributes(g, node_type, ATTR_NODE_TYPE)
     nx.set_edge_attributes(g, edge_type, ATTR_EDGE_TYPE)
