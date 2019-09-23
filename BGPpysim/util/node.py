@@ -77,8 +77,8 @@ class Node(object):
         # mrai scaduto! ready2fire!
         if mrai <= now:
             self.really_send_update(prefix, neigh, now)
-        else:
-            print("\u001b[31mWait mrai to fire")
+        # else:
+            # print("\u001b[31mWait mrai to fire")
 
     '''really send:
         1. creare l'update e metterlo e farglielo ricevere al vicino

@@ -25,7 +25,7 @@ class bgpSim(object):
         self.initNodes(G)
 
     def initNodes(self, G):
-        print("InitNodes")
+        # print("InitNodes")
         nodes = {}
         # Node attributes
         for n in self.G.nodes(data=True):
@@ -111,9 +111,9 @@ if __name__ == '__main__':
     sim = bgpSim(G, sim_dir)
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
-    for n in sim.nodes.values():
-        print("RT of NODE: "+n.ID)
-        n.RT.dumps()
+    # for n in sim.nodes.values():
+    #    print("RT of NODE: "+n.ID)
+    #    n.RT.dumps()
     
     #code.interact(local=dict(globals(), **locals()))
     time = sim.sched.elapsed_time()
@@ -128,6 +128,6 @@ if __name__ == '__main__':
         node.setLogging(True)
     sim.runSimulation()
     print("FINISHED AGAIN SIMULATION...")
-    for n in sim.nodes.values():
-        print("RT of NODE: "+n.ID)
-        n.RT.dumps()
+    # for n in sim.nodes.values():
+    #    print("RT of NODE: "+n.ID)
+    #    n.RT.dumps()
