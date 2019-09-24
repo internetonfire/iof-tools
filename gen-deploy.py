@@ -122,6 +122,7 @@ if __name__ == "__main__":
             node_get_logs += getlogs_cmd
             checkbirds_script += "cd $1\n"
             checkbirds_script += "sh cs.sh $1/h_%d $2\n" % (node_id)
+            checkbirds_script += "if [ $? -ne 0 ]; then exit 1 ; fi\n"
 
             node_check_routes += "cd $1\n"
             node_check_routes += "python3 pt.py -b $2 -n $1/h_%d/sock%d > $1/h_%d/pathlogs%d &\n" % (node_id,node_id,node_id,node_id)
