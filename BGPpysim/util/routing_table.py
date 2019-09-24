@@ -52,6 +52,7 @@ class RoutingTable(object):
         prefix, NH, as_path, preference = route.prefix, sender, route.as_path(), rt_preference
         new_route = prefix not in self.rt
         modified=False
+        old_best = self.rt[prefix]['AS_PATH'] if not new_route else None
         if not new_route:
             entry = self.rt[prefix]
             modified = (NH, as_path, preference) != (entry['NH'], entry['AS_PATH'], entry['PREFERENCE'])
@@ -71,5 +72,6 @@ class RoutingTable(object):
             # ma setto shared_flag = False per tutti, perchè con nessuno
             # ho gia condiviso la nuova rotta appena installata
             self.rt[prefix]['SHARED_FLAG'] = defaultdict(bool)
-            self.node.log(EventLog(time, 'INSTALLED_ROUTE', NH,
-                                   prefix, as_path, bin(preference)[2:]))
+            # self.node.log(EventLog(time, 'INSTALLED_ROUTE', NH,
+            #                       prefix, as_path, bin(preference)[2:]))
+        new_best_path = self.rt[prefix]['AS_PATH']

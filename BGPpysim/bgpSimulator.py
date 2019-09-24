@@ -109,6 +109,8 @@ if __name__ == '__main__':
 
     # Initialize simulator and start simulation
     sim = bgpSim(G, sim_dir)
+    for node in sim.nodes.values():
+        node.setLogging(True)
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
     # for n in sim.nodes.values():
@@ -122,10 +124,9 @@ if __name__ == '__main__':
     route = Route(prefix, {'AS_PATH': 'P'})
     x1.RT.install_route(route, x1.ID, 1, time)
     event = {'actor': x1.ID, 'action': 'DECISION_PROCESS','update': (x1.ID, route)}
-    sim.sched.schedule_event(16, event)
+    sim.sched.schedule_event(1, event)
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
-    for node in sim.nodes.values():
-        node.setLogging(True)
+    x1.log2(str(time) + " <FATAL> {type: RECONF, dest: " + str(prefix).split('/')[0] + "}\n")
     sim.runSimulation()
     print("FINISHED AGAIN SIMULATION...")
     # for n in sim.nodes.values():

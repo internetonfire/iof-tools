@@ -46,8 +46,8 @@ class Node(object):
             route = Route(prefix, {'AS_PATH': ''})
             self.decisionProcess(0, (self.ID, route))
         # apertura file di log
-        self.logfile = open(self.sim_dir + "/" + self.ID + "_log.csv", 'a')
-        self.logfile.write("TIME|EVENT_TYPE|FROM|PREFIX|AS_PATH|BINPREF"+'\n')
+        self.logfile = open(self.sim_dir + "/" + self.ID + "_log.log", 'a')
+        # self.logfile.write("TIME|EVENT_TYPE|FROM|PREFIX|AS_PATH|BINPREF"+'\n')
 
     def toString(self):
         s = PrettyTable()
@@ -69,6 +69,12 @@ class Node(object):
         #to_write = json.dumps(event_describer)
         self.logfile.write('|'.join([str(evlog.time), evlog.evType, evlog.evFrom,
                                      evlog.prefix, evlog.as_path, evlog.binPref])+'\n')
+        self.logfile.flush()
+
+    def log2(self, message):
+        if not self.logging:
+            return
+        self.logfile.write(message)
         self.logfile.flush()
 
     def sendUpdate(self, prefix, neigh, now):
@@ -96,14 +102,16 @@ class Node(object):
         self.RT[prefix]['MRAIs'][neigh] = now + \
             self.neighs[neigh]['mrai']
         event = {'actor': self.ID, 'action': 'DECISION_PROCESS', 'update': None}
+        self.log2(str(now) + " <FATAL> {type: UPDATE_TX, dest: " + str(prefix).split('/')[0] + ", to: " + str(neigh) + ", as_path: "
+                  + str(newAS_PATH).replace(',', '|') + "}\n")
         self.sched.schedule_event(
             self.neighs[neigh]['mrai'] + self.sched.jitter(), event)
         # 3.
         self.RT[prefix]['SHARED_FLAG'][neigh] = True
 
     def processRXupdates(self, update, now):
-        self.log(EventLog(now, 'RECEPTION', update[0],
-                          update[1].prefix, update[1].as_path()))
+        # self.log(EventLog(now, 'RECEPTION', update[0],
+        #                  update[1].prefix, update[1].as_path()))
         # Processing, by model, takes non-zero time. This is why I
         # schedule a decision process after short-time
         addj = 0
@@ -133,14 +141,34 @@ class Node(object):
         # HARD CODING!!! so che ho solo una destinazione nella RT
         prefix = update[1].prefix if update else list(self.RT.adjRIBin.keys())[0]
         if update:
+            if prefix not in self.RT.adjRIBin:
+                len_adj_before = 0
+            else:
+                len_adj_before = len(list(self.RT.adjRIBin[prefix].items()))
             self.RT.update_adjRIBin(update)
+            len_adj_after = len(list(self.RT.adjRIBin[prefix].items()))
+            fromWho = update[0]
             # Phase 1,2: compute preferences, then select&install the best
             best_rt, learned_by, max_pref, = None, None, float('-inf')
             for sender, route in self.RT.adjRIBin[prefix].items():
                 rt_preference = policy(self.ID, route)
                 if rt_preference > max_pref:
                     best_rt, learned_by, max_pref = route, sender, rt_preference
+            if (learned_by, best_rt) == update:
+                PROCESSING_RESULT = "NEW_BEST_PATH"
+            elif len_adj_after > len_adj_before:
+                PROCESSING_RESULT = "NEW_PATH"
+            elif len_adj_after == len_adj_before:
+                PROCESSING_RESULT = "REMOVED_REPLACE_PATH"
+            else:
+                PROCESSING_RESULT = "NONE"
+            old_best = self.RT[best_rt.prefix]['AS_PATH'] if not best_rt.prefix not in self.RT else "NONE"
             self.RT.install_route(best_rt, learned_by, max_pref, now)
+            new_best_path = self.RT[best_rt.prefix]['AS_PATH']
+            self.log2(str(now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
+                           str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|') +
+                           ", previus_best_path: " + str(old_best).replace(',', '|') + ", actual_best_path: " +
+                           str(new_best_path).replace(',', '|') + ", processing: " + PROCESSING_RESULT + "}\n")
         self.disseminate(prefix, now)
 
     def disseminate(self, prefix, now):
