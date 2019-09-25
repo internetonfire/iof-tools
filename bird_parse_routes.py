@@ -37,7 +37,6 @@ if __name__ == "__main__":
     d = []
     obj = {}
     output = subprocess.check_output([bird_path,'-s',node_path,' show route all'],universal_newlines=True)
-    #output = subprocess.check_output(['cat','test1.out'],universal_newlines=True)
     for l in output.split('\n'):
       if len(l) == 0:
         break

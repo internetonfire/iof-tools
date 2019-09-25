@@ -98,13 +98,11 @@ if __name__ == "__main__":
         node_run_file_path = bird_conf_dir + n['name'] + "-run.sh"
         node_get_logs_path = bird_conf_dir + n['name'] + "-getlogs.sh"
         node_check_birds_path = bird_conf_dir + n['name'] + "-checkbirds.sh"
-        node_check_routes_path = bird_conf_dir + n['name'] + "-checkroutes.sh"
 
         node_script = "#!/bin/sh\n\n"
         run_script = node_script
         checkbirds_script = node_script
         node_get_logs = node_script
-        node_check_routes = node_script
 
         node_get_logs += "mkdir $1/%s-logs\n" % (n['name'])
 
@@ -116,16 +114,16 @@ if __name__ == "__main__":
             run_cmd += " && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id)
             run_script += run_cmd
             run_script += "sleep 0.5\n"
-            run_script += "nohup ../pt.py -b ../../ -n sock%d > path_%d.log &\n" % (node_id,node_id)
+            run_script += "nohup ../bird_parse_routes.py -b ../../ -n sock%d > path_%d.log &\n" % (node_id,node_id)
             getlogs_cmd = "mv $1/h_%d/log_h_%d.log $1/%s-logs/ && touch $1/h_%d/log_h_%d.log\n" % (node_id,node_id,n['name'],
                                                                                                       node_id,node_id)
+            getlogs_cmd += "mv $1/h_%d/path_%d.log $1/%s-logs/\n" % (node_id,node_id,n['name'])
+
             node_get_logs += getlogs_cmd
             checkbirds_script += "cd $1\n"
-            checkbirds_script += "sh cs.sh $1/h_%d $2\n" % (node_id)
+            checkbirds_script += "sh check-sessions.sh $1/h_%d $2\n" % (node_id)
             checkbirds_script += "if [ $? -ne 0 ]; then exit 1 ; fi\n"
 
-            node_check_routes += "cd $1\n"
-            node_check_routes += "python3 pt.py -b $2 -n $1/h_%d/sock%d > $1/h_%d/pathlogs%d &\n" % (node_id,node_id,node_id,node_id)
 
         node_get_logs += "cd $1\n"
         node_get_logs += "tar -cz %s-logs -f $1/%s-logs.tgz\n" % (n['name'],n['name'])
@@ -139,8 +137,6 @@ if __name__ == "__main__":
             nl_fd.write(node_get_logs)
         with open(node_check_birds_path,"w") as b_fd:
             b_fd.write(checkbirds_script)
-        with open(node_check_routes_path,"w") as r_fd:
-            r_fd.write(node_check_routes)
 
     # Copying all the files is too slow, so we pack up all the config directory
     tar_file_name = bird_conf_dir[:-1] + ".tgz"
