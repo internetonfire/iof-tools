@@ -42,7 +42,9 @@ class Node(object):
         # far conoscere a RT i negihbour
         self.RT.set_neighbours(self.neighs)
         # autoricezione prefissi da esportare
+
         for prefix in self.exportPrefixes:
+            self.log2("found prefix: " + str(prefix) + "\n")
             route = Route(prefix, {'AS_PATH': ''})
             self.decisionProcess(0, (self.ID, route))
         # apertura file di log
@@ -82,6 +84,7 @@ class Node(object):
         mrai = self.RT[prefix]['MRAIs'][neigh]
         # mrai scaduto! ready2fire!
         if mrai <= now:
+            self.log2("MRAI scaduto, really send update\n")
             self.really_send_update(prefix, neigh, now)
         # else:
             # print("\u001b[31mWait mrai to fire")
@@ -169,16 +172,21 @@ class Node(object):
                            str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|') +
                            ", previus_best_path: " + str(old_best).replace(',', '|') + ", actual_best_path: " +
                            str(new_best_path).replace(',', '|') + ", processing: " + PROCESSING_RESULT + "}\n")
+        else:
+            self.log2("decision process without update\n")
         self.disseminate(prefix, now)
 
     def disseminate(self, prefix, now):
         for neigh in self.neighs:
+            self.log2("Neigh: " + str(neigh) + "\n")
             if not self.RT[prefix]['SHARED_FLAG'][neigh]:
                 myNeighIsMy = self.neighs[neigh]['relation']
                 # policy propagazione update in base a relazioni tra nodi e loro tipo...
+                self.log2("My neigh is my: " + str(myNeighIsMy) + "\n")
                 if myNeighIsMy == 'customer':
                     '''Da implementare anche, in futuro, la propagazione
                     nei seguenti casi:
                     - se ho imparato la rotta da un provider OR peer ==> manda ai miei customer
                     - se mi arriva da un customer ==> manda a tutti tranne a chi me l'ha mandata'''
+                    self.log2("Called sendUpdate for nhg: " + str(neigh) + "\n")
                     self.sendUpdate(prefix, neigh, now)

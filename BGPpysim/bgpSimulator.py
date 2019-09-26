@@ -67,7 +67,7 @@ class bgpSim(object):
         print("Simulation started")
         #code.interact(local=dict(globals(), **locals()))
         with tqdm(total=MAX_DURATION) as pbar:
-            while(sched.elapsed_time() < MAX_DURATION and len(sched.queue) > 0):
+            while sched.elapsed_time() < MAX_DURATION and len(sched.queue) > 0:
                 event = sched.pop_event()
                 node = self.nodes[event['actor']]
                 if event['action'] == 'DECISION_PROCESS':
@@ -111,6 +111,7 @@ if __name__ == '__main__':
     sim = bgpSim(G, sim_dir)
     for node in sim.nodes.values():
         node.setLogging(True)
+
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
     # for n in sim.nodes.values():
