@@ -59,7 +59,7 @@ def parse_line(line, verb):
     log_dict = {}
     for k, v in [x.split(':') for x in log_fields]:
         log_dict[k.strip()] = v.strip()
-    if log_type == 'RECONF':
+    if log_dict['type'] == 'RECONF':
         return log_time, log_dict, True
     return log_time, log_dict, False
 
@@ -126,7 +126,9 @@ def main():
     AS_data = defaultdict(dict)
     reconf_time = None
     for fname in args.f:
-        AS_number, data, reconf_time = parse_file(fname)
+        AS_number, data, reconf_temp = parse_file(fname)
+        if reconf_temp:
+            reconf_time = reconf_temp
         if args.c:
             convergence_time, first_log = compute_convergence_time(data)
             AS_data[AS_number]['convergence_time'] = convergence_time
