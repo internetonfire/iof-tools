@@ -51,6 +51,10 @@ if __name__ == "__main__":
         if "BGP.as_path" in l:
           obj['paths'].append(l.split(':')[1][1:])
 
+    #Ultima rotta considerata    
+    if obj:
+      d.append(obj)
+
     logme = {}
     logme['timestamp'] = str(datetime.now())
     logme['routes'] = d
