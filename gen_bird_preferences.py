@@ -71,7 +71,7 @@ for node in graph.nodes(data=True):
 
 for edge in graph.edges(data=True):
     e1 = str(edge[2]["customer"])
-    if e1[0] == str(edge[2]["termination1"]):
+    if e1 == str(edge[2]["termination1"]):
         e2 = str(edge[2]["termination2"])
     else:
         e2 = str(edge[2]["termination1"])
