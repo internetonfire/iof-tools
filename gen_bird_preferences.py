@@ -81,7 +81,6 @@ for edge in graph.edges(data=True):
     if e1 == destinationNode[0]:
         e1 = str(edge[2]["termination2"])
         e2 = str(edge[2]["termination1"])
-    print(e1, e2)
     G.add_edge(e2, e1)
 
 pathSet = set()
@@ -92,7 +91,6 @@ for node in G.nodes():
         pathSet.add(tuple(path))
 
 pathlist = sorted(list(pathSet), key=len)
-print(pathlist)
 
 pathPref = {}
 for path in pathlist:
