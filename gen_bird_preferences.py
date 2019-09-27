@@ -52,15 +52,16 @@ graph.add_node(n1, type="M")
 graph.add_node(n2, type="M")
 graph.add_node(n3, type="M", destinations=destinationNode[1]["destinations"])
 
-graph.add_edge(n1, destinationNode[0], customer=n1, termination1=n1, termination2=destinationNode[0],
+graph.add_edge(n1, destinationNode[0], customer=destinationNode[0], termination1=n1, termination2=destinationNode[0],
                mrai1=maxMrai, mrai2=maxMrai, fabrikant_weight=0, type="transit")
-graph.add_edge(n2, destinationNode[0], customer=n2, termination1=n2, termination2=destinationNode[0],
+graph.add_edge(n2, destinationNode[0], customer=destinationNode[0], termination1=n2, termination2=destinationNode[0],
                mrai1=maxMrai, mrai2=maxMrai, fabrikant_weight=1, type="transit")
 graph.add_edge(n3, n1, customer=n3, termination1=n3, termination2=n1,
                mrai1=maxMrai, mrai2=maxMrai, type="transit")
 graph.add_edge(n3, n2, customer=n3, termination1=n3, termination2=n2,
                mrai1=maxMrai, mrai2=maxMrai, type="transit")
 
+oldDNode = str(destinationNode[0])
 del graph.node[destinationNode[0]]["destinations"]
 
 destinationNode = (str(n3), graph.node[n3])
@@ -75,7 +76,13 @@ for edge in graph.edges(data=True):
         e2 = str(edge[2]["termination2"])
     else:
         e2 = str(edge[2]["termination1"])
-    G.add_edge(e1, e2)
+    if e1 == oldDNode:
+        e2 = str(edge[2]["termination1"])
+    if e1 == destinationNode[0]:
+        e1 = str(edge[2]["termination2"])
+        e2 = str(edge[2]["termination1"])
+    print(e1, e2)
+    G.add_edge(e2, e1)
 
 pathSet = set()
 
@@ -85,6 +92,7 @@ for node in G.nodes():
         pathSet.add(tuple(path))
 
 pathlist = sorted(list(pathSet), key=len)
+print(pathlist)
 
 pathPref = {}
 for path in pathlist:
