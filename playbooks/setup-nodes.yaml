@@ -1,12 +1,14 @@
 ---
 - hosts: nodes
+  strategy: free
   gather_facts: true
 
   tasks:
     - name: Enable NAT
       become: true
       shell: wget -O - -q https://www.wall2.ilabt.iminds.be/enable-nat.sh | sudo bash
-      warn: false
+      args:
+        warn: false
     - name: set variables 1
       set_fact:
         home_dir: "{{ ansible_env.HOME }}"
@@ -38,7 +40,8 @@
     - git:
         repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
         dest: "{{ bird_dir }}"
-        version: "milani/bird-2.0.1"
+        version: "MRAI"
+#        version: "milani/bird-2.0.1"
     - name: run autoreconf
       command: autoreconf
       args:
@@ -69,3 +72,16 @@
     - name: add iface to bridge
       become: true
       command: "brctl addif br-iof {{ ifname }}"
+    - name: set bridge to UP
+      become: true
+      command: ip link set dev br-iof up
+    - name: Arp cache tuning 3
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh3=65536 
+    - name: Arp cache tuning 2
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh2=65536
+    - name: Arp cache tuning 1
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
+

@@ -1,0 +1,33 @@
+---
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Set Variables 1
+    set_fact:
+      home_dir: "{{ ansible_env.HOME }}"
+      bird_folder: "iof-bird-daemon"
+      conf_folder: "nodes-config"
+      tmp_folder: "/tmp"
+  - name: Set Variables 2
+    set_fact:
+      bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+      conf_dir: "{{ home_dir }}/{{ bird_folder }}/{{ conf_folder }}"
+      getlogs_c: "{{inventory_hostname}}-getlogs.sh"
+      logname_c: "{{inventory_hostname}}-logs.tgz"
+      logdest: "/tmp/{{inventory_hostname}}-logs.tgz"
+
+  #- name: Print host {{inventory_hostname}}
+  #  debug:
+  #    var: run_c
+
+  - name: Zip logs
+    command: "sh {{ getlogs_c }} {{ conf_dir }}"
+    args:
+      chdir: "{{ conf_dir }}"
+  - name: Transfer logs
+    fetch:
+      src: "{{ conf_dir }}/{{ logname_c }}"
+      dest: "{{ logdest }}"
+      fail_on_missing: no
+      flat: yes

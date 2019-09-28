@@ -1,0 +1,41 @@
+---
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Set Variables 1
+    set_fact:
+      home_dir: "{{ ansible_env.HOME }}"
+      bird_folder: "iof-bird-daemon"
+      conf_folder: "nodes-config"
+  - name: Set Variables 2
+    set_fact:
+      bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+      conf_dir: "{{ home_dir }}/{{ bird_folder }}/{{ conf_folder }}"
+      net_c: "{{inventory_hostname}}.sh"
+  - name: Cleanup node config dir
+    file:
+      path: "{{ conf_dir }}" 
+      state: absent
+
+#  - name: Cleanup Namespace Config
+#    become: true
+#    command: ip -all netns delete
+
+  - name: Create node config dir
+    file:
+      path: "{{ conf_dir }}"
+      state: directory
+      mode: "0755"
+
+  - name: Copy AS configurations
+    unarchive:
+      src: %s
+      dest: "{{ conf_dir }}"
+
+  - name: Deploy network configuration on node
+    become: true
+    command: "sh {{ net_c }}"
+    args:
+      chdir: "{{ conf_dir }}"
+

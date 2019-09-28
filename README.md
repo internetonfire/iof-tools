@@ -326,3 +326,14 @@ parameters of the script have different names, but the same meaning):
  value, starting with the default of `30 s`. The left-most ring (according to
  the graphical description of the topology in the paper) has the highest
  timer. Each ring's timer is halved with respect to the one of its left ring.
+
+## AS graph generator
+
+ This [tool](https://github.com/lucabaldesi/AS_graph_generator) generates graphs
+resembling the Internet BGP speaker topology.
+
+Generation is as easy as typing:
+
+'''
+./generate.py <number_of_nodes> <number_of_graphs>
+'''
