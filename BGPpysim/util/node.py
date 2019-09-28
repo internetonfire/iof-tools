@@ -22,7 +22,7 @@ class Node(object):
         self.exportPrefixes = prefixes
         # MRAI da configurare, XdestXneigh
         self.events_memory = []
-        self.logging = False
+        self.logging = True
 
     def setLogging(self, flag):
         self.logging = flag
@@ -42,13 +42,13 @@ class Node(object):
         # far conoscere a RT i negihbour
         self.RT.set_neighbours(self.neighs)
         # autoricezione prefissi da esportare
+        self.logfile = open(self.sim_dir + "/" + self.ID + "_log.log", 'a')
 
         for prefix in self.exportPrefixes:
-            self.log2("found prefix: " + str(prefix) + "\n")
+            # self.log2("found prefix: " + str(prefix) + "\n")
             route = Route(prefix, {'AS_PATH': ''})
             self.decisionProcess(0, (self.ID, route))
         # apertura file di log
-        self.logfile = open(self.sim_dir + "/" + self.ID + "_log.log", 'a')
         # self.logfile.write("TIME|EVENT_TYPE|FROM|PREFIX|AS_PATH|BINPREF"+'\n')
 
     def toString(self):
@@ -68,9 +68,9 @@ class Node(object):
         if not self.logging:
             return
         self.events_memory.append(evlog)
-        #to_write = json.dumps(event_describer)
+        # to_write = json.dumps(event_describer)
         self.logfile.write('|'.join([str(evlog.time), evlog.evType, evlog.evFrom,
-                                     evlog.prefix, evlog.as_path, evlog.binPref])+'\n')
+                                     evlog.prefix, evlog.as_path, evlog.binPref]) + '\n')
         self.logfile.flush()
 
     def log2(self, message):
@@ -84,15 +84,16 @@ class Node(object):
         mrai = self.RT[prefix]['MRAIs'][neigh]
         # mrai scaduto! ready2fire!
         if mrai <= now:
-            self.log2("MRAI scaduto, really send update\n")
+            # self.log2("MRAI scaduto, really send update\n")
             self.really_send_update(prefix, neigh, now)
         # else:
-            # print("\u001b[31mWait mrai to fire")
+        # print("\u001b[31mWait mrai to fire")
 
     '''really send:
         1. creare l'update e metterlo e farglielo ricevere al vicino
         2. impostare l'MRAI per questa rotta con questo vicino
         3. flaggare la rotta come comunicata a questo vicino'''
+
     def really_send_update(self, prefix, neigh, now):
         # 1.
         pyneigh = self.neighs[neigh]['pynode']
@@ -103,9 +104,10 @@ class Node(object):
         pyneigh.processRXupdates(update, now)
         # 2.
         self.RT[prefix]['MRAIs'][neigh] = now + \
-            self.neighs[neigh]['mrai']
+                                          self.neighs[neigh]['mrai']
         event = {'actor': self.ID, 'action': 'DECISION_PROCESS', 'update': None}
-        self.log2(str(now) + " <FATAL> {type: UPDATE_TX, dest: " + str(prefix).split('/')[0] + ", to: " + str(neigh) + ", as_path: "
+        self.log2(str(now) + " <FATAL> {type: UPDATE_TX, dest: " + str(prefix).split('/')[0] + ", to: " + str(
+            neigh) + ", as_path: "
                   + str(newAS_PATH).replace(',', '|') + "}\n")
         self.sched.schedule_event(
             self.neighs[neigh]['mrai'] + self.sched.jitter(), event)
@@ -119,10 +121,10 @@ class Node(object):
         # schedule a decision process after short-time
         addj = 0
         if self.ID.startswith('Y'):
-            addj=0.001
+            addj = 0.001
         event = {'actor': self.ID,
                  'action': 'DECISION_PROCESS', 'update': update}
-        self.sched.schedule_event(addj+self.sched.jitter(), event)
+        self.sched.schedule_event(addj + self.sched.jitter(), event)
 
     '''Da BGP RFC`
     The Decision Process takes place in three distinct phases, each
@@ -168,25 +170,28 @@ class Node(object):
             old_best = self.RT[best_rt.prefix]['AS_PATH'] if not best_rt.prefix not in self.RT else "NONE"
             self.RT.install_route(best_rt, learned_by, max_pref, now)
             new_best_path = self.RT[best_rt.prefix]['AS_PATH']
-            self.log2(str(now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
-                           str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|') +
-                           ", previus_best_path: " + str(old_best).replace(',', '|') + ", actual_best_path: " +
-                           str(new_best_path).replace(',', '|') + ", processing: " + PROCESSING_RESULT + "}\n")
+            if len(update[1].as_path()) > 0:
+                self.log2(
+                    str(now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
+                    str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|')
+                    + ", previus_best_path: " + str(old_best).replace(',', '|') + ", actual_best_path: " +
+                    str(new_best_path).replace(',', '|') + ", processing: " + PROCESSING_RESULT + "}\n")
         else:
-            self.log2("decision process without update\n")
+            # self.log2("decision process without update\n")
+            pass
         self.disseminate(prefix, now)
 
     def disseminate(self, prefix, now):
         for neigh in self.neighs:
-            self.log2("Neigh: " + str(neigh) + "\n")
+            # self.log2("Neigh: " + str(neigh) + "\n")
             if not self.RT[prefix]['SHARED_FLAG'][neigh]:
                 myNeighIsMy = self.neighs[neigh]['relation']
                 # policy propagazione update in base a relazioni tra nodi e loro tipo...
-                self.log2("My neigh is my: " + str(myNeighIsMy) + "\n")
+                # self.log2("My neigh is my: " + str(myNeighIsMy) + "\n")
                 if myNeighIsMy == 'customer':
                     '''Da implementare anche, in futuro, la propagazione
                     nei seguenti casi:
                     - se ho imparato la rotta da un provider OR peer ==> manda ai miei customer
                     - se mi arriva da un customer ==> manda a tutti tranne a chi me l'ha mandata'''
-                    self.log2("Called sendUpdate for nhg: " + str(neigh) + "\n")
+                    # self.log2("Called sendUpdate for nhg: " + str(neigh) + "\n")
                     self.sendUpdate(prefix, neigh, now)
