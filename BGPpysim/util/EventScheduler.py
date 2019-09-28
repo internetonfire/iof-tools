@@ -11,7 +11,7 @@ class EventScheduler:
 
         def jitter(self, positive=True):
             if positive:
-                return random.uniform(0, 0.01)
+                return random.uniform(0, 0.1)
             else:
                 return [-1, 1][random.randrange(2)]*random.uniform(0, 0.866)
 

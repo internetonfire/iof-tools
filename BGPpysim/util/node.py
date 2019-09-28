@@ -7,6 +7,7 @@ from policy import policy
 import json
 import code  # code.interact(local=dict(globals(), **locals()))
 from util.event_log import EventLog
+import datetime
 
 
 class Node(object):
@@ -23,6 +24,7 @@ class Node(object):
         # MRAI da configurare, XdestXneigh
         self.events_memory = []
         self.logging = True
+        self.start_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
     def setLogging(self, flag):
         self.logging = flag
@@ -106,7 +108,7 @@ class Node(object):
         self.RT[prefix]['MRAIs'][neigh] = now + \
                                           self.neighs[neigh]['mrai']
         event = {'actor': self.ID, 'action': 'DECISION_PROCESS', 'update': None}
-        self.log2(str(now) + " <FATAL> {type: UPDATE_TX, dest: " + str(prefix).split('/')[0] + ", to: " + str(
+        self.log2(self.start_time + ":" + str("%.3f" % now) + " <FATAL> {type: UPDATE_TX, dest: " + str(prefix).split('/')[0] + ", to: " + str(
             neigh) + ", as_path: "
                   + str(newAS_PATH).replace(',', '|') + "}\n")
         self.sched.schedule_event(
@@ -171,8 +173,8 @@ class Node(object):
             self.RT.install_route(best_rt, learned_by, max_pref, now)
             new_best_path = self.RT[best_rt.prefix]['AS_PATH']
             if len(update[1].as_path()) > 0:
-                self.log2(
-                    str(now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
+                self.log2(self.start_time + ":" +
+                    str("%.3f" % now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
                     str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|')
                     + ", previus_best_path: " + str(old_best).replace(',', '|') + ", actual_best_path: " +
                     str(new_best_path).replace(',', '|') + ", processing: " + PROCESSING_RESULT + "}\n")

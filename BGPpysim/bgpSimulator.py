@@ -127,7 +127,8 @@ if __name__ == '__main__':
     event = {'actor': x1.ID, 'action': 'DECISION_PROCESS','update': (x1.ID, route)}
     sim.sched.schedule_event(1, event)
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
-    x1.log2(str(time) + " <FATAL> {type: RECONF, dest: " + str(prefix).split('/')[0] + "}\n")
+    x1.log2(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ":" + str("%.3f" % time) + " <FATAL> {type: RECONF}\n")
+    #, dest: " + str(prefix).split('/')[0] + "}\n")
     sim.runSimulation()
     print("FINISHED AGAIN SIMULATION...")
     # for n in sim.nodes.values():
