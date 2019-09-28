@@ -11,6 +11,7 @@ import datetime
 
 
 class Node(object):
+    i = 0
 
     def __init__(self, node_id, sim_dir, sched, node_type='C', prefixes=[]):
         self.sim_dir = sim_dir
@@ -44,7 +45,8 @@ class Node(object):
         # far conoscere a RT i negihbour
         self.RT.set_neighbours(self.neighs)
         # autoricezione prefissi da esportare
-        self.logfile = open(self.sim_dir + "/" + self.ID + "_log.log", 'a')
+        self.logfile = open(self.sim_dir + "/" + "log_h_" + str(Node.i) + ".log", 'a')
+        Node.i += 1
 
         for prefix in self.exportPrefixes:
             # self.log2("found prefix: " + str(prefix) + "\n")
