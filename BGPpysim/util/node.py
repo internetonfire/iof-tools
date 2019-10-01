@@ -174,7 +174,7 @@ class Node(object):
             old_best = self.RT[best_rt.prefix]['AS_PATH'] if not best_rt.prefix not in self.RT else "NONE"
             self.RT.install_route(best_rt, learned_by, max_pref, now)
             new_best_path = self.RT[best_rt.prefix]['AS_PATH']
-            if len(update[1].as_path()) > 0:
+            if len(update[1].as_path()) > 0 and update[1].as_path() != 'P':
                 self.log2(self.start_time + ":" +
                     str("%.3f" % now) + " <FATAL> {type: UPDATE_RX, dest: " + str(best_rt.prefix).split('/')[0] + ", from: " +
                     str(fromWho) + ", nh: " + str(fromWho) + ", as_path: " + str(update[1].as_path()).replace(',', '|')
