@@ -27,7 +27,7 @@ class Log:
     def __init__(self, filepath):
         self.logFilePath = filepath
         self.fileName = filepath.split('/')[-1]
-        self.ASNumber = self.fileName.split('_')[-1].split('.')[0]
+        self.ASNumber = str(int(self.fileName.split('_')[-1].split('.')[0]) + 1)
         self.file = open(self.logFilePath, "r")
         self.df = pd.DataFrame(columns=columnsNames)
 
@@ -45,9 +45,9 @@ class Log:
         attributes_object = line.split(' <FATAL> ')[1][1:-1].split(',')
         attributes_dict = {'AS': [self.ASNumber], 'TIME': [datetime_object]}
         for attr in attributes_object:
+            attr = attr.replace('previus_best_path', 'previous_best_path')
             name = attr.replace(' ', '').split(':')[0].upper()
             obj = attr.replace(' ', '').split(':')[1]
-            obj.replace('previus', 'previous')
             attributes_dict[name] = [obj]
         df2 = pd.DataFrame.from_dict(attributes_dict)
         self.df = self.df.append(df2, sort=False, ignore_index=True)

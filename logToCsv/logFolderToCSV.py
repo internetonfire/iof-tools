@@ -33,7 +33,6 @@ class LogFolder:
 
     def sumuplogs(self):
         for file in self.fileList:
-            print(file)
             log = Log(file)
             log.parseFile()
             self.df = self.df.append(log.get_df(), sort=False, ignore_index=True)
@@ -41,9 +40,3 @@ class LogFolder:
 
     def write_csv(self, csv):
         self.df.to_csv(csv, sep=',', na_rep="None", index_label="IDX")
-
-    def reconfid(self):
-        return self.df.loc[self.df['TYPE'] == 'RECONF'].index
-
-    def iloc_test(self, id):
-        print(self.df.iloc[id])

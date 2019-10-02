@@ -71,8 +71,8 @@ class bgpSim(object):
                 event = sched.pop_event()
                 node = self.nodes[event['actor']]
                 if event['action'] == 'DECISION_PROCESS':
+                    # node.log2("elapsed time: " + str(sched.elapsed_time()) + "\n")
                     node.decisionProcess(sched.elapsed_time(), event['update'])
-                sleep(0.05)
                 pbar.update(sched.step())
 
 
@@ -119,16 +119,24 @@ if __name__ == '__main__':
     #    n.RT.dumps()
     
     #code.interact(local=dict(globals(), **locals()))
-    time = sim.sched.elapsed_time()
+    time1 = sim.sched.elapsed_time()
+    time = time1 + 300
+
     x1 = sim.nodes['X1']
     prefix = x1.exportPrefixes[0]
     route = Route(prefix, {'AS_PATH': 'P'})
     x1.RT.install_route(route, x1.ID, 1, time)
-    event = {'actor': x1.ID, 'action': 'DECISION_PROCESS','update': (x1.ID, route)}
-    sim.sched.schedule_event(1, event)
+
+    event = {'actor': x1.ID, 'action': 'DECISION_PROCESS', 'update': (x1.ID, route)}
+    time_with_jitter = time + sim.sched.jitter() - time1
+    sim.sched.schedule_event(time_with_jitter, event)
+    # x1.log2("il tempo di merda é: " + str(time_with_jitter) + "\n")
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
-    x1.log2(datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + ":" + str("%.3f" % time) + " <FATAL> {type: RECONF}\n")
-    #, dest: " + str(prefix).split('/')[0] + "}\n")
+
+    tim = x1.start_time + datetime.timedelta(0, time)
+    timing = tim.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    x1.log2(timing + " <FATAL> {type: RECONF}\n")
+
     sim.runSimulation()
     print("FINISHED AGAIN SIMULATION...")
     # for n in sim.nodes.values():
