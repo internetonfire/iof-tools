@@ -17,7 +17,7 @@ class WrongFileName(Exception):
 
 
 args = None
-
+resolution = 1
 
 def print_in_columns(data, width=15, separator=','):
     print(separator.join([str(d).ljust(width) for d in data]))
@@ -25,10 +25,12 @@ def print_in_columns(data, width=15, separator=','):
 
 def to_unixtime(t):
     """ note that this does not work if all timestamps are not from the same time zone """
-    return int((t - datetime.datetime(1970, 1, 1)).total_seconds())
+    return int((t - datetime.datetime(1970, 1, 1)).total_seconds()*resolution)
 
 
 def parse_args():
+    global args
+    global resolution
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', help='the log file', required=True, nargs='*')
     parser.add_argument('-v', help='be more verbose', default=False,
@@ -37,8 +39,16 @@ def parse_args():
                         action='store_true')
     parser.add_argument('-t', help='compute the number of updates generated',
                         default=False, action='store_true')
-    global args
+    parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
+                        default='SEC',
+                        choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
     args = parser.parse_args()
+    if args.T == 'DSEC':
+        resolution = 10
+    elif args.T == 'CSEC':
+        resolution = 100
+    elif args.T == 'MSEC':
+        resolution = 1000
 
 
 def parse_line(line, verb):
