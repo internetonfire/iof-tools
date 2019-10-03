@@ -1,3 +1,5 @@
+library(ggplot2)
+
 # set the environment
 setwd("~/src/iof-tools/Rscripts/singleCSV")
 
@@ -21,6 +23,12 @@ numberOfElements <- function(csv_obj){
   return(nrow(csv_obj))
 }
 
+maxAS <- function(csv_obj1, csv_obj2){
+  max1 <- max(csv_obj1$AS)
+  max2 <- max(csv_obj2$AS)
+  return(max(max1, max2))
+}
+
 csv1 <- read.csv(file, header = T)
 
 reconfId <- findReconfId(csv1)
@@ -35,3 +43,20 @@ afterReconf_rx <- onlyTypeCondition(afterReconf, 'UPDATE_RX')
 
 sprintf("Number of updates sent before RECONF: %i", numberOfElements(beforeReconf_tx))
 sprintf("Number of updates sent after RECONF: %i", numberOfElements(afterReconf_tx))
+
+numberOfAS <- maxAS(beforeReconf_tx, beforeReconf_rx)
+
+print(beforeReconf$TIME[1])
+print(beforeReconf$TIME[nrow(beforeReconf)])
+timeDelta <- difftime(beforeReconf$TIME[1], beforeReconf$TIME[nrow(beforeReconf)])
+print(abs(timeDelta))
+
+op <- options(digits.secs=10)
+ggplot(beforeReconf, aes(x=beforeReconf$TIME, y=beforeReconf$AS)) +
+  geom_point(shape=1) + theme_classic() +
+  labs(x = "Samples ids", y = "Value", 
+       title = "Samples distribution") + 
+  theme(plot.title = element_text(hjust = 0.5, size = 20), 
+        axis.title.x = element_text(face="bold", size = 17),
+        axis.title.y = element_text(face="bold", size = 17),
+        axis.text = element_text(size = 14))

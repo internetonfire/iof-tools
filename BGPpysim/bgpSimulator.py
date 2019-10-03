@@ -77,6 +77,7 @@ class bgpSim(object):
 
 
 def config_out_path(outPath, graphName):
+    print(outPath)
     if not os.path.exists(outPath):
         raise Exception("\u001b[31mCannot find the outpath you provided!\n")
     else:
