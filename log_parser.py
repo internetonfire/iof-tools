@@ -112,7 +112,7 @@ def compute_convergence_time(data):
         if 'processing' in d and d['processing'] == 'NEW_BEST_PATH':
             convergence_time = t
             best_path = d['actual_best_path']
-        if 'processing' in d and (d['processing'] == 'REMOVED_REPLACED_PATH'
+        if 'processing' in d and (d['processing'] == 'REMOVED_REPLACE_PATH'
                                   or d['processing'] == 'NEW_PATH'):
             if d['actual_best_path'] == 'NONE':
                 convergence_time = ''
