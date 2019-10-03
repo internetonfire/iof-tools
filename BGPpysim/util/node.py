@@ -170,7 +170,7 @@ class Node(object):
             elif len_adj_after > len_adj_before:
                 PROCESSING_RESULT = "NEW_PATH"
             elif len_adj_after == len_adj_before:
-                PROCESSING_RESULT = "REMOVED_REPLACE_PATH"
+                PROCESSING_RESULT = "REMOVED_REPLACED_PATH"
             else:
                 PROCESSING_RESULT = "NONE"
             old_best = self.RT[best_rt.prefix]['AS_PATH'] if not best_rt.prefix not in self.RT else "NONE"

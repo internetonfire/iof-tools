@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 N=$1
-DIRECTORY="outSimpleHeuristic"
+DIRECTORY="$3"
 
 if [ ! -d "$DIRECTORY" ]; then
   mkdir "$DIRECTORY"

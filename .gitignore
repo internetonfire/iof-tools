@@ -14,3 +14,5 @@ ssh-config-no-proxy
 id.cert
 cpu_info
 nw_info
+/Rscripts/singleCSV/.RData
+/Rscripts/singleCSV/.Rhistory
