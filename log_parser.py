@@ -3,6 +3,9 @@ import argparse
 import datetime
 import re
 from collections import defaultdict, Counter
+from os import walk
+import numpy as np
+import pprint
 
 
 log_types = ['FATAL', 'RECONF']
@@ -32,7 +35,8 @@ def parse_args():
     global args
     global resolution
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', help='the log file', required=True, nargs='*')
+    parser.add_argument('-f', help='the log file', required=False, nargs='*')
+    parser.add_argument('-ff', help='Folder with log Folders', required=False)
     parser.add_argument('-v', help='be more verbose', default=False,
                         action='store_true')
     parser.add_argument('-c', help='Compute convergence delay', default=False,
@@ -42,7 +46,14 @@ def parse_args():
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='SEC',
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
+    parser.add_argument('-n', default=False, action='store_true', help="with this option tables will start at -1 from the crash")
     args = parser.parse_args()
+
+    if not (args.f or args.ff):
+        parser.error('No folders provided, you have to choose at one type of folder to pass')
+    if args.f and args.ff:
+        parser.error('Too much folders provided, you have to choose at ONE type of folder to pass')
+
     if args.T == 'DSEC':
         resolution = 10
     elif args.T == 'CSEC':
@@ -82,7 +93,7 @@ def parse_line(line, verb):
 
 def parse_file(fname):
     try:
-        AS_number = int(fname.split('_')[2][:-4]) + 1
+        AS_number = int(fname.split('_')[-1][:-4]) + 1
     except (ValueError, ):
         print('Invalid file name:', fname)
         print('I expect a file name of the form log_h_X.log '
@@ -142,52 +153,128 @@ def main():
     AS_data = defaultdict(dict)
     reconf_time = None
     last_reconf = None
-    for fname in args.f:
-        AS_number, data, reconf_temp = parse_file(fname)
-        if reconf_temp:
-            reconf_time = reconf_temp
-        if args.c:
-            convergence_time, first_log = compute_convergence_time(data)
-            AS_data[AS_number]['convergence_time'] = convergence_time
-            AS_data[AS_number]['first_log'] = first_log
-        if args.t:
-            updates, min_secs, max_secs = compute_updates_number(data)
-            AS_data[AS_number]['updates'] = updates
-            AS_data[AS_number]['min_secs'] = min_secs
-            AS_data[AS_number]['max_secs'] = max_secs
+    reconf_ASes = list()
+    max_key = 0
+    key_counter = Counter()
+    if args.f and not args.ff:
+        for fname in args.f:
+            AS_number, data, reconf_temp = parse_file(fname)
+            if reconf_temp:
+                reconf_time = reconf_temp
+                reconf_ASes.append(AS_number)
+            if args.c:
+                convergence_time, first_log = compute_convergence_time(data)
+                AS_data[AS_number]['convergence_time'] = convergence_time
+                AS_data[AS_number]['first_log'] = first_log
+            if args.t:
+                updates, min_secs, max_secs = compute_updates_number(data)
+                AS_data[AS_number]['updates'] = updates
+                AS_data[AS_number]['min_secs'] = min_secs
+                AS_data[AS_number]['max_secs'] = max_secs
+
+        for AS_number in AS_data:
+            if AS_data[AS_number]['convergence_time']:
+                if reconf_time:
+                    AS_data[AS_number]['convergence_time'] -= reconf_time
+                else:
+                    AS_data[AS_number]['convergence_time'] -= AS_data[AS_number]['first_log']
+            else:
+                if AS_number in reconf_ASes:
+                    AS_data[AS_number]['convergence_time'] = 0
+                else:
+                    AS_data[AS_number]['convergence_time'] = 1000000
+
+            if 'updates' in AS_data[AS_number]:
+                new_counter = Counter()
+                for key in AS_data[AS_number]['updates']:
+                    new_key = key - reconf_time
+                    max_key = max(max_key, new_key)
+                    key_counter[str(AS_number) + str(new_key)] += 1
+                    value = AS_data[AS_number]['updates'][key]
+                    new_counter[new_key] = value
+                AS_data[AS_number]['updates'] = new_counter
+    else:
+        dirNames = list()
+        for (dir_path, dir_names, filenames) in walk(args.ff):
+            dirNames.extend(dir_names)
+            break
+        for dir in dirNames:
+            fileList = list()
+            for (dir_path, dir_names, filenames) in walk(args.ff + "/" + dir):
+                fileList.extend(filenames)
+                break
+            AS_data_all = defaultdict(dict)
+            if dir not in AS_data_all:
+                AS_data_all[dir] = defaultdict(dict)
+            for fname in fileList:
+                AS_number, data, reconf_temp = parse_file(args.ff + "/" + dir + "/" + fname)
+                if reconf_temp:
+                    reconf_time = reconf_temp
+                    reconf_ASes.append(AS_number)
+                if args.c:
+                    convergence_time, first_log = compute_convergence_time(data)
+                    AS_data_all[dir][AS_number]['convergence_time'] = convergence_time
+                    AS_data_all[dir][AS_number]['first_log'] = first_log
+                if args.t:
+                    updates, min_secs, max_secs = compute_updates_number(data)
+                    AS_data_all[dir][AS_number]['updates'] = updates
+                    AS_data_all[dir][AS_number]['min_secs'] = min_secs
+                    AS_data_all[dir][AS_number]['max_secs'] = max_secs
+            for AS_number in AS_data_all[dir]:
+                if AS_data_all[dir][AS_number]['convergence_time']:
+                    if reconf_time:
+                        AS_data_all[dir][AS_number]['convergence_time'] -= reconf_time
+                    else:
+                        AS_data_all[dir][AS_number]['convergence_time'] -= AS_data_all[dir][AS_number]['first_log']
+                else:
+                    if AS_number in reconf_ASes:
+                        AS_data_all[dir][AS_number]['convergence_time'] = 0
+                    else:
+                        AS_data_all[dir][AS_number]['convergence_time'] = 1000000
+
+                if 'convergence_time' not in AS_data[AS_number]:
+                    AS_data[AS_number]['convergence_time'] = AS_data_all[dir][AS_number]['convergence_time']
+                else:
+                    AS_data[AS_number]['convergence_time'] += AS_data_all[dir][AS_number]['convergence_time']
+
+                if 'updates' in AS_data_all[dir][AS_number]:
+                    new_counter = Counter()
+                    for key in AS_data_all[dir][AS_number]['updates']:
+                        new_key = key - reconf_time
+                        max_key = max(max_key, new_key)
+                        key_counter[str(AS_number) + str(new_key)] += 1
+                        value = AS_data_all[dir][AS_number]['updates'][key]
+                        new_counter[new_key] = value
+                    AS_data_all[dir][AS_number]['updates'] = new_counter
+
+                if 'updates' not in AS_data[AS_number]:
+                    AS_data[AS_number]['updates'] = AS_data_all[dir][AS_number]['updates']
+                else:
+                    AS_data[AS_number]['updates'] += AS_data_all[dir][AS_number]['updates']
+
+        for AS_number in AS_data:
+            AS_data[AS_number]['convergence_time'] /= len(dirNames)
+            for key in AS_data[AS_number]['updates']:
+                AS_data[AS_number]['updates'][key] /= key_counter[str(AS_number) + str(key)]
 
     if args.c:
         print_in_columns(['AS', 'convergence_time'])
         for AS_number, c_data in sorted(AS_data.items()):
-            if c_data['convergence_time']:
-                print_line = []
-                if reconf_time:
-                    print_line = [AS_number, (c_data['convergence_time'] -
-                                  reconf_time)]
-                else:
-                    print_line = [AS_number, (c_data['convergence_time'] -
-                                  c_data['first_log'])]
-                    # there can be negative value for convergence, that
-                    # happen when a node is not affected by the change
-                    # (it converged before the RECONF)
-            else:
-                print_line = [AS_number, 1000000]  # a big number to show that
-                                                   # it did not converge
+            print_line = [AS_number, c_data['convergence_time']]
             print_in_columns(print_line)
         print('\n\n')
 
         print_in_columns(['time', 'converged_ASes', 'non_converged_ASes', 'total_nodes'])
+        if args.n:
+            print_in_columns(['-1', str(len(AS_data)), '0', str(len(AS_data))])
         convergence_time = []
         never_converged_ASes = 0
         non_reconfigured_ASes = 0
         last_reconf = 0
         for AS_number, c_data in sorted(AS_data.items()):
-            if c_data['convergence_time']:
-                if reconf_time:
-                    # convergence_time is a relative time
-                    conv_time = (c_data['convergence_time'] - reconf_time)
-                else:
-                    conv_time = (c_data['convergence_time'] - c_data['first_log'])
+            if 'convergence_time' in c_data:
+                conv_time = c_data['convergence_time']
+
                 if conv_time >= 0:
                     convergence_time.append((AS_number, conv_time))
                     if c_data['convergence_time'] > last_reconf:
@@ -195,9 +282,12 @@ def main():
                 else:
                     non_reconfigured_ASes += 1
             else:
-                never_converged_ASes += 1
+                if AS_number not in reconf_ASes:
+                    never_converged_ASes += 1
+                else:
+                    convergence_time.append((AS_number, 0))
         tot_nodes = len(AS_data)
-        max_time = max([x[1] for x in convergence_time])
+        max_time = max([x[1] for x in convergence_time]) if max_key == 0 else max_key
         for i in range(max_time + 1):
             conv_ASes = 0
             for (AS, t) in convergence_time:
@@ -208,20 +298,23 @@ def main():
                               tot_nodes])
         print('\n\n')
 
+    reconf_time = 0
 
     if args.t:
         # here seconds are in unix time
-        if reconf_time:
+        if reconf_time is not None:
             reconf_secs = reconf_time
         else:
             reconf_secs = min([AS_data[x]['min_secs'] for x in AS_data])
 
-        if last_reconf:
-            end_secs = last_reconf
+        if last_reconf is not None:
+            end_secs = max_key if max_key != 0 else last_reconf
         else:
             end_secs = max([AS_data[x]['max_secs'] for x in AS_data])
 
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
+        if args.n:
+            print_in_columns(['-1'] + ['0'] + ['0' for x in AS_data.keys()], width=4)
         # just a check that we are not leving any number behind
         control_total = 0
         for i in range(reconf_time, end_secs+1):
@@ -238,9 +331,10 @@ def main():
         tot_updates = 0
         for (AS_number, c_data) in sorted(AS_data.items()):
             for k,v in c_data['updates'].items():
-                if k >= reconf_time and k < last_reconf + 1:
+                if k >= reconf_time and k < end_secs + 1:
                     tot_updates += v
         if (tot_updates != control_total):
+
             print("Error in counting updates")
 
 main()

@@ -81,7 +81,7 @@ def config_out_path(outPath, graphName):
     if not os.path.exists(outPath):
         raise Exception("\u001b[31mCannot find the outpath you provided!\n")
     else:
-        start = datetime.datetime.now().strftime("%Hh%Mm%Ss_%d-%m-%Y")
+        start = datetime.datetime.now().strftime("%Hh%Mm%Ss.%f_%d-%m-%Y")
         expCode = random.randint(0, 999)
         cdir = outPath + '/' + 'bgpSim_' + \
             graphName + '_' + str(expCode)+'_' + start
