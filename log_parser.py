@@ -350,7 +350,11 @@ def main():
                 if k >= reconf_time and k < end_secs + 1:
                     tot_updates += v
         if (tot_updates != control_total):
-
             print("Error in counting updates")
+        print('\n\n')
+
+        print_in_columns(['tim','sum'])
+        for i in range(reconf_time-int(args.d), end_secs+1):
+            print_in_columns([str(i), str(tot_updates)])
 
 main()

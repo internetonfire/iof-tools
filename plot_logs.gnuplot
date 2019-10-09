@@ -22,7 +22,8 @@ set output outfile
 if (type > 0) {
     plot inputfile i 1 u 1:2 w lp t 'Converged ASes',\
     '' i 1 u 1:4 w l lt 2 dashtype 2 notitle,\
-    '' i 2 u 1:2 w lp t 'Updates received' axes x1y2
+    '' i 2 u 1:2 w lp t 'Updates received' axes x1y2,\
+    '' i 3 u 1:2 w l t 'total updates' axes x1y2
 } else {
     plot inputfile i 1 u 1:2 w lp t 'Converged ASes',\
     '' i 1 u 1:4 w l lt 2 dashtype 2 notitle
