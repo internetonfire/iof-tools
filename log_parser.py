@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='SEC',
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
-    parser.add_argument('-n', default=False, action='store_true', help="with this option tables will start at -1 from the crash")
+    parser.add_argument('-d', required=False, default=0, action='store', help="Use this option to see a negative delta")
     args = parser.parse_args()
 
     if not (args.f or args.ff):
@@ -101,16 +101,19 @@ def parse_file(fname):
         exit()
     data = []
     reconf_time = None
+    last_message_before_reconf = None
     with open(fname, 'r') as f:
         for line in f:
             try:
                 t, d, reconf = parse_line(line, args.v)
                 if reconf:
                     reconf_time = t
+                    last_message_before_reconf = last_one
+                last_one = t
             except WrongLogLine:
                 continue
             data.append([t, d])
-    return AS_number, data, reconf_time
+    return AS_number, data, last_message_before_reconf, reconf_time
 
 
 def compute_convergence_time(data):
@@ -153,14 +156,16 @@ def main():
     AS_data = defaultdict(dict)
     reconf_time = None
     last_reconf = None
+    last_message_before_reconf = None
     reconf_ASes = list()
     max_key = 0
     key_counter = Counter()
     if args.f and not args.ff:
         for fname in args.f:
-            AS_number, data, reconf_temp = parse_file(fname)
+            AS_number, data, last_message_before_tmp, reconf_temp = parse_file(fname)
             if reconf_temp:
                 reconf_time = reconf_temp
+                last_message_before_reconf = last_message_before_tmp
                 reconf_ASes.append(AS_number)
             if args.c:
                 convergence_time, first_log = compute_convergence_time(data)
@@ -207,9 +212,10 @@ def main():
             if dir not in AS_data_all:
                 AS_data_all[dir] = defaultdict(dict)
             for fname in fileList:
-                AS_number, data, reconf_temp = parse_file(args.ff + "/" + dir + "/" + fname)
+                AS_number, data, last_message_before_tmp, reconf_temp = parse_file(args.ff + "/" + dir + "/" + fname)
                 if reconf_temp:
                     reconf_time = reconf_temp
+                    last_message_before_reconf = last_message_before_tmp
                     reconf_ASes.append(AS_number)
                 if args.c:
                     convergence_time, first_log = compute_convergence_time(data)
@@ -257,6 +263,8 @@ def main():
             for key in AS_data[AS_number]['updates']:
                 AS_data[AS_number]['updates'][key] /= key_counter[str(AS_number) + str(key)]
 
+    delta = reconf_time - last_message_before_reconf
+
     if args.c:
         print_in_columns(['AS', 'convergence_time'])
         for AS_number, c_data in sorted(AS_data.items()):
@@ -265,8 +273,12 @@ def main():
         print('\n\n')
 
         print_in_columns(['time', 'converged_ASes', 'non_converged_ASes', 'total_nodes'])
-        if args.n:
-            print_in_columns(['-1', str(len(AS_data)), '0', str(len(AS_data))])
+        if int(args.d) > 0:
+            if delta > int(args.d):
+                i = int(args.d)
+                while i > 0:
+                    print_in_columns(['-' + str(i), str(len(AS_data)), '0', str(len(AS_data))])
+                    i -= 1
         convergence_time = []
         never_converged_ASes = 0
         non_reconfigured_ASes = 0
@@ -313,8 +325,12 @@ def main():
             end_secs = max([AS_data[x]['max_secs'] for x in AS_data])
 
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
-        if args.n:
-            print_in_columns(['-1'] + ['0'] + ['0' for x in AS_data.keys()], width=4)
+        if int(args.d) > 0:
+            if delta > int(args.d):
+                i = int(args.d)
+                while i > 0:
+                    print_in_columns(['-' + str(i)] + ['0'] + ['0' for x in AS_data.keys()], width=4)
+                    i -= 1
         # just a check that we are not leving any number behind
         control_total = 0
         for i in range(reconf_time, end_secs+1):

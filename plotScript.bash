@@ -3,9 +3,9 @@
 python log_parser.py -ff BGPpysim/out30sec/  -c -t > 30Sec.txt
 gnuplot -e "outfile='30Sec_fixed_50_simulations_avg.pdf'; inputfile='30Sec.txt'" plot_logs.gnuplot
 python log_parser.py -ff BGPpysim/outFabrikant/  -c -t > fabr.txt
-gnuplot -e "outfile='fabrikant_50_simulations_avg.pdf'; inputfile='fabr.txt'" plot_logs.gnuplot
+gnuplot -e "outfile='fabrikant_50_simulations_avg.pdf'; inputfile='fabr.txt'; yrng=10; y2rng=10; xmin=0; xmax=23; timeRange='[s]'" plot_logs.gnuplot
 python log_parser.py -ff BGPpysim/outInversefabrikant/  -c -t > IFabr.txt
-gnuplot -e "outfile='InversedFabrikant_50_simulations_avg.pdf'; inputfile='IFabr.txt'" plot_logs.gnuplot
+gnuplot -e "outfile='InversedFabrikant_50_simulations_avg.pdf'; inputfile='IFabr.txt'; yrng=10; y2rng=10; xmin=0; xmax=61; timeRange='[s]'" plot_logs.gnuplot
 python log_parser.py -ff BGPpysim/outSimpleheuristic/  -c -t -T DSEC> heur.txt
 gnuplot -e "outfile='SimpleHeuristic_50_simulations_avg.pdf'; inputfile='heur.txt'; timeRange='[DSEC]'" plot_logs.gnuplot
 python log_parser.py -ff BGPpysim/outNoMRAI/  -c -t -T CSEC> NoMRAI.txt
