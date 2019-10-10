@@ -4,8 +4,12 @@ from argparse import ArgumentParser
 from glob import glob
 import json
 import os
+from random import randint
 
 DEPLOY_TEMPLATE = "templates/ansible-deploy.template"
+
+LOW_LATENCY = 2
+HIGH_LATENCY = 13
 
 # TODO: ask for a "savedirectory" on input and place everything there
 DEPLOY_OUTFILE = "deploy.yaml"
@@ -110,8 +114,10 @@ if __name__ == "__main__":
             node_id = a - 1
             cmd = "sh h_%d/network-config-node-%d.sh\n" % (node_id,node_id)
             node_script += cmd
+            latencycmd = "tc qdisc add dev br-tap%d root netem delay %dms\n" % (node_id,randint(LOW_LATENCY,HIGH_LATENCY))
+            node_script += latencycmd
             run_cmd = "cd $1/h_%d" % (node_id)
-            run_cmd += " && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id)
+            run_cmd += " && echo \"\" > log_h_%d.log && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id,node_id)
             run_script += run_cmd
             run_script += "sleep 0.5\n"
             run_script += "nohup ../bird_parse_routes.py -b ../../ -n sock%d > path_%d.log &\n" % (node_id,node_id)
