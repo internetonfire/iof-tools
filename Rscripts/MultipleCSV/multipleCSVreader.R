@@ -3,11 +3,11 @@ setwd("~/src/iof-tools/Rscripts/MultipleCSV")
 
 library(dplyr)
 
-folder1 <- '../../BGPpysim/out30secCSV'
-folder2 <- '../../BGPpysim/outFabrikantCSV'
-folder3 <- '../../BGPpysim/outInverseFabrikantCSV'
-folder4 <- '../../BGPpysim/outSimpleHeuristicCSV'
-folder5 <- '../../BGPpysim/outNoMRAICSV'
+folder1 <- '../../BGPpysim/out/mrai30secCSV'
+folder2 <- '../../BGPpysim/out/mraiFabrikantCSV'
+folder3 <- '../../BGPpysim/out/mraiInverseFabrikantCSV'
+folder4 <- '../../BGPpysim/out/mraiSimpleHeuristicCSV'
+folder5 <- '../../BGPpysim/out/nomraiCSV'
 
 fileList1 <- list.files(folder1,full.names = TRUE)
 fileList2 <- list.files(folder2,full.names = TRUE)
@@ -128,7 +128,7 @@ boxplot(data.frame(fixed30sec = data1, Fabrikant = data2, ReverseFabrikant = dat
 data1 <- c()
 for (file in fileList1) {
   csv_obj <- read.csv(file, header = T)
-  data1 <- c(data1, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), 3])))
+  data1 <- c(data1, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
 sink("30SecFixed_time.txt")
 print(summary(data1))
@@ -136,7 +136,7 @@ sink()
 data2 <- c()
 for (file in fileList2) {
   csv_obj <- read.csv(file, header = T)
-  data2 <- c(data2, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), 3])))
+  data2 <- c(data2, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
 sink("Fabrikant_time.txt")
 print(summary(data2))
@@ -144,7 +144,7 @@ sink()
 data3 <- c()
 for (file in fileList3) {
   csv_obj <- read.csv(file, header = T)
-  data3 <- c(data3, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), 3])))
+  data3 <- c(data3, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
 sink("InversedFabrikant_time.txt")
 print(summary(data3))
@@ -152,7 +152,7 @@ sink()
 data4 <- c()
 for (file in fileList4) {
   csv_obj <- read.csv(file, header = T)
-  data4 <- c(data4, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), 3])))
+  data4 <- c(data4, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
 sink("SimpleHeuristic_time.txt")
 print(summary(data4))
@@ -160,7 +160,7 @@ sink()
 data5 <- c()
 for (file in fileList5) {
   csv_obj <- read.csv(file, header = T)
-  data5 <- c(data5, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), 3])))
+  data5 <- c(data5, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
 sink("NoMRAI_time.txt")
 print(summary(data5))
