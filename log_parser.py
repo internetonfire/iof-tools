@@ -354,7 +354,20 @@ def main():
         print('\n\n')
 
         print_in_columns(['tim','sum'])
-        for i in range(reconf_time-int(args.d), end_secs+1):
-            print_in_columns([str(i), str(tot_updates)])
+        #for i in range(reconf_time-int(args.d), end_secs+1):
+        #   print_in_columns([str(i), str(tot_updates)])
+        if int(args.d) > 0:
+            if delta > int(args.d):
+                i = int(args.d)
+                while i > 0:
+                    print_in_columns(['-' + str(i)] + ['0'], width=4)
+                    i -= 1
+        total_upd = 0
+        for i in range(reconf_time, end_secs+1):
+            tot_udp = 0
+            for (AS_number, c_data) in sorted(AS_data.items()):
+                upd = c_data['updates'][i]
+                total_upd += upd
+            print_in_columns([str(i), str(total_upd)], width=4)
 
 main()
