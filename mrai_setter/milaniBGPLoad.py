@@ -22,7 +22,7 @@ import networkx as nx
 
 
 
-def mice_centrality(G, cutoff=None, normalized=True, weight=None, destIdentifier=None):
+def mice_centrality(G, cutoff=None, normalized=True, weight=None, destIdentifier='destinations'):
     """Compute distributed partial centrality for nodes.
 
     The centrality of a node is the fraction of all shortest
@@ -58,13 +58,13 @@ def mice_centrality(G, cutoff=None, normalized=True, weight=None, destIdentifier
     dpc_load = {}.fromkeys(G, 0.0)
     dpc = {}
     # Take the list of stub nodes
-    nodeList = [i for i in G.nodes if G.nodes[i]['type'] != 'T']
+    nodeList = [i for i in G.nodes if destIdentifier in G.nodes[i]]
     for node in nodeList:
         dpc[node] = 0.0  # For each initial stub node I set a dpc of 0
 
     # Calculate the load dispersione between each couple of stub nodes
     for source in dpc:
-        ubetween = _node_betweenness(G, source, cutoff, weight)
+        ubetween = _node_betweenness(G, source, cutoff, weight, destIdentifier=destIdentifier)
         for vk in ubetween:
             dpc_load[vk] += ubetween[vk]
 
@@ -78,7 +78,7 @@ def mice_centrality(G, cutoff=None, normalized=True, weight=None, destIdentifier
     return dpc_load  # all nodes
 
 
-def _node_betweenness(G, source, cutoff=False, weight=None):
+def _node_betweenness(G, source, cutoff=False, weight=None, destIdentifier='destinations'):
     """Node betweenness_centrality helper:
 
     See betweenness_centrality for what you probably want.
@@ -117,7 +117,7 @@ def _node_betweenness(G, source, cutoff=False, weight=None):
 
     between = {}.fromkeys(length, 1.0)
     for node in G.nodes:
-        if G.nodes[node]['type'] == 'T':
+        if destIdentifier not in G.nodes[node]:
             between[node] = 0.0  # No stub nodes does not propagate any contribute
         else:
             between[node] = 1.0  # Stub nodes propagate 1 contribute
@@ -132,7 +132,7 @@ def _node_betweenness(G, source, cutoff=False, weight=None):
                 between[x] += between[v] / float(num_paths)
 
     for node in G.nodes:
-        if G.nodes[node]['type'] != 'T':
+        if destIdentifier in G.nodes[node]:
             between[node] -= 1.0
 
     return between

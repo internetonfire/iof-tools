@@ -7,3 +7,5 @@ N=$1
 ./nSimulations.bash $N inversefabrikant_test.graphml outInversefabrikant
 ./nSimulations.bash $N simpleheuristic_test.graphml outSimpleheuristic
 ./nSimulations.bash $N noMRAI_test.graphml outNoMRAI
+./nSimulations.bash $N constantfabrikant_test.graphml outConstFabr
+./nSimulations.bash $N constantinversefabrikant_test.graphml outConstInvFabr
