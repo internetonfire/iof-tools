@@ -150,6 +150,22 @@ class TestStrategyGenerator():
         almost_equal(self.get_node_mrai(self.saw, 'y2'), 15)
         almost_equal(self.get_node_mrai(self.saw, 'y3'), 7.5)
 
+    def test_constantfabrikant_strategy(self):
+        pg.apply_constantfabrikant_strategy(self.small_saw, 'x1')
+        almost_equal(self.get_node_mrai(self.small_saw, 'x1'), 30)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x2'), 24)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x3'), 19.2)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y1'), 30)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y2'), 24)
+
+    def test_constantinversefabrikant_strategy(self):
+        pg.apply_constantinversefabrikant_strategy(self.small_saw, 'x1')
+        almost_equal(self.get_node_mrai(self.small_saw, 'x1'), 15.36)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x2'), 19.2)
+        almost_equal(self.get_node_mrai(self.small_saw, 'x3'), 24)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y1'), 15.36)
+        almost_equal(self.get_node_mrai(self.small_saw, 'y2'), 19.2)
+
     def test_simpleheuristic_strategy(self):
         pg.apply_simpleheuristic_strategy(self.saw, 'x1')
         almost_equal(self.get_node_mrai(self.saw, 'x1'), 0)

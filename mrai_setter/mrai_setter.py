@@ -4,11 +4,15 @@
 import sys
 import networkx as nx
 import functools
+import random
+import os
 
 import milaniBGPLoad as mice
 
 
 strategies = []
+default_mrai = 30.0
+percentage_constant = 20
 
 
 def usage(name):
@@ -21,10 +25,10 @@ def usage(name):
 
 
 def bgp_strategy(func):
-    ''' Wrapper for strategy definition; it adds strategy name to the strategy list.
-    Strategy name *must not* include an underscore and the function *must* be 
+    """ Wrapper for strategy definition; it adds strategy name to the strategy list.
+    Strategy name *must not* include an underscore and the function *must* be
     called "apply_<strategyname>_strategy".
-    '''
+    """
     strategies.append(func.__qualname__.split('_')[1])
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -34,18 +38,18 @@ def bgp_strategy(func):
 
 @bgp_strategy
 def apply_30secs_strategy(G, adv_node):
-    ''' set all mrai timers to 30 '''
+    """ set all mrai timers to 30 """
     for e in G.edges:
         i, j = e
         G.edges[e]['termination1'] = i 
         G.edges[e]['termination2'] = j 
-        G.edges[e]['mrai1'] = 30.0
-        G.edges[e]['mrai2'] = 30.0
+        G.edges[e]['mrai1'] = default_mrai
+        G.edges[e]['mrai2'] = default_mrai
 
 
 @bgp_strategy
 def apply_none_strategy(G, adv_node):
-    ''' set all mrai timers to 0 '''
+    """ set all mrai timers to 0 """
     for e in G.edges:
         i, j = e
         G.edges[e]['termination1'] = i 
@@ -56,32 +60,61 @@ def apply_none_strategy(G, adv_node):
 
 @bgp_strategy
 def apply_fabrikant_strategy(G, adv_node):
-    ''' set mrai timers according to the Fabrikant gadget paper '''
+    """ set mrai timers according to the Fabrikant gadget paper """
     fl = fabrikant_levels(G, adv_node)
     for i in G.nodes:
         if i in fl:
-            set_node_mrai(G, i, 30/(2**fl[i]))
+            set_node_mrai(G, i, default_mrai/(2**fl[i]))
         else:
-            set_node_mrai(G, i, 30)
+            set_node_mrai(G, i, default_mrai)
+
+
+@bgp_strategy
+def apply_constantfabrikant_strategy(G, adv_node):
+    """ set mrai timers according to the Fabrikant gadget paper but with a constant decrease"""
+    fl = fabrikant_levels(G, adv_node)
+    for i in G.nodes:
+        if i in fl:
+            mrai = 30
+            for level in range(fl[i]):
+                mrai = mrai - ((mrai*percentage_constant)/100)
+            set_node_mrai(G, i, mrai)
+        else:
+            set_node_mrai(G, i, default_mrai)
 
 
 @bgp_strategy
 def apply_inversefabrikant_strategy(G, adv_node):
-    ''' set mrai timers according to the Fabrikant gadget paper
-    but in reverse order '''
+    """ set mrai timers according to the Fabrikant gadget paper
+    but in reverse order """
     fl = fabrikant_levels(G, adv_node)
     maxi = max(fl.values())
     for i in G.nodes:
         if i in fl:
-            set_node_mrai(G, i, 30/(2**(maxi-fl[i])))
+            set_node_mrai(G, i, default_mrai/(2**(maxi-fl[i])))
         else:
-            set_node_mrai(G, i, 30)
+            set_node_mrai(G, i, default_mrai)
 
 
 @bgp_strategy
+def apply_constantinversefabrikant_strategy(G, adv_node):
+    """ set mrai timers according to the Fabrikant gadget paper
+    but in reverse order and with a constant increment"""
+    fl = fabrikant_levels(G, adv_node)
+    maxi = max(fl.values())
+    for i in G.nodes:
+        if i in fl:
+            mrai = 30
+            for level in range(maxi-fl[i]):
+                mrai = mrai - ((mrai * percentage_constant) / 100)
+            set_node_mrai(G, i, mrai)
+        else:
+            set_node_mrai(G, i, default_mrai)
+
+@bgp_strategy
 def apply_simpleheuristic_strategy(G, adv_node):
-    ''' set mrai timers so that they slightly increase as updates get
-    farther and farther from the advertising node '''
+    """ set mrai timers so that they slightly increase as updates get
+    farther and farther from the advertising node """
     start_mrai = 0
     inc_mrai = 0.5
     mrai = {}
@@ -112,10 +145,22 @@ def apply_simpleheuristic_strategy(G, adv_node):
 
 
 @bgp_strategy
+def apply_uniformdistrmrai_strategy(G, adv_node):
+    """ set mrai chosing the mrai from a uniform distribution between a max and a min value """
+    max_value = default_mrai
+    min_value = (default_mrai*percentage_constant)/100
+    for e in G.edges:
+        i, j = e
+        G.edges[e]['termination1'] = i
+        G.edges[e]['termination2'] = j
+        G.edges[e]['mrai1'] = round(random.uniform(min_value, max_value), 2)
+        G.edges[e]['mrai2'] = round(random.uniform(min_value, max_value), 2)
+
+@bgp_strategy
 def apply_milanicent_strategy(G, adv_node):
-    ''' set mrai timers so accordingly to Milani centrality (MiCe).
-    Graph is split in three logic parts. '''
-    T = 30.0  # max mrai in seconds
+    """ set mrai timers so accordingly to Milani centrality (MiCe).
+    Graph is split in three logic parts. """
+    T = default_mrai  # max mrai in seconds
     cent = mice.mice_centrality(G, normalized=True)
 
     visited_nodes = set()
@@ -148,9 +193,9 @@ def apply_milanicent_strategy(G, adv_node):
 
 @bgp_strategy
 def apply_milanicent2_strategy(G, adv_node):
-    ''' set mrai timers so accordingly to Milani centrality (MiCe).
-    Graph is split in three logic parts. '''
-    T = 30.0  # max mrai in seconds
+    """ set mrai timers so accordingly to Milani centrality (MiCe).
+    Graph is split in three logic parts. """
+    T = default_mrai  # max mrai in seconds
     cent = mice.mice_centrality(G, normalized=False)
     ss = max(cent.values())
     cent = {i: v/ss for i,v in cent.items()}
@@ -259,17 +304,35 @@ def strategyfy(G, strategy, adv_node):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) in [3, 4]:
+    if len(sys.argv) in list(range(4, 5)):
         filename = sys.argv[1]
         strategy = sys.argv[2]
+        outDir = sys.argv[3]
 
         adv_node = None
-        if len(sys.argv) == 4:
-            adv_node = sys.argv[3]
+        if len(sys.argv) == 5:
+            adv_node = sys.argv[4]
 
         G = nx.read_graphml(filename)
         strategyfy(G, strategy, adv_node)
-        nx.write_graphml(G, f"{strategy}_{filename}")
-        print(f"Created file {strategy}_{filename} for strategy {strategy}")
+
+        filePath = f"{strategy}_{filename}"
+        if outDir is not None:
+            if not os.path.exists(outDir):
+                os.makedirs(outDir)
+            i = 0
+            filePath = outDir + "/" + str(i) + "_" + f"{strategy}_{filename}"
+            while os.path.isfile(filePath):
+                i += 1
+                filePath = outDir + "/" + str(i) + "_" + f"{strategy}_{filename}"
+        else:
+            i = 0
+            filePath = str(i) + "_" + f"{strategy}_{filename}"
+            while os.path.isfile(filePath):
+                i += 1
+                filePath = str(i) + "_" + f"{strategy}_{filename}"
+
+        nx.write_graphml(G, filePath)
+        # print(f"Created file {strategy}_{filename} for strategy {strategy}")
     else:
         usage(sys.argv[0])
