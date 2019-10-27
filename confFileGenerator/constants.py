@@ -41,7 +41,7 @@ PREF_COMMON_FILTER = "templates/commonFilters.template"
 TYPE_KEY = "type"
 
 ARGS = ['graph=', 'out=', 'nnodes=', 'directories', 'help', 'h', 'nomrai', 'mraitype=', 'prepath=', 'ipnetworksgraph=',
-        'noautomaticnetworks', 'preferences=', 'doublepeering', 'fatallog', 'prefevaluator=']
+        'noautomaticnetworks', 'preferences=', 'doublepeering', 'fatallog', 'prefevaluator=', 'mraijitter=']
 
 gname = "small_g.graphml"
 outDir = "out/"

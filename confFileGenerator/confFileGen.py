@@ -51,6 +51,8 @@ for opt, arg in options:
         variables.mrai = False
     if opt in '--mraitype':
         variables.mrai_type = int(arg)
+    if opt in '--mraijitter':
+        variables.mrai_jitter = int(arg)
     if opt in '--prepath':
         variables.PREPATH = str(arg)
     if opt in '--ipnetworksgraph':

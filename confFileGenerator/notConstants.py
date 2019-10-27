@@ -22,6 +22,7 @@ class NotConstantsObj(object):
     def __init__(self):
         self._doublePeering = False
         self._mrai_type = 0
+        self._mrai_jitter = 25
         self._PREPATH = "/etc/bird/"
 
         self._gname = ""
@@ -57,6 +58,18 @@ class NotConstantsObj(object):
     @mrai_type.deleter
     def mrai_type(self):
         del self._mrai_type
+
+    @property
+    def mrai_jitter(self):
+        return self._mrai_jitter
+
+    @mrai_jitter.setter
+    def mrai_jitter(self, value):
+        self._mrai_jitter = value
+
+    @mrai_jitter.deleter
+    def mrai_jitter(self):
+        del self._mrai_jitter
 
     @property
     def PREPATH(self):

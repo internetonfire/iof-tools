@@ -130,9 +130,13 @@ class Edge:
         mrai_content2 = ""
 
         if self.mrai_node1 != 0:
-            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.mrai_node1, mrai_type=self.variables.mrai_type)
+            mrai_content1 = self.node1.mrai_template.format(mrai_timer=self.mrai_node1,
+                                                            mrai_type=self.variables.mrai_type,
+                                                            mrai_jitter=self.variables.mrai_jitter)
         if self.mrai_node2 != 0:
-            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.mrai_node2, mrai_type=self.variables.mrai_type)
+            mrai_content2 = self.node2.mrai_template.format(mrai_timer=self.mrai_node2,
+                                                            mrai_type=self.variables.mrai_type,
+                                                            mrai_jitter=self.variables.mrai_jitter)
 
         if self.type == "transit":
             # Write the exporter file
