@@ -138,6 +138,28 @@ boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic
         xlab="MRAI style",
         ylab="# Updates after break to achieve convergence")
 
+# Set colors for the CDF.
+c1 <- rgb(0,0,0)
+c2 <- rgb(1,1,0)
+c3 <- rgb(1,0,1)
+c4 <- rgb(1,0,0)
+c5 <- rgb(0,1,1)
+c6 <- rgb(0,1,0)
+c7 <- rgb(0,0,1)
+
+# Create a single chart with all 3 CDF plots.
+plot(ecdf(data1), col=c1, main=NA)
+plot(ecdf(data2), col=c2, add=T)
+plot(ecdf(data3), col=c3, add=T)
+plot(ecdf(data4), col=c4, add=T)
+plot(ecdf(data5), col=c5, add=T)
+plot(ecdf(data6), col=c6, add=T)
+plot(ecdf(data7), col=c7, add=T)
+
+
+# Add a legend to the chart.
+legend('left', c('fixed30sec', 'Fabr', 'RevFabr', 'SHeuristic', 'NoMRAI', 'constFabr', 'constInvFabr'), fill=c(c1, c2, c3, c4, c5, c6, c7), border=NA)
+
 data1 <- c()
 for (file in fileList1) {
   csv_obj <- read.csv(file, header = T)
