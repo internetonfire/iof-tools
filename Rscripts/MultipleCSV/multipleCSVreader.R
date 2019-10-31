@@ -138,6 +138,7 @@ boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic
         xlab="MRAI style",
         ylab="# Updates after break to achieve convergence")
 
+
 data1 <- c()
 for (file in fileList1) {
   csv_obj <- read.csv(file, header = T)
