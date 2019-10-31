@@ -3,17 +3,21 @@ setwd("~/src/iof-tools/Rscripts/MultipleCSV")
 
 library(dplyr)
 
-folder1 <- '../../BGPpysim/out/mrai30secCSV'
-folder2 <- '../../BGPpysim/out/mraiFabrikantCSV'
-folder3 <- '../../BGPpysim/out/mraiInverseFabrikantCSV'
-folder4 <- '../../BGPpysim/out/mraiSimpleHeuristicCSV'
-folder5 <- '../../BGPpysim/out/nomraiCSV'
+folder1 <- '../../BGPpysim/out30secCSV'
+folder2 <- '../../BGPpysim/outFabrCSV'
+folder3 <- '../../BGPpysim/outInvFabrCSV'
+folder4 <- '../../BGPpysim/outSimpleheuristicCSV'
+folder5 <- '../../BGPpysim/outNoMRAICSV'
+folder6 <- '../../BGPpysim/outConstFabrCSV'
+folder7 <- '../../BGPpysim/outConstInvFabrCSV'
 
 fileList1 <- list.files(folder1,full.names = TRUE)
 fileList2 <- list.files(folder2,full.names = TRUE)
 fileList3 <- list.files(folder3,full.names = TRUE)
 fileList4 <- list.files(folder4,full.names = TRUE)
 fileList5 <- list.files(folder5,full.names = TRUE)
+fileList6 <- list.files(folder6,full.names = TRUE)
+fileList7 <- list.files(folder7,full.names = TRUE)
 
 #Functions
 # Function to find the id of the line with type equals to RECONF
@@ -118,12 +122,43 @@ data5 <- listUpdtes(fileList5)
 sink("NoMRAI_nUpdates.txt")
 print(summary(data5))
 sink()
+data6 <- listUpdtes(fileList6)
+sink("constFabr_nUpdates.txt")
+print(summary(data6))
+sink()
+data7 <- listUpdtes(fileList7)
+sink("InvConstFabr_nUpdates.txt")
+print(summary(data7))
+sink()
 
-boxplot(data.frame(fixed30sec = data1, Fabrikant = data2, ReverseFabrikant = data3, SimpleHeuristic = data4, NoMRAI = data5),
+boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic = data4, NoMRAI = data5,
+                   constFabr = data6, constInvFabr = data7),
         main="Different boxplots for each MRAI style",
         sub="(50 simulations, graph based on Fig 1 Fabrikant paper)",
         xlab="MRAI style",
         ylab="# Updates after break to achieve convergence")
+
+# Set colors for the CDF.
+c1 <- rgb(0,0,0)
+c2 <- rgb(1,1,0)
+c3 <- rgb(1,0,1)
+c4 <- rgb(1,0,0)
+c5 <- rgb(0,1,1)
+c6 <- rgb(0,1,0)
+c7 <- rgb(0,0,1)
+
+# Create a single chart with all 3 CDF plots.
+plot(ecdf(data1), col=c1, main=NA)
+plot(ecdf(data2), col=c2, add=T)
+plot(ecdf(data3), col=c3, add=T)
+plot(ecdf(data4), col=c4, add=T)
+plot(ecdf(data5), col=c5, add=T)
+plot(ecdf(data6), col=c6, add=T)
+plot(ecdf(data7), col=c7, add=T)
+
+
+# Add a legend to the chart.
+legend('left', c('fixed30sec', 'Fabr', 'RevFabr', 'SHeuristic', 'NoMRAI', 'constFabr', 'constInvFabr'), fill=c(c1, c2, c3, c4, c5, c6, c7), border=NA)
 
 data1 <- c()
 for (file in fileList1) {
@@ -165,9 +200,27 @@ for (file in fileList5) {
 sink("NoMRAI_time.txt")
 print(summary(data5))
 sink()
+data6 <- c()
+for (file in fileList6) {
+  csv_obj <- read.csv(file, header = T)
+  data6 <- c(data6, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
+}
+sink("constFabr_mrai.txt")
+print(summary(data6))
+sink()
+data7 <- c()
+for (file in fileList7) {
+  csv_obj <- read.csv(file, header = T)
+  data7 <- c(data7, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
+}
+sink("constInvFabr_time.txt")
+print(summary(data7))
+sink()
 
-boxplot(data.frame(fixed30sec = data1, Fabrikant = data2, ReverseFabrikant = data3, SimpleHeuristic = data4, NoMRAI = data5),
+boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic = data4, NoMRAI = data5,
+                   constFabr = data6, constInvFabr = data7),
         main="Convergence time BoxPlot",
         sub="(50 simulations, graph based on Fig 1 Fabrikant paper)",
         xlab="MRAI style",
         ylab="Convergence time in seconds")
+
