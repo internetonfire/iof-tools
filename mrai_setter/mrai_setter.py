@@ -303,18 +303,33 @@ def strategyfy(G, strategy, adv_node):
         raise ValueError(f"Strategy \"{strategy}\" not available")
 
 
+def adapt_to_mean(G, expected_mean):
+    mean = 0.0
+    n_elements = len(G.edges)*2
+    for e in G.edges(data=True):
+        mean += e[2]['mrai1'] + e[2]['mrai2']
+    mean /= n_elements
+
+    multiplier = round(float(expected_mean) / mean, 2)
+    for e in G.edges(data=True):
+        e[2]['mrai1'] = round(e[2]['mrai1'] * multiplier, 2)
+        e[2]['mrai2'] = round(e[2]['mrai2'] * multiplier, 2)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) in list(range(4, 5)):
+    if len(sys.argv) in list(range(5, 6)):
         filename = sys.argv[1]
         strategy = sys.argv[2]
         outDir = sys.argv[3]
+        mean_mrai = sys.argv[4]
 
         adv_node = None
-        if len(sys.argv) == 5:
-            adv_node = sys.argv[4]
+        if len(sys.argv) == 6:
+            adv_node = sys.argv[5]
 
         G = nx.read_graphml(filename)
         strategyfy(G, strategy, adv_node)
+        adapt_to_mean(G, mean_mrai)
 
         filePath = f"{strategy}_{filename}"
         if outDir is not None:

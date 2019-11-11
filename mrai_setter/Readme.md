@@ -5,7 +5,7 @@ This software takes in input a graphml annotated according to the specifications
 ## Usage
 
 ```
-./mrai_setter.py <graphml_file> <strategy> <outputDir> [<advertising_node>]
+./mrai_setter.py <graphml_file> <strategy> <outputDir> <mean_mrai> [<advertising_node>]
 ```
 
 The output dir will be created if it does not exist

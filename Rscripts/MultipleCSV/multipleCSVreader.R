@@ -3,8 +3,8 @@ setwd("~/src/iof-tools/Rscripts/MultipleCSV")
 
 library(dplyr)
 
-folder1 <- '../../BGPpysim/out30secCSV'
-folder2 <- '../../BGPpysim/outFabrCSV'
+folder1 <- '../../drive/F16N-CONSTANT/logsToCSV'
+folder2 <- '../../drive/F16N-DPC/logsToCSV'
 folder3 <- '../../BGPpysim/outInvFabrCSV'
 folder4 <- '../../BGPpysim/outSimpleheuristicCSV'
 folder5 <- '../../BGPpysim/outNoMRAICSV'
@@ -103,11 +103,11 @@ listTimes <- function(fileList) {
 }
 
 data1 <- listUpdtes(fileList1)
-sink("30SecFixed_nUpdates.txt")
+sink("FabrConstant_nUpdates.txt")
 print(summary(data1))
 sink()
 data2 <- listUpdtes(fileList2)
-sink("Fabrikant_nUpdates.txt")
+sink("DPC_nUpdates.txt")
 print(summary(data2))
 sink()
 data3 <- listUpdtes(fileList3)
@@ -131,10 +131,9 @@ sink("InvConstFabr_nUpdates.txt")
 print(summary(data7))
 sink()
 
-boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic = data4, NoMRAI = data5,
-                   constFabr = data6, constInvFabr = data7),
+boxplot(data.frame(ConstantFabrikant = data1, DPC = data2),
         main="Different boxplots for each MRAI style",
-        sub="(50 simulations, graph based on Fig 1 Fabrikant paper)",
+        sub="(10 emulations, graph based on Fig 1 Fabrikant paper with 16 nodes)",
         xlab="MRAI style",
         ylab="# Updates after break to achieve convergence")
 
@@ -144,7 +143,7 @@ for (file in fileList1) {
   csv_obj <- read.csv(file, header = T)
   data1 <- c(data1, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
-sink("30SecFixed_time.txt")
+sink("FabrConstant_time.txt")
 print(summary(data1))
 sink()
 data2 <- c()
@@ -152,7 +151,7 @@ for (file in fileList2) {
   csv_obj <- read.csv(file, header = T)
   data2 <- c(data2, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
-sink("Fabrikant_time.txt")
+sink("DPC_time.txt")
 print(summary(data2))
 sink()
 data3 <- c()
@@ -196,10 +195,9 @@ sink("constInvFabr_time.txt")
 print(summary(data7))
 sink()
 
-boxplot(data.frame(fixed30sec = data1, Fabr = data2, RevFabr = data3, SHeuristic = data4, NoMRAI = data5,
-                   constFabr = data6, constInvFabr = data7),
+boxplot(data.frame(ConstantFabrikant = data1, DPC = data2),
         main="Convergence time BoxPlot",
-        sub="(50 simulations, graph based on Fig 1 Fabrikant paper)",
+        sub="(10 emulations, graph based on Fig 1 Fabrikant paper with 16 nodes)",
         xlab="MRAI style",
         ylab="Convergence time in seconds")
 
