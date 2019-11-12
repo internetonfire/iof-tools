@@ -295,7 +295,7 @@ def fabrikant_levels(G, adv_node):
 def strategyfy(G, strategy, adv_node):
     if not adv_node:
         adv_node = list(G.nodes)[-1]
-    G.nodes[adv_node]['destinations'] = "10.0.0.0/8"
+    G.nodes[adv_node]['destinations'] = "10.0.0.0/24"
 
     if strategy in strategies:
         eval("apply_" + strategy + "_strategy")(G, adv_node)
