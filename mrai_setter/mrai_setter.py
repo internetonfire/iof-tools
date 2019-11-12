@@ -329,7 +329,8 @@ if __name__ == "__main__":
 
         G = nx.read_graphml(filename)
         strategyfy(G, strategy, adv_node)
-        adapt_to_mean(G, mean_mrai)
+        if float(mean_mrai) > 0:
+            adapt_to_mean(G, mean_mrai)
 
         filePath = f"{strategy}_{filename}"
         if outDir is not None:
