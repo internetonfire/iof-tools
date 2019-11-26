@@ -72,10 +72,16 @@ def gen_ring_with_outer(n_inner_ring, ring_index, timer, weight=False):
         }
         nx.set_edge_attributes(g, attrs)
     if weight:
-        for i in range(2, total_nodes, 2):
+        for i in range(0, total_nodes, 2):
             attrs = {
                 (i+id_delta, 0+id_delta): {
-                    ATTR_EDGE_WEIGHT: i//2-1
+                    ATTR_EDGE_WEIGHT: i//2
+                },
+                (i + id_delta, i + 1 + id_delta): {
+                    ATTR_EDGE_WEIGHT: 0
+                },
+                (i + id_delta, i + 2 + id_delta): {
+                    ATTR_EDGE_WEIGHT: 1
                 }
             }
             nx.set_edge_attributes(g, attrs)

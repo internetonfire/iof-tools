@@ -62,6 +62,7 @@ def apply_none_strategy(G, adv_node):
 def apply_fabrikant_strategy(G, adv_node):
     """ set mrai timers according to the Fabrikant gadget paper """
     fl = fabrikant_levels(G, adv_node)
+    print(fl)
     for i in G.nodes:
         if i in fl:
             set_node_mrai(G, i, default_mrai/(2**fl[i]))
@@ -162,7 +163,6 @@ def apply_milanicent_strategy(G, adv_node):
     Graph is split in three logic parts. """
     T = default_mrai  # max mrai in seconds
     cent = mice.mice_centrality(G, normalized=True)
-
     visited_nodes = set()
     set_node_mrai(G, adv_node, T*cent[adv_node]/2)
     fifo = set()
@@ -241,6 +241,24 @@ def set_node_mrai(G, node, mrai):
             e['mrai1'] = float(mrai)
             e['termination2'] = j
 
+"""for node in self.graph.nodes(data=True):
+                self.G.add_node(node[0])
+
+            for edge in self.graph.edges(data=True):
+                e1 = str(edge[2]["customer"])
+                if e1 == str(edge[2]["termination1"]):
+                    e2 = str(edge[2]["termination2"])
+                else:
+                    e2 = str(edge[2]["termination1"])
+                if 'fabrikant_weight' in edge[2]:
+                    self.G.add_edge(e1, e2, customer=edge[2]['customer'], termination2=edge[2]['termination2'],
+                               fabrikant_weight=edge[2]['fabrikant_weight'], termination1=edge[2]['termination1'],
+                               mrai1=edge[2]['mrai1'], mrai2=edge[2]['mrai2'], type=edge[2]['type'])
+                else:
+                    self.G.add_edge(e1, e2, customer=edge[2]['customer'], termination2=edge[2]['termination2'],
+                               termination1=edge[2]['termination1'], mrai1=edge[2]['mrai1'], mrai2=edge[2]['mrai2'],
+                               type=edge[2]['type'])"""
+
 
 def fabrikant_levels(G, adv_node):
     class FabrikantLeveler(object):
@@ -274,7 +292,7 @@ def fabrikant_levels(G, adv_node):
                 i = to_explore.pop()
                 for j in nx.neighbors(G, i):
                     e = G.edges[(i,j)]
-                    if e['type'] == 'transit' and str(e['customer']) == j:
+                    if e['type'] == 'transit' and str(e['customer']) == i:
                         if j not in self.level:
                             self.level[j] = self.level[i] + 1
                         else:
@@ -285,8 +303,7 @@ def fabrikant_levels(G, adv_node):
                         self.sub_nodes[j] = self.sub_nodes[j].union(self.sub_nodes[i])
                         self.sub_nodes[j].add(i)
                         to_explore.add(j)  # there cannot be customer-provider loops
-
-            explored.add(i)
+                explored.add(i)
 
     fl = FabrikantLeveler(G)
     return fl.levels(adv_node)
@@ -305,9 +322,14 @@ def strategyfy(G, strategy, adv_node):
 
 def adapt_to_mean(G, expected_mean):
     mean = 0.0
-    n_elements = len(G.edges)*2
+    n_elements = 0
     for e in G.edges(data=True):
-        mean += e[2]['mrai1'] + e[2]['mrai2']
+        if e[2]['mrai1'] != 0.0:
+            mean += e[2]['mrai1']
+            n_elements += 1
+        if e[2]['mrai2'] != 0.0:
+            mean += e[2]['mrai2']
+            n_elements += 1
     mean /= n_elements
 
     multiplier = round(float(expected_mean) / mean, 2)
@@ -317,7 +339,7 @@ def adapt_to_mean(G, expected_mean):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) in list(range(5, 6)):
+    if len(sys.argv) in list(range(5, 7)):
         filename = sys.argv[1]
         strategy = sys.argv[2]
         outDir = sys.argv[3]
