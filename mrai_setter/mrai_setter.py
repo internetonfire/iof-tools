@@ -241,24 +241,6 @@ def set_node_mrai(G, node, mrai):
             e['mrai1'] = float(mrai)
             e['termination2'] = j
 
-"""for node in self.graph.nodes(data=True):
-                self.G.add_node(node[0])
-
-            for edge in self.graph.edges(data=True):
-                e1 = str(edge[2]["customer"])
-                if e1 == str(edge[2]["termination1"]):
-                    e2 = str(edge[2]["termination2"])
-                else:
-                    e2 = str(edge[2]["termination1"])
-                if 'fabrikant_weight' in edge[2]:
-                    self.G.add_edge(e1, e2, customer=edge[2]['customer'], termination2=edge[2]['termination2'],
-                               fabrikant_weight=edge[2]['fabrikant_weight'], termination1=edge[2]['termination1'],
-                               mrai1=edge[2]['mrai1'], mrai2=edge[2]['mrai2'], type=edge[2]['type'])
-                else:
-                    self.G.add_edge(e1, e2, customer=edge[2]['customer'], termination2=edge[2]['termination2'],
-                               termination1=edge[2]['termination1'], mrai1=edge[2]['mrai1'], mrai2=edge[2]['mrai2'],
-                               type=edge[2]['type'])"""
-
 
 def fabrikant_levels(G, adv_node):
     class FabrikantLeveler(object):
