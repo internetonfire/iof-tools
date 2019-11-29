@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="customer" attr.type="string" for="edge" id="d3" />
+  <key attr.name="type" attr.type="string" for="edge" id="d2" />
+  <key attr.name="peers" attr.type="long" for="node" id="d1" />
+  <key attr.name="type" attr.type="string" for="node" id="d0" />
+  <key attr.name="ip_eth_n1" attr.type="string" for="edge" id="d4" />
+  <key attr.name="ip_eth_n2" attr.type="string" for="edge" id="d5" />
+  <key attr.name="node_a" attr.type="string" for="edge" id="d7" />
+  <key attr.name="node_b" attr.type="string" for="edge" id="d8" />
+  <key attr.name="mrai_a" attr.type="string" for="edge" id="d9" />
+  <key attr.name="mrai_b" attr.type="string" for="edge" id="d10" />
+  <key attr.name="ipNetworksToShare" attr.type="string" for="node" id="d6" />
+  <graph edgedefault="undirected">
+    <node id="0">
+      <data key="d0">C</data>
+      <data key="d6">100.0.1.0/24,100.0.2.0/24</data>
+    </node>
+    <node id="1">
+      <data key="d0">C</data>
+      <data key="d6">100.0.3.0/24,100.0.4.0/24</data>
+    </node>
+    <node id="2">
+      <data key="d0">C</data>
+      <data key="d6">100.0.5.0/24,100.0.6.0/24</data>
+    </node>
+    <node id="3">
+      <data key="d0">C</data>
+      <data key="d6">100.0.7.0/24,100.0.8.0/24</data>
+    </node>
+    <node id="4">
+      <data key="d0">M</data>
+    </node>
+    <node id="5">
+      <data key="d0">M</data>
+    </node>
+    <node id="6">
+      <data key="d0">T</data>
+      <data key="d1">0</data>
+    </node>
+    <node id="7">
+      <data key="d0">T</data>
+      <data key="d1">0</data>
+    </node>
+    <edge source="0" target="4">
+      <data key="d2">transit</data>
+      <data key="d3">0</data>
+      <data key="d4">10.0.0.1/30</data>
+      <data key="d5">10.0.0.2/30</data>
+      <data key="d7">0</data>
+      <data key="d8">4</data>
+      <data key="d9">5</data>
+      <data key="d10">3</data>
+    </edge>
+    <edge source="1" target="4">
+      <data key="d2">transit</data>
+      <data key="d3">1</data>
+      <data key="d4">10.0.0.14/30</data>
+      <data key="d5">10.0.0.13/30</data>
+      <data key="d7">1</data>
+      <data key="d8">4</data>
+      <data key="d9">3</data>
+      <data key="d10">5</data>
+    </edge>
+    <edge source="2" target="5">
+      <data key="d2">transit</data>
+      <data key="d3">2</data>
+      <data key="d4">10.0.0.5/30</data>
+      <data key="d5">10.0.0.6/30</data>
+      <data key="d7">2</data>
+      <data key="d8">4</data>
+      <data key="d9">8</data>
+      <data key="d10">2</data>
+    </edge>
+    <edge source="3" target="5">
+      <data key="d2">transit</data>
+      <data key="d3">3</data>
+      <data key="d4">10.0.0.9/30</data>
+      <data key="d5">10.0.0.10/30</data>
+      <data key="d7">3</data>
+      <data key="d8">4</data>
+      <data key="d9">5</data>
+      <data key="d10">3</data>
+    </edge>
+    <edge source="4" target="6">
+      <data key="d2">transit</data>
+      <data key="d3">4</data>
+      <data key="d4">10.0.0.17/30</data>
+      <data key="d5">10.0.0.18/30</data>
+      <data key="d7">4</data>
+      <data key="d8">6</data>
+      <data key="d9">5</data>
+      <data key="d10">5</data>
+    </edge>
+    <edge source="5" target="7">
+      <data key="d2">transit</data>
+      <data key="d3">5</data>
+      <data key="d4">10.0.0.22/30</data>
+      <data key="d5">10.0.0.21/30</data>
+      <data key="d7">5</data>
+      <data key="d8">7</data>
+      <data key="d9">10</data>
+      <data key="d10">4</data>
+    </edge>
+    <edge source="6" target="7">
+      <data key="d2">peer</data>
+      <data key="d3">none</data>
+      <data key="d4">10.0.0.26/30</data>
+      <data key="d5">10.0.0.25/30</data>
+      <data key="d7">6</data>
+      <data key="d8">7</data>
+      <data key="d9">5</data>
+      <data key="d10">3</data>
+    </edge>
+  </graph>
+</graphml>

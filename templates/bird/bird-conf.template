@@ -11,4 +11,3 @@ log "{log_file}" all;
         include "commonFilters.conf";
 include {session_exporter}
 # list of sessions (links) created using the bird-conf-session.template
-include "/etc/bird/bgpSession_h0_0_h1_1_155756776930.conf";

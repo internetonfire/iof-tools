@@ -9,6 +9,7 @@
           # return bgp_next_hop ~ [ 100.1.1.1, 100.1.1.2, 200.1.1.1 ];
           # Clients list
           {client_list}
+          reject;
         }}
 
         filter {filter_in_name}
@@ -29,11 +30,12 @@
             # Addr of the neighbor and it's AS
             neighbor {peer_addr} as {peer_as};
             hold time {hold_timer};
-            # mrai time {mrai_timer};
+            {mrai}
             ipv4{{
                 import filter {filter_in_name};
                 # export where proto = "export_protocol";
                 export filter {filter_out_name};
+                next hop self;
             }};
             direct;
             connect retry time {connect_retry_timer};

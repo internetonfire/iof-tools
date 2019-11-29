@@ -1,44 +1,48 @@
 function avoid_crappy_prefixes()
-        {
+        {{
             if net.len < 8 then return false;
             if net.len > 24 then return false;
             return true;
-        }
+        }}
 
-        filter bgp_in {
+        filter bgp_in {{
             if avoid_crappy_prefixes() then accept;
             else reject;
-        }
+        }}
 
         function net_martian()
-        {
-            return net ~ [ 169.254.0.0/16+, 172.16.0.0/12+, 192.168.0.0/16+, 127.0.0.0/8+, 224.0.0.0/4+, 240.0.0.0/4+, 0.0.0.0/32-, 0.0.0.0/0{25,32},0.0.0.0/0{0,7} ];
-        }
+        {{
+            return net ~ [ 169.254.0.0/16+, 172.16.0.0/12+, 192.168.0.0/16+, 127.0.0.0/8+, 224.0.0.0/4+, 240.0.0.0/4+, 0.0.0.0/32-, 0.0.0.0/0{{25,32}},0.0.0.0/0{{0,7}} ];
+        }}
+
+        {IMPORT_BGP_PREF}
 
         # accept only explicit configured prefixes peer_nets
         # Originator AS filtered by peer_asns
         # For client and peers
 
-        function rt_import (int asn_ok){
+        function rt_import (int asn_ok){{
             if ! (net ~ [ 100.0.0.0/8+ ]) then return false;
             if bgp_path.first != asn_ok then return false;
+            {BGP_PREF_FUNCTION}
             return true;
-        }
+        }}
 
         # Accept all except for martians prefixes
         # used for uplinks and peering
         function rt_import_all (int asn_ok)
-        {
+        {{
         if net_martian() then return false;
         if bgp_path.first != asn_ok then return false;
+        {BGP_PREF_FUNCTION}
         return true;
-        }
+        }}
 
         function rt_export_all ()
-        {
+        {{
         if proto = "static_bgp" then return true;
         if net_martian() then return false;
         # Propagate to everyone
         return true;
-        }
+        }}
 

@@ -17,3 +17,5 @@ nw_info
 /Rscripts/singleCSV/.RData
 /Rscripts/singleCSV/.Rhistory
 /drive/
+/confFileGenerator/baseFiles/commonFilters.conf
+/confFileGenerator/baseFiles/prefFile.conf

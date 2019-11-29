@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Namespace Configuration for this AS
+ip netns add ns{{name}}
+ip netns exec ns{{name}} ip link set lo up
+
+# create a port pair
+ip link add tap{{name}} type veth peer name br-tap{{name}}
+
+# attach one side to linuxbridge
+brctl addif br-iof br-tap{{name}}
+
+# attach the other side to namespace
+ip link set tap{{name}} netns ns{{name}}
+
+# set the ports to up
+ip netns exec ns{{name}} ip link set dev tap{{name}} up
+ip link set dev br-tap{{name}} up
+
+# Add ip addresses related to this AS
+{% for i in ipaddresses -%}
+ip netns exec ns{{name}} ip address add {{ i }}/30 dev tap{{name}}
+{% endfor -%}
