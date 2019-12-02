@@ -2,14 +2,13 @@
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
   <key attr.name="customer" attr.type="string" for="edge" id="d3" />
   <key attr.name="type" attr.type="string" for="edge" id="d2" />
-  <key attr.name="peers" attr.type="long" for="node" id="d1" />
   <key attr.name="type" attr.type="string" for="node" id="d0" />
   <key attr.name="ip_eth_n1" attr.type="string" for="edge" id="d4" />
   <key attr.name="ip_eth_n2" attr.type="string" for="edge" id="d5" />
-  <key attr.name="node_a" attr.type="string" for="edge" id="d7" />
-  <key attr.name="node_b" attr.type="string" for="edge" id="d8" />
-  <key attr.name="mrai_a" attr.type="string" for="edge" id="d9" />
-  <key attr.name="mrai_b" attr.type="string" for="edge" id="d10" />
+  <key attr.name="termination1" attr.type="string" for="edge" id="d7" />
+  <key attr.name="termination2" attr.type="string" for="edge" id="d8" />
+  <key attr.name="mrai1" attr.type="string" for="edge" id="d9" />
+  <key attr.name="mrai2" attr.type="string" for="edge" id="d10" />
   <key attr.name="ipNetworksToShare" attr.type="string" for="node" id="d6" />
   <graph edgedefault="undirected">
     <node id="0">
@@ -36,11 +35,9 @@
     </node>
     <node id="6">
       <data key="d0">T</data>
-      <data key="d1">0</data>
     </node>
     <node id="7">
       <data key="d0">T</data>
-      <data key="d1">0</data>
     </node>
     <edge source="0" target="4">
       <data key="d2">transit</data>

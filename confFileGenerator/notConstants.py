@@ -18,6 +18,9 @@
 
 
 class NotConstantsObj(object):
+    """
+    Class used to handle not constants objects
+    """
 
     def __init__(self):
         self._doublePeering = False

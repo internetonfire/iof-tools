@@ -19,7 +19,6 @@
 import getopt
 import os.path
 import shutil
-# import notConstants
 import sys
 
 from Edge import Edge
@@ -43,8 +42,6 @@ for opt, arg in options:
         variables.gname = arg
     if opt in '--out':
         variables.outDir = arg
-    """if opt in '--nnodes':
-        node_number = int(arg)"""
     if opt in '--directories':
         variables.directories = True
     if opt in '--nomrai':
@@ -59,8 +56,6 @@ for opt, arg in options:
         variables.ipNetworks = str(arg)
     if opt in '--noautomaticnetworks':
         variables.networks = False
-    """if opt in '--preferences':
-        preferences = str(arg)"""
     if opt in '--doublepeering':
         variables.doublePeering = True
     if opt in '--fatallog':
@@ -69,7 +64,7 @@ for opt, arg in options:
         variables.pref_eval = str(arg)
 
 # If the graph file is not present it will be created with a predefined number of nodes
-# Creation of the file no more supported, you have to use the script made by luca:
+# Creation of the file no more supported, you have to use the script made by Luca:
 # https://github.com/AdvancedNetworkingSystems/AS_graph_generator/tree/undirected
 """if not os.path.isfile(variables.gname):
     small_g = internet_as_graph(node_number)
