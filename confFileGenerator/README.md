@@ -1,6 +1,8 @@
-#Basic test
+#Conf file generator
 
-gen2 for now stable it uses `/30` networks for the point to point networks between nodes 
+This program will generate bird configurations starting from a graphml file.
+The protocol is BGP and all the main arguments could be modified.
+Follow the instructions to use the software.
 
 ###Requirements
 
