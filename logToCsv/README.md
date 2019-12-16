@@ -4,6 +4,18 @@ This program is a parser for log file formatted in a certain way from our versio
 
 Our implementation of Bird use the FATAL log level (that was not used) to log some message information.
 
+###Requirements
+
+This software requires the following libraries:
+
+* argparse
+* os
+* progressbar
+* pandas
+* datetime
+
+you can use pip3 to install all of them 
+
 ###Usage
 
 The software requires a log input and a csv output.
