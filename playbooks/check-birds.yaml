@@ -1,0 +1,25 @@
+---
+- hosts: nodes,!node0
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Set Variables 1
+    set_fact:
+      home_dir: "{{ ansible_env.HOME }}"
+      bird_folder: "iof-bird-daemon"
+      conf_folder: "nodes-config"
+  - name: Set Variables 2
+    set_fact:
+      bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+      conf_dir: "{{ home_dir }}/{{ bird_folder }}/{{ conf_folder }}"
+      run_c: "{{inventory_hostname}}-checkbirds.sh"
+
+  #- name: Print host {{inventory_hostname}}
+  #  debug:
+  #    var: run_c
+
+  - name: Check  
+    command: "sh {{ run_c }} {{ conf_dir }} {{ bird_dir }}"
+    become: true
+    args:
+      chdir: "{{ conf_dir }}"
