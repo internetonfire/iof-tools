@@ -1,5 +1,6 @@
 # Log file to use
 log "{log_file_path}" {log_mode};
+log syslog {log_mode};
 debug protocols {dbg_mode};
 debug commands {dbg_commands_mode};
 router id {addr};

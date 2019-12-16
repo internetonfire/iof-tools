@@ -9,6 +9,13 @@
         filter {filter_out_name}
         {{
             if ! rt_export_all() then reject;
+            if !defined(bgp_path) then bgp_path.empty;
+            #bgp_path.prepend({local_as});
+            #bgp_path.prepend({local_as});
+            #bgp_path.prepend({local_as});
+            #bgp_path.prepend({local_as});
+            #bgp_path.prepend({local_as});
+            #bgp_path.prepend({local_as});
             accept;
         }}
 
