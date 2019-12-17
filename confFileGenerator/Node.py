@@ -71,6 +71,7 @@ class Node:
     def __init__(self, node, out_folder, variables):
         """
         Class node initializer, this class is used to control bird configuration nodes
+
         :param node: the node from networkx that you want to transform in a bird conf
         :param out_folder: the output folder where to save the configuration of this node
         """
