@@ -1,0 +1,13 @@
+- hosts: nodes,!node0
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Clear Namespace Config
+    become: true
+    command: ip -all netns delete 
+  - name: bridge down
+    become: true
+    command: ip link set br-iof down
+  - name: bridge del
+    become: true
+    command: brctl delbr br-iof

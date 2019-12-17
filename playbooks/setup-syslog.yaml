@@ -1,0 +1,70 @@
+---
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Set Variables 1
+    set_fact:
+      home_dir: "{{ ansible_env.HOME }}"
+      bird_folder: "iof-bird-daemon"
+      conf_folder: "nodes-config"
+  - name: Set Variables 2
+    set_fact:
+      bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+      conf_dir: "{{ home_dir }}/{{ bird_folder }}/{{ conf_folder }}"
+      net_c: "{{inventory_hostname}}.sh"
+
+- hosts: node0
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Copy master configuration
+    become: true
+    copy:
+      src: ../node0-iof.conf
+      dest: /etc/rsyslog.d/node0-iof.conf
+      mode: '0644'
+      owner: root
+      group: root
+  
+  - name: Restart rsyslog
+    become: true
+    service:
+      name: rsyslog
+      state: restarted
+  
+  - name: Get Interface IP 
+    shell: ip addr show | grep 10.2. | awk '{ print $2 }' | cut -d "/" -f1
+    register: command_output
+  - set_fact:
+      ifname={{ command_output.stdout }}
+
+  - name: print result
+    debug:
+      var: ifname
+
+- hosts: nodes,!node0
+  strategy: free
+  gather_facts: true 
+  tasks:
+  - name: Copy  configuration
+    become: true
+    copy:
+      src: ../98-iof.conf
+      dest: /etc/rsyslog.d/98-iof.conf
+      mode: '0644'
+      owner: root
+      group: root
+  - name: Change IP in conf
+    become: true
+    replace:
+      path: /etc/rsyslog.d/98-iof.conf
+      regexp: 'IP_HERE'
+      replace: "{{ hostvars['node0'].ifname }}"
+    #command: "sed -i -e 's/IP_HERE/{{ hostvars['node0'].ifname }}' /etc/rsyslog.d/98-iof.conf"
+  - name: Restart rsyslog
+    become: true
+    service: 
+      name: rsyslog
+      state: restarted
+
