@@ -274,7 +274,7 @@ def fabrikant_levels(G, adv_node):
                 i = to_explore.pop()
                 for j in nx.neighbors(G, i):
                     e = G.edges[(i,j)]
-                    if e['type'] == 'transit' and str(e['customer']) == i:
+                    if e['type'] == 'transit' and str(e['customer']) == j:
                         if j not in self.level:
                             self.level[j] = self.level[i] + 1
                         else:
