@@ -10,7 +10,7 @@ from const import COMPONENT_ID, NODE, SSH_CONFIG_TEMPLATE, \
 
 parser = ArgumentParser()
 parser.add_argument("-r", "--rspec", dest="rspec",
-                    default="", action="store", metavar="FILENAME",
+                    nargs='+', action="store", metavar="FILENAME",
                     help="Rspec file to be parsed")
 parser.add_argument("-s", "--ssh-config", dest="ssh_config",
                     default="ssh-config", action="store", metavar="FILENAME",
@@ -20,6 +20,9 @@ parser.add_argument("-a", "--ansible-config", dest="ansible_config",
                     default="ansible.cfg", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible configuration is "
                          "written (default=%(default)s)")
+parser.add_argument("-u", "--user", dest="user",
+                    default="segata", action="store", metavar="USERNAME",
+                    help="Username for ssh config file (default=%(default)s)")
 parser.add_argument("-i", "--inventory", dest="ansible_inventory",
                     default="ansible-hosts", action="store", metavar="FILENAME",
                     help="Output file onto which the ansible inventory is "
@@ -36,12 +39,13 @@ if not args.rspec:
     print("You must specify an Rspec input file")
     sys.exit(1)
 
-rspec_file = args.rspec
+rspec_list = args.rspec
 ssh_config_file = args.ssh_config
 ssh_config_no_proxy_file = ssh_config_file + "-no-proxy"
 ansible_config_file = args.ansible_config
 ansible_inventory_file = args.ansible_inventory
 identity_file = args.identity
+user = args.user
 
 config_file = open(ssh_config_file, "w")
 config_no_proxy_file = open(ssh_config_no_proxy_file, "w")
@@ -49,21 +53,26 @@ ansible_file = open(ansible_config_file, "w")
 inventory_file = open(ansible_inventory_file, "w")
 
 ssh_config = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
-                       identity_file, PROXY_COMMAND_TEMPLATE)
+                       identity_file, user, PROXY_COMMAND_TEMPLATE)
 ssh_config_no_proxy = SSHConfig(SSH_CONFIG_TEMPLATE, HOST_CONFIG_TEMPLATE,
-                                identity_file)
+                                identity_file, user)
 ansible_config = AnsibleConfig(ANSIBLE_CONFIG_TEMPLATE,
                                INVENTORY_CONFIG_TEMPLATE,
                                ANSIBLE_HOST_TEMPLATE, ansible_inventory_file,
                                ssh_config_file)
 
-xml_file = ET.iterparse(rspec_file)
-for _, el in xml_file:
+nodes = []
+for r in rspec_list:
+  xml_file = ET.iterparse(r)
+  for _, el in xml_file:
     el.tag = el.tag.split('}', 1)[1]  # strip all namespaces
+  root = xml_file.root
+  n = root.findall(NODE)
+  nodes = nodes + n
 
 n = 0
-root = xml_file.root
-nodes = root.findall(NODE)
+#root = xml_file.root
+#nodes = root.findall(NODE)
 n_nodes = len(nodes)
 name_template = NODE_NAME
 for node in nodes:

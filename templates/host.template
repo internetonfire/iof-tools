@@ -1,7 +1,7 @@
 Host {name}
     HostName {hostname}
     Port 22
-    User segata
+    User {user}
     IdentityFile {identity}
     ForwardAgent yes
     {proxy}

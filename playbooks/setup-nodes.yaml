@@ -1,0 +1,87 @@
+---
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+
+  tasks:
+    - name: Enable NAT
+      become: true
+      shell: wget -O - -q https://www.wall2.ilabt.iminds.be/enable-nat.sh | sudo bash
+      args:
+        warn: false
+    - name: set variables 1
+      set_fact:
+        home_dir: "{{ ansible_env.HOME }}"
+        bird_folder: "iof-bird-daemon"
+    - name: set variables 2
+      set_fact:
+        bird_dir: "{{ home_dir }}/{{ bird_folder }}"
+    - name: install required libraries
+      become: true
+      apt:
+        name: "{{ packages }}"
+        update_cache: yes
+      vars:
+        packages:
+          - libncurses5-dev
+          - libreadline-dev
+          - python3.6
+          - python3-pip
+    - name: set python2 as alternative
+      become: true
+      command: update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
+    - name: set python3 as default
+      become: true
+      command: update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
+    - name: install ansible
+      become: true
+      pip:
+        name: ansible
+    - git:
+        repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
+        dest: "{{ bird_dir }}"
+        version: "MRAI"
+#        version: "milani/bird-2.0.1"
+    - name: run autoreconf
+      command: autoreconf
+      args:
+        chdir: "{{ bird_dir }}"
+    - name: run configure
+      command: ./configure
+      args:
+        chdir: "{{ bird_dir }}"
+    - name: compile bird
+      command: make -j 4
+      args:
+        chdir: "{{ bird_dir }}"
+#
+    - name: Get Interface Name 
+      shell: ip addr show | grep "192.168.0" |  sed 's/^.*global //' 
+      register: command_output
+    - set_fact:
+        ifname="{{ command_output.stdout }}"
+    - name: print result
+      debug:
+        var: ifname 
+    - name: create bridge
+      become: true
+      command: brctl addbr br-iof
+    - name: disable stp
+      become: true
+      command: brctl stp br-iof off
+    - name: add iface to bridge
+      become: true
+      command: "brctl addif br-iof {{ ifname }}"
+    - name: set bridge to UP
+      become: true
+      command: ip link set dev br-iof up
+    - name: Arp cache tuning 3
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh3=65536 
+    - name: Arp cache tuning 2
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh2=65536
+    - name: Arp cache tuning 1
+      become: true
+      command: sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
+

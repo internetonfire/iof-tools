@@ -13,6 +13,9 @@ TRUE = "true"
 X = "x"
 Y = "y"
 Z = "z"
+NETWORK_HEADER = "network_header"
+NETWORK_FOOTER = "network_footer"
+NETWORK_TEMPLATE = "network_template"
 
 NODE_NAME = "node{}"
 

@@ -1,0 +1,7 @@
+- hosts: nodes
+  strategy: free
+  gather_facts: true
+  tasks:
+  - name: Kill Bird 
+    become: true
+    command: killall bird

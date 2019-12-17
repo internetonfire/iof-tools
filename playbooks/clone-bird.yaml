@@ -39,7 +39,7 @@
     args:
       chdir: "{{ home_dir }}"
   - file:
-      path: /tmp/iof-bird-daemon.zip
+      path: /tmp/iof-bird-daemon.bzip
       state: absent
 
 - hosts: node0

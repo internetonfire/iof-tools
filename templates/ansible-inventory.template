@@ -2,4 +2,7 @@
 # ansible nodes -m ping
 # ansible nodes -m shell -a "uptime"
 
+[proxy]
+proxy0
+
 [nodes]
