@@ -40,7 +40,8 @@
     - git:
         repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
         dest: "{{ bird_dir }}"
-        version: "MRAI"
+        version: "NoMiCe"
+#        version: "MRAI"
 #        version: "milani/bird-2.0.1"
     - name: run autoreconf
       command: autoreconf
@@ -84,4 +85,6 @@
     - name: Arp cache tuning 1
       become: true
       command: sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
-
+    - name: Set Timezone
+      become: true
+      command: timedatectl set-timezone CET
