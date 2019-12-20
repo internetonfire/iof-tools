@@ -149,9 +149,11 @@ do
   # The bird ID is the AS minus one
   BIRDID=$(( $AS - 1 ))
 
+  COMPLETEPATH="$NODESPATH/h_$BIRDID"
+
   if [ -z "${NEIGHBORAS}" ]
   then
-    FILEGOOD=`ssh -F ssh-config $NODE ls $COMPLETEPATH/bgpSession_h_* | grep conf | head -1 | sed -E 's/^.*bgp/bgp/'`
+    FILEGOOD=`ssh -F ssh-config $NODE ls ${COMPLETEPATH}/bgpSession_h_* | grep conf | head -1 | sed -E 's/^.*bgp/bgp/'`
   else
     NEIGHBORID=$(( $NEIGHBORAS - 1 ))
     FILEGOOD="bgpSession_h_${BIRDID}_h_${NEIGHBORID}.conf"
@@ -164,7 +166,7 @@ do
   echo $FILEGOOD
   echo $BIRDID
 
-  COMPLETEPATH="$NODESPATH/h_$BIRDID"
+
 
   # Backup of the good filename
   #ssh -F ssh-config $NODE cp $COMPLETEPATH/$FILEGOOD $NODESPATH/

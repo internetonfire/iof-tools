@@ -31,6 +31,15 @@ run_playbook () {
     fi
 }
 
+if [ -d "cpu_info" ]
+then
+  echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Deleting the old cpu_info dir"
+  rm -r cpu_info
+fi
+
+echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Fetching the nodes specs"
+./get-node-info.sh
+
 echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Setting up software on the nodes, this may take a while.."
 run_playbook playbooks/setup-nodes.yaml
 
