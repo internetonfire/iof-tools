@@ -117,10 +117,10 @@ if __name__ == "__main__":
             latencycmd = "tc qdisc add dev br-tap%d root netem delay %dms\n" % (node_id,randint(LOW_LATENCY,HIGH_LATENCY))
             node_script += latencycmd
             run_cmd = "cd $1/h_%d" % (node_id)
-            run_cmd += " && echo \"\" > log_h_%d.log && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id,node_id)
+            run_cmd += " && truncate -s 0 log_h_%d.log && sudo ip netns exec ns%d ../../bird -c bgp_h_%d.conf -s sock%d\n" % (node_id,node_id,node_id,node_id)
             run_script += run_cmd
             run_script += "sleep 0.5\n"
-            run_script += "nohup ../bird_parse_routes.py -b ../../ -n sock%d > path_%d.log &\n" % (node_id,node_id)
+            #run_script += "nohup ../bird_parse_routes.py -b ../../ -n sock%d > path_%d.log &\n" % (node_id,node_id)
             getlogs_cmd = "mv $1/h_%d/log_h_%d.log $1/%s-logs/ && touch $1/h_%d/log_h_%d.log\n" % (node_id,node_id,n['name'],
                                                                                                       node_id,node_id)
             getlogs_cmd += "mv $1/h_%d/path_%d.log $1/%s-logs/\n" % (node_id,node_id,n['name'])
