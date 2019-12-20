@@ -85,6 +85,27 @@
     - name: Arp cache tuning 1
       become: true
       command: sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
+    - name: File limit Soft
+      become: true 
+      pam_limits:
+        domain: '*' 
+        limit_type: soft
+        limit_item: nofile
+        value: 1000000
+    - name: File limit Hard
+      become: true
+      pam_limits:
+        domain: '*'
+        limit_type: hard
+        limit_item: nofile
+        value: 1000001
+    - name: Sysctl FD limit
+      become: true
+      sysctl:
+        name: fs.file-max
+        value: 1000001
+        state: present
+        reload: yes
     - name: Set Timezone
       become: true
       command: timedatectl set-timezone CET
