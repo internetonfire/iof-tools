@@ -247,6 +247,8 @@ def main():
                     new_counter = Counter()
                     for key in AS_data_all[dir][AS_number]['updates']:
                         new_key = key - reconf_time
+                        # if new_key < 0:
+                        #    print("ERROR")
                         max_key = max(max_key, new_key)
                         key_counter[str(AS_number) + str(new_key)] += 1
                         value = AS_data_all[dir][AS_number]['updates'][key]
@@ -261,7 +263,7 @@ def main():
         for AS_number in AS_data:
             AS_data[AS_number]['convergence_time'] /= len(dirNames)
             for key in AS_data[AS_number]['updates']:
-                AS_data[AS_number]['updates'][key] /= key_counter[str(AS_number) + str(key)]
+                AS_data[AS_number]['updates'][key] /= len(AS_data_all.keys())
 
     delta = reconf_time - last_message_before_reconf
 
@@ -334,12 +336,9 @@ def main():
                         integral_on_time_dir[i] = 0
                     for as_number in AS_data_all[dir]:
                         integral_on_time_dir[i] += AS_data_all[dir][as_number]['updates'][i]
-                print(dir, integral_on_time_dir)
                 for i in range(reconf_time + 1, end_secs + 1):
                     integral_on_time_dir[i] += integral_on_time_dir[i - 1]
                 integral_list.append(integral_on_time_dir)
-            for integral in integral_list:
-                print(integral)
             for i in range(reconf_time, end_secs + 1):
                 for integral in integral_list:
                     if i not in integral_on_time:
