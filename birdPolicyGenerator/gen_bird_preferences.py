@@ -25,8 +25,6 @@ parser.add_argument("-w", "--write-to", dest="writeto",
 parser.add_argument("-g", "--graph", dest="graph", required=True, type=str, action="store")
 parser.add_argument("-o", "--outer", dest="outer", default=False,
                     action="store_true", help="signal the presence of inner nodes")
-parser.add_argument("-o", "--outer", dest="outer", default=False,
-                    action="store_true", help="signal the presence of inner nodes")
 
 args = parser.parse_args()
 

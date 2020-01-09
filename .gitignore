@@ -16,6 +16,6 @@ cpu_info
 nw_info
 /confFileGenerator/baseFiles/commonFilters.conf
 /confFileGenerator/baseFiles/prefFile.conf
-/Rscripts/singleCSV/.RData
-/Rscripts/singleCSV/.Rhistory
+/plotsGenerator/Rscripts/singleCSV/.RData
+/plotsGenerator/Rscripts/singleCSV/.Rhistory
 /drive/

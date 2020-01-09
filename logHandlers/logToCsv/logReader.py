@@ -17,14 +17,14 @@
 # Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it>
 
 import argparse
-from argparse import ArgumentParser
 import os
 import shutil
 from os import walk
 import progressbar
 from logFolderToCSV import LogFolder
 
-parser = ArgumentParser()
+
+parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--folder", dest="logFolder", required=False, type=str,
                     action="store", help="log files folder")
 parser.add_argument("-ff", "--folders", dest="logFolderFolder", required=False, type=str,
@@ -33,8 +33,10 @@ parser.add_argument("-o", "--out", dest="csv", required=False, type=str,
                     action="store", help="Folder where to save csv output")
 parser.add_argument("-oo", "--outFolder", dest="csvFolder", required=False, type=str,
                     action="store", help="Folder where to save all csv outputs")
-parser.add_argument('-w', '--warnings', dest='warn', action='store_true')
-parser.add_argument('-nw', '--no-warnings', dest='warn', action='store_false')
+parser.add_argument('-w', '--warnings', dest='warn', action='store_true',
+                    help="it enables the warnings, by default it's true")
+parser.add_argument('-nw', '--no-warnings', dest='warn', action='store_false',
+                    help="it disable the warnings")
 parser.set_defaults(feature=False)
 
 args = parser.parse_args()

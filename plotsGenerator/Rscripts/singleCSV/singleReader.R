@@ -1,7 +1,7 @@
 library(ggplot2)
 
 # set the environment
-setwd("~/src/iof-tools/Rscripts/singleCSV")
+setwd("~/src/iof-tools/plotsGenerator/Rscripts/singleCSV")
 
 #File
 file <- '../../BGPpysim/out2/bgpSim_test_49_15h39m21s_01-10-2019.csv'

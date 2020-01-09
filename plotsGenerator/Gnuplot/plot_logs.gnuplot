@@ -19,6 +19,7 @@ set y2range [0:y2rng]
 set xrange [xmin:xmax]
 set terminal pdf
 set output outfile
+set logscale y2 10
 if (type > 0) {
     plot inputfile i 1 u 1:2 w lp t 'Converged ASes',\
     '' i 1 u 1:4 w l lt 2 dashtype 2 notitle,\

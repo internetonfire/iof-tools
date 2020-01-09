@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
 import networkx as nx
-from chain_gadget import VALID_NODE_TYPES, VALID_EDGE_TYPES, ATTR_NODE_TYPE, \
+from graphGenerator.chain_gadget import VALID_NODE_TYPES, VALID_EDGE_TYPES, ATTR_NODE_TYPE, \
     ATTR_EDGE_TYPE
 
 parser = ArgumentParser()

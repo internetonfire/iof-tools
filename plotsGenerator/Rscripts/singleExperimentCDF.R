@@ -1,5 +1,5 @@
 # set the environment
-setwd("~/src/iof-tools/Rscripts")
+setwd("~/src/iof-tools/plotsGenerator/Rscripts")
 
 library(dplyr)
 
