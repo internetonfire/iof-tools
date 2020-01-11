@@ -65,9 +65,9 @@ graph.add_edge(n3, n2, customer=n3, termination1=n3, termination2=n2,
                mrai1=maxMrai, mrai2=maxMrai, type="transit")
 
 oldDNode = str(destinationNode[0])
-del graph.node[destinationNode[0]]["destinations"]
+del graph.nodes()[destinationNode[0]]["destinations"]
 
-destinationNode = (str(n3), graph.node[n3])
+destinationNode = (str(n3), graph.nodes()[n3])
 
 G = nx.DiGraph()
 for node in graph.nodes(data=True):
