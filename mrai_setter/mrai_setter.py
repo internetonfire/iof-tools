@@ -233,12 +233,12 @@ def set_node_mrai(G, node, mrai):
         e = G.edges[(node, j)]
         if 'termination1' in e:
             if e['termination1'] == node:
-                e['mrai1'] = float(mrai)
+                e['mrai1'] = round(float(mrai), 2)
             else:
-                e['mrai2'] = float(mrai)
+                e['mrai2'] = round(float(mrai), 2)
         else:
             e['termination1'] = node
-            e['mrai1'] = float(mrai)
+            e['mrai1'] = round(float(mrai), 2)
             e['termination2'] = j
 
 

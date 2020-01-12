@@ -224,12 +224,13 @@ the SSH and the ansible configuration files to access the nodes of the
 testbeds. To do so, simply run:
 
 ```
-./gen-config.py -r <rspec file> -k <identity file>
+./gen-config.py -r <rspec files> -u <username> -k <identity file>
 ```
 
 The identity file is the private key or the certificate obtained after getting
 an account from the [iMinds authority](https://authority.ilabt.iminds.be/).
-This file will be copied under the current directory with the name `id.cert`.
+This file will be copied under the current directory with the name `id.cert`. The 
+username is your username on the Testbed.
 
 The script will generate:
 * `ssh-config`: the configuration file to be given to the SSH command (e.g.,
@@ -248,28 +249,22 @@ The script will generate:
 The filename of the configuration files can be changed via command line
 arguments (see `./gen-config.py --help`).
 
-## Installing bird on the nodes
+## Setting up the testing environment on the nodes
 
-The process of installing bird on the nodes is composed by two steps. The
-first one clones the `bird` repository on the proxy node (the testbed nodes
-have Internet connection, but they cannot reach `ans.disi.unitn.it`), creates
-an archive file, and copies that to `node0`, used as a master node. `node0`
-then unpacks the archive, installs the required libraries, and compiles `bird`.
-To run the first task invoke
+The process of setting up the testing environment on the nodes is composed by two steps.
+The first one takes care of installing all the needed software and tweaks some system parameters.
 ```
-ansible-playbook playbooks/clone-bird.yaml
+ansible-playbook playbooks/setup-nodes.yaml
 ```
 from your local machine.
 
-The second step deployes the compiled binary one all the testbed nodes. To
-run the second task invoke
+The second step is needed to configure the node0 as the master node for the experiments and
+will correctly setup the syslog collection system on that node.
 ```
-./run playbooks/install-bird.yaml "testbed=wall1"
+ansible-playbook playbooks/setup-syslog.yaml
 ```
-on your local machine. The `run` script copies the given ansible playbook on
-the master node specified for the testbed, as well as the required
-configuration files and runs it as you where running it directly on the master
-node.
+on your local machine. If you want you can automate the whole procedure executing the `setup-nodes-environment.sh`
+script.
 
 To test the installation run from your local machine (do so only if you have
 reserved a few nodes)
@@ -285,7 +280,7 @@ To retrieve CPU and interface information for all the nodes in the testbed run
 ```
 ./get-node-info.sh
 ```
-This will create a `cpu_info` and a `nw_info` folder containing one `json` file
+This will create a `cpu_info` containing one `json` file
 for each node in the testbed. The information can be used within python
 programs using the `nodes_info::NodesInfo` class. See the unit test
 `test_nodes_info.py` for an example usage.

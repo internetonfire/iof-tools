@@ -1,4 +1,4 @@
-- hosts: nodes
+- hosts: nodes,!node0
   strategy: free
   gather_facts: true
   tasks:

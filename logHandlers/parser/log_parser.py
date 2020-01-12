@@ -160,6 +160,7 @@ def main():
     reconf_ASes = list()
     max_key = 0
     key_counter = Counter()
+    AS_data_all = defaultdict(dict)
     if args.f and not args.ff:
         for fname in args.f:
             AS_number, data, last_message_before_tmp, reconf_temp = parse_file(fname)
@@ -208,7 +209,6 @@ def main():
             for (dir_path, dir_names, filenames) in walk(args.ff + "/" + dir):
                 fileList.extend(filenames)
                 break
-            AS_data_all = defaultdict(dict)
             if dir not in AS_data_all:
                 AS_data_all[dir] = defaultdict(dict)
             for fname in fileList:
@@ -247,6 +247,8 @@ def main():
                     new_counter = Counter()
                     for key in AS_data_all[dir][AS_number]['updates']:
                         new_key = key - reconf_time
+                        # if new_key < 0:
+                        #    print("ERROR")
                         max_key = max(max_key, new_key)
                         key_counter[str(AS_number) + str(new_key)] += 1
                         value = AS_data_all[dir][AS_number]['updates'][key]
@@ -261,7 +263,7 @@ def main():
         for AS_number in AS_data:
             AS_data[AS_number]['convergence_time'] /= len(dirNames)
             for key in AS_data[AS_number]['updates']:
-                AS_data[AS_number]['updates'][key] /= key_counter[str(AS_number) + str(key)]
+                AS_data[AS_number]['updates'][key] /= len(AS_data_all.keys())
 
     delta = reconf_time - last_message_before_reconf
 
@@ -324,6 +326,26 @@ def main():
         else:
             end_secs = max([AS_data[x]['max_secs'] for x in AS_data])
 
+        integral_on_time = dict()
+        if args.ff and not args.f:
+            integral_list = list()
+            for dir in AS_data_all:
+                integral_on_time_dir = dict()
+                for i in range(reconf_time, end_secs + 1):
+                    if i not in integral_on_time:
+                        integral_on_time_dir[i] = 0
+                    for as_number in AS_data_all[dir]:
+                        integral_on_time_dir[i] += AS_data_all[dir][as_number]['updates'][i]
+                for i in range(reconf_time + 1, end_secs + 1):
+                    integral_on_time_dir[i] += integral_on_time_dir[i - 1]
+                integral_list.append(integral_on_time_dir)
+            for i in range(reconf_time, end_secs + 1):
+                for integral in integral_list:
+                    if i not in integral_on_time:
+                        integral_on_time[i] = 0
+                    integral_on_time[i] += integral[i]
+                integral_on_time[i] /= len(integral_list)
+
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
         if int(args.d) > 0:
             if delta > int(args.d):
@@ -363,11 +385,24 @@ def main():
                     print_in_columns(['-' + str(i)] + ['0'], width=4)
                     i -= 1
         total_upd = 0
-        for i in range(reconf_time, end_secs+1):
-            tot_udp = 0
-            for (AS_number, c_data) in sorted(AS_data.items()):
-                upd = c_data['updates'][i]
-                total_upd += upd
-            print_in_columns([str(i), str(total_upd)], width=4)
-
+        if args.f and not args.ff:
+            for i in range(reconf_time, end_secs+1):
+                for (AS_number, c_data) in sorted(AS_data.items()):
+                    upd = c_data['updates'][i]
+                    total_upd += upd
+                print_in_columns([str(i), str(total_upd)], width=4)
+        else:
+            for i in range(reconf_time, end_secs+1):
+                """counter = 0
+                delta = 0
+                for (AS_number, c_data) in sorted(AS_data.items()):
+                    upd = 0
+                    print(AS_number, c_data['updates'])
+                    if i in c_data['updates']:
+                        counter += 1
+                        upd = c_data['updates'][i]
+                        delta += upd
+                    if upd > 0:
+                        total_upd += upd/counter"""
+                print_in_columns([str(i), str(integral_on_time[i])], width=4)
 main()

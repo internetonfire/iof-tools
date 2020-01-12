@@ -56,15 +56,6 @@ then
   usage
 fi
 
-if [ -d "cpu_info" ]
-then
-  echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Deleting the old cpu_info dir"
-  rm -r cpu_info
-fi
-
-echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Fetching the nodes specs"
-./get-node-info.sh
-
 echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Generating the deployment scripts"
 cp check-sessions.sh $DIR
 python3 gen-deploy.py -b $DIR
