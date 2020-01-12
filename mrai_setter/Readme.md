@@ -21,8 +21,8 @@ At the time of writing available strategies include:
   * none: set all timers to 0 seconds
   * fabrikant: set timers according to worst case gadget configuration (see paper)
   * inversefabrikant: inverted timers of the previous case (should lead to good case)
-  * milanicent: set timers according to our theorecal derived model based on Milani centrality (mice)
-  * milanicent2: variation of the previous one, with a different normalization factor
+  * dpc: set timers according to our theorecal derived model based on destination partial centrality (DPC)
+  * dpc2: variation of the previous one, with a different normalization factor
   * uniformdistrmrai: Set timers randomly following a uniform distribution btween 'default_mrai'%'percentage_constant' and default_mrai
   * constantfabrikant: Set timers following Fabrikant policies, but with a constant increment, the constant percentage is given by 'percentage_constant'
   * constantinversefabrikant: Set timers following inverse Fabrikant polices, but with a constant decrement, the constant percentage is given by 'percentage_constant'

@@ -158,7 +158,7 @@ def apply_uniformdistrmrai_strategy(G, adv_node):
         G.edges[e]['mrai2'] = round(random.uniform(min_value, max_value), 2)
 
 @bgp_strategy
-def apply_milanicent_strategy(G, adv_node):
+def apply_dpc_strategy(G, adv_node):
     """ set mrai timers so accordingly to Milani centrality (MiCe).
     Graph is split in three logic parts. """
     T = default_mrai  # max mrai in seconds
@@ -192,7 +192,7 @@ def apply_milanicent_strategy(G, adv_node):
 
 
 @bgp_strategy
-def apply_milanicent2_strategy(G, adv_node):
+def apply_dpc2_strategy(G, adv_node):
     """ set mrai timers so accordingly to Milani centrality (MiCe).
     Graph is split in three logic parts. """
     T = default_mrai  # max mrai in seconds
