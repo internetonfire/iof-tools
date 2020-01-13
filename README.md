@@ -399,7 +399,7 @@ to edit the bgp session file on node with id 17:
 cd h_17/ && vim bgpSession_h_17_h_16.conf
 ``
 
-In the section named filter *filter_out_h_17_h_16* uncomment four of the six lines starting with *bgp_path.prepend*.
+In the section named filter *filter\_out\_h\_17\_h\_16* uncomment four of the six lines starting with *bgp_path.prepend*.
 
 With this modification, the initial path preferred will be the one between node 16 and 18 ( AS 17 and 19 respectively),and 
 this will be the link to be specified as the "broken" link (see section below for more details) with the command 
