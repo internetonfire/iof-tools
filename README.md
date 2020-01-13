@@ -395,26 +395,25 @@ You'll need:
  We tried topologies up to 4000 Autonomous Systems, using a 6:1 ratio (6 AS on a single core).
  
  
- ## Deployment of the topology
- 1. Copy the Bird config file directory in `~/src/iof-tools/`
- 2. You can use the `./deploy-experiment.sh` script to automate all the deployment steps.
+## Deployment of the topology
+ 
+1. Copy the Bird config file directory in `~/src/iof-tools/`
+2. You can use the `./deploy-experiment.sh` script to automate all the deployment steps.
  
  
- ## Running the experiment
- After you successfully deployed the experiment files, you can connect to the control node to run the experiment: 
- `ssh -F ssh-config node0`
- From the control node, execute the `./run-experiment.sh` script. You'll need to specify some arguments:
+## Running the experiment
+After you successfully deployed the experiment files, you can connect to the control node to run the experiment: 
+`ssh -F ssh-config node0`
+From the control node, execute the `./run-experiment.sh` script. You'll need to specify some arguments:
  
- * `-a ASNumber` this flag specifies which AS is going to trigger the change in the topology
- * `-n ASNumber` this flag specifies the adjacency that will be changed, if you want to trigger the 
- change on the AS 10 over the adjacency with the AS 15, the command line will be `-a 10 -n 15`. 
- If you don't specify a neighbor, the first one will be selected.
- * `-r runs` this flag specifies the number of runs to execute, on each run the script will:
-    * Start via ansible the bird process on all the nodes;
-    * Check if all the bird processes and adjacencies are ok;
-    * Wait for the topology to converge;
-    * Trigger the change on the network;
-    * Wait for the topology to converge;
-    * Collect all the relevant logs;
-    * Kill all Bird processes.
+1. `-a ASNumber` this flag specifies which AS is going to trigger the change in the topology
+2. `-n ASNumber` this flag specifies the adjacency that will be changed, if you want to trigger the change on the AS 10 over the adjacency with the AS 15, the command line will be `-a 10 -n 15`. If you don't specify a neighbor, the first one will be selected.
+3. `-r runs` this flag specifies the number of runs to execute, on each run the script will:
+   * Start via ansible the bird process on all the nodes;
+   * Check if all the bird processes and adjacencies are ok;
+   * Wait for the topology to converge;
+   * Trigger the change on the network;
+   * Wait for the topology to converge;
+   * Collect all the relevant logs;
+   * Kill all Bird processes.
  
