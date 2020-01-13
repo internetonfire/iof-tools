@@ -57,7 +57,7 @@
         chdir: "{{ bird_dir }}"
 #
     - name: Get Interface Name 
-      shell: ip addr show | grep "192.168.0" |  sed 's/^.*global //' 
+      shell: ip addr show | grep "192.168." |  sed 's/^.*global //' 
       register: command_output
     - set_fact:
         ifname="{{ command_output.stdout }}"
