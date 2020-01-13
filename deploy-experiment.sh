@@ -2,7 +2,7 @@
 #
 # This script deploys all the experiment files needed on the Testbed
 #
-FORKS=25
+FORKS=5
 
 usage () {
   echo "usage: $0 -d config dir"
