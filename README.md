@@ -296,6 +296,9 @@ for each node in the testbed. The information can be used within python
 programs using the `nodes_info::NodesInfo` class. See the unit test
 `test_nodes_info.py` for an example usage.
 
+If you used the `setup-nodes-environment.sh` in the previous step, the informations have already
+beed retrieved by the script. If you want to do it by hand, be sure to delete the `cpu_info` direcroty first.
+
 # Topologies and BGP configurations
 
 This section describes the tools that are used to generate network topologies
@@ -333,6 +336,11 @@ parameters of the script have different names, but the same meaning):
  the graphical description of the topology in the paper) has the highest
  timer. Each ring's timer is halved with respect to the one of its left ring.
 
+As an example, if you want to generate an eight ring Fabrikant topology:
+``
+cd graphGenerator/fabrikant &&
+python3 gen_chain_gadget.py -r 8 -i 1 -t M -w OUTPUTFILE.graphml
+``
 ## AS graph generator
 
  This [tool](https://github.com/lucabaldesi/AS_graph_generator) generates graphs
@@ -340,6 +348,6 @@ resembling the Internet BGP speaker topology.
 
 Generation is as easy as typing:
 
-'''
+``
 ./generate.py <number_of_nodes> <number_of_graphs>
-'''
+``
