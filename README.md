@@ -384,6 +384,27 @@ This tool is available in the `confFileGenerator` folder, it can be used to gene
 configuration files to deploy on the Testbed. You can refer to the tool Readme for a complete explanation
 of the different options.
 
+## Custom modification needed on Bird config files
+If you plan to simulate a Fabrikant topology, some custom modification on the config must be made. In order to simulate the
+change in the network we added three additional nodes, these nodes are in charge of managing the "d" destination. The nodes
+are always identified as the three nodes with the highest number id. As an example, if you generated with the chain gadget generator
+a 17 nodes topology, the nodes with id 0 to 16 are the nodes of the chain gadget and the nodes with id 17,18 and 19 are
+in charge of managing the destination. The node exporting the destination is always the one with the highest id (in this case
+the node with id 19). To simulate a change in the network we use the path prepending technique. For this reason, before
+deploying the experiment you must enable the prepending on one of the links. In all our experiments we added the prepending
+in the highest odd numbered node not announcing the route. In the example of the 17 nodes Fabrikant topology you'll need
+to edit the bgp session file on node with id 17:
+
+``
+cd h_17/ && vim bgpSession_h_17_h_16.conf
+``
+
+In the section named filter *filter_out_h_17_h_16* uncomment four of the six lines starting with *bgp_path.prepend*.
+
+With this modification, the initial path preferred will be the one between node 16 and 18 ( AS 17 and 19 respectively),and 
+this will be the link to be specified as the "broken" link (see section below for more details) with the command 
+``./run-experiment.sh -a 19 -n 17``
+
 # Experiment deployment and execution
 To deploy an experiment on the Testbed, a mix of ansible playbooks and various scripts is needed.
 You'll need:
@@ -417,3 +438,8 @@ From the control node, execute the `./run-experiment.sh` script. You'll need to 
    * Collect all the relevant logs;
    * Kill all Bird processes.
  
+## Fetching the logs
+The `fetch-results.sh` script can be used to fetch the logs from the testbed control node. If you are experimenting with 
+a Fabrikant topology it will also clean the logs related to the nodes used to trigger the change in the network.
+
+## Analysis of the logs
