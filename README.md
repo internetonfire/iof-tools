@@ -1,7 +1,7 @@
 Internet on FIRE Scripts Repo
 ===
 
-## ASSUMPTIONS
+# ASSUMPTIONS
 
 This `README` assumes that:
 * you are working on a Unix-like system, so the variable `$HOME` is available;
@@ -13,7 +13,7 @@ Please execute the following beforehand:
 mkdir -p $HOME/src
 ```
 
-### Key pair setup
+## Key pair setup
 
 First of all, we assume that the user has a
 valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
@@ -113,6 +113,10 @@ In case you need to add a new user, these are the required steps:
    the `omni` section.
 2. add to the `omni_config` file a new section for the new user.
 3. commit and push the new `omni_config` template.
+
+# Testbed resource reservation
+You can use jFed directly to reserve nodes, if you plan on using a lot of nodes, you can use 
+the rspec generation scripts to ease this step.
 
 ## RSPEC generation
 
@@ -337,10 +341,12 @@ parameters of the script have different names, but the same meaning):
  timer. Each ring's timer is halved with respect to the one of its left ring.
 
 As an example, if you want to generate an eight ring Fabrikant topology:
+
 ``
 cd graphGenerator/fabrikant &&
 python3 gen_chain_gadget.py -r 8 -i 1 -t M -w OUTPUTFILE.graphml
 ``
+
 ## AS graph generator
 
  This [tool](https://github.com/lucabaldesi/AS_graph_generator) generates graphs
@@ -349,5 +355,41 @@ resembling the Internet BGP speaker topology.
 Generation is as easy as typing:
 
 ``
-./generate.py <number_of_nodes> <number_of_graphs>
+python3 generate.py <number_of_nodes> <number_of_graphs>
 ``
+
+## MRAI Setter
+This tool sets the MRAI value on a graphml topology, using a specific strategy. You can look
+at the Readme file in the `mrai_setter` folder for a complete explanation of the arguments.
+
+## Bird Policy file generator
+If you want to simulate a chain gedget topology you must also generate a Bird policy file.
+This generator implements the routing policies needed on for the correct functioning of the Fabrikant topologies.
+The policy generator will also add three nodes needed to manage the routing change in the
+topology. It is mandatory to have a single destination route to be announced configured in 
+the graph. If you have more than one (because you added them to correctly calculate the DPC values), you 
+need to remove them by hand, editing the graphml file and deleting the "destination" entries
+on every node (except the last one).
+If you plan to use the Elmokashfi generator, you can skip this step.
+
+To generate the policy file, use the tools as follows:
+
+``
+cd birdPolicyGenerator &&
+python3 gen_bird_preferences.py -g <graph_name>
+``
+
+## Bird Config file generator
+This tool is available in the `confFileGenerator` folder, it can be used to generate the Bird
+configuration files to deploy on the Testbed. You can refer to the tool Readme for a complete explanation
+of the different options.
+
+# Experiment deployment and execution
+To deploy an experiment on the Testbed, a mix of ansible playbooks and various scripts is needed.
+You'll need:
+  * A set of nodes reserved on the Testbed
+  * The output directory of the Bird policy generator tool, containing the configuration files of the selected topology to be tested.
+ 
+ If you are testing a fabrikant gadget topology, only two nodes are needed. If you are testing an Elmokashfi topology, the total number
+ of *cores* needed is dependant upon the number of Autonomous Systems of the topology.
+ We tried topologies up to 4000 Autonomous Systems, using a 6:1 ratio (6 AS on a single core).
