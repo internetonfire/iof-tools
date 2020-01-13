@@ -3,23 +3,16 @@ setwd("~/src/iof-tools/plotsGenerator/Rscripts/MultipleCSV")
 
 library(dplyr)
 
-folder1 <- '../../tmp/drive-download-20191229T142734Z-001/2019-12-23_4K-runs/RES-4K-30SEC/30SEC_CSV/'
-folder2 <- '../../tmp/drive-download-20191229T142734Z-001/2019-12-23_4K-runs/RES-4K-DPC/DPC_CSV/'
-#folder1 <- '../../tmp/drive-download-20191229T142734Z-001_01/2019-12-24_fabrikant_16_nodes/RES-F16N/RES-F16N-NOMRAI_CSV/'
-#folder2 <- '../../tmp/drive-download-20191229T142734Z-001_01/2019-12-24_fabrikant_16_nodes/RES-F16N/RES-F16N-30SEC_CSV/'
-#folder3 <- '../../tmp/drive-download-20191229T142734Z-001_01/2019-12-24_fabrikant_16_nodes/RES-F16N/RES-F16N-FABRIKANT_CSV/'
-#folder4 <- '../../tmp/drive-download-20191229T142734Z-001_01/2019-12-24_fabrikant_16_nodes/RES-F16N/RES-F16N-DPC_CSV/'
-#folder5 <- '../../BGPpysim/outNoMRAICSV'
-#folder6 <- '../../BGPpysim/outConstFabrCSV'
-#folder7 <- '../../BGPpysim/outConstInvFabrCSV'
+args <- commandArgs(trailingOnly = TRUE)
+
+folder1 <- args[1]
+folder2 <- args[2]
+
+#folder1 <- '../../tmp/drive-download-20191229T142734Z-001/2019-12-23_4K-runs/RES-4K-30SEC/30SEC_CSV/'
+#folder2 <- '../../tmp/drive-download-20191229T142734Z-001/2019-12-23_4K-runs/RES-4K-DPC/DPC_CSV/'
 
 fileList1 <- list.files(folder1,full.names = TRUE)
 fileList2 <- list.files(folder2,full.names = TRUE)
-#fileList3 <- list.files(folder3,full.names = TRUE)
-#fileList4 <- list.files(folder4,full.names = TRUE)
-#fileList5 <- list.files(folder5,full.names = TRUE)
-#fileList6 <- list.files(folder6,full.names = TRUE)
-#fileList7 <- list.files(folder7,full.names = TRUE)
 
 #Functions
 # Function to find the id of the line with type equals to RECONF
@@ -105,35 +98,14 @@ listTimes <- function(fileList) {
 }
 
 data1 <- listUpdtes(fileList1)
-sink("30Sec_nUpdates.txt")
+sink("input1_nUpdates.txt")
 print(summary(data1))
 sink()
 data2 <- listUpdtes(fileList2)
-sink("DPC_nUpdates.txt")
+sink("input2_nUpdates.txt")
 print(summary(data2))
 sink()
-#data3 <- listUpdtes(fileList3)
-#sink("InverseFabrikant_nUpdates.txt")
-#print(summary(data3))
-#sink()
-#data4 <- listUpdtes(fileList4)
-#sink("Heuristic_nUpdates.txt")
-#print(summary(data4))
-#sink()
-#data5 <- listUpdtes(fileList5)
-#sink("NoMRAI_nUpdates.txt")
-#print(summary(data5))
-#sink()
-#data6 <- listUpdtes(fileList6)
-#sink("constFabr_nUpdates.txt")
-#print(summary(data6))
-#sink()
-#data7 <- listUpdtes(fileList7)
-#sink("InvConstFabr_nUpdates.txt")
-#print(summary(data7))
-#sink()
 
-#boxplot(data.frame(NoMRAI = data1, Fixed30Sec = data2, Fabrikant = data3, DPC = data4),
 boxplot(data.frame(Fixed30Sec = data1, DPC = data2),
         main="Number of UPDATEs comparison",
         xlab="MRAI style",
@@ -146,7 +118,7 @@ for (file in fileList1) {
   csv_obj <- read.csv(file, header = T)
   data1 <- c(data1, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
-sink("fixed_30_sec.txt")
+sink("input1_time.txt")
 print(summary(data1))
 sink()
 data2 <- c()
@@ -154,51 +126,10 @@ for (file in fileList2) {
   csv_obj <- read.csv(file, header = T)
   data2 <- c(data2, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
 }
-sink("DPC.txt")
+sink("input2_time.txt")
 print(summary(data2))
 sink()
-#data3 <- c()
-#for (file in fileList3) {
-#  csv_obj <- read.csv(file, header = T)
-#  data3 <- c(data3, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
-#}
-#sink("Fabrikant.txt")
-#print(summary(data3))
-#sink()
-#data4 <- c()
-#for (file in fileList4) {
-#  csv_obj <- read.csv(file, header = T)
-#  data4 <- c(data4, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
-#}
-#sink("DPC.txt")
-#print(summary(data4))
-#sink()
-#data5 <- c()
-#for (file in fileList5) {
-#  csv_obj <- read.csv(file, header = T)
-#  data5 <- c(data5, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
-#}
-#sink("NoMRAI_time.txt")
-#print(summary(data5))
-#sink()
-#data6 <- c()
-#for (file in fileList6) {
-#  csv_obj <- read.csv(file, header = T)
-#  data6 <- c(data6, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
-#}
-#sink("constFabr_mrai.txt")
-#print(summary(data6))
-#sink()
-#data7 <- c()
-#for (file in fileList7) {
-#  csv_obj <- read.csv(file, header = T)
-#  data7 <- c(data7, max(as.numeric(as.POSIXct(csv_obj$TIME))) - as.numeric(as.POSIXct(csv_obj[findReconfId(csv_obj), ]$TIME)))
-#}
-#sink("constInvFabr_time.txt")
-#print(summary(data7))
-#sink()
 
-#boxplot(data.frame(NoMRAI = data1, Fixed30Sec = data2, Fabrikant = data3, DPC = data4),
 boxplot(data.frame(Fixed30Sec = data1, DPC = data2),
         main="Convergence time",
         xlab="MRAI style",

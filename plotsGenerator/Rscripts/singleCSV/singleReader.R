@@ -3,8 +3,12 @@ library(ggplot2)
 # set the environment
 setwd("~/src/iof-tools/plotsGenerator/Rscripts/singleCSV")
 
+args <- commandArgs(trailingOnly = TRUE)
+
+file <- args[1]
+
 #File
-file <- '../../BGPpysim/out2/bgpSim_test_49_15h39m21s_01-10-2019.csv'
+#file <- '../../BGPpysim/out2/bgpSim_test_49_15h39m21s_01-10-2019.csv'
 
 #Functions
 # Function to find the id of the line with type equals to RECONF
