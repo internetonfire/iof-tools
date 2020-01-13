@@ -22,7 +22,7 @@ Authority account are located in ~/.ssh/twist.pub and ~/.ssh/twist.key
 respectively (the private key MUST NOT be encrypted).
 If you don't have the keys already setup, you can follow these instructions:
 
-Go to https://authority.ilabt.iminds.be/getcert.php and download your certificate
+Go to [iMinds Authority account management](https://authority.ilabt.iminds.be/getcert.php) and download your certificate
 clicking on the "Download Login Cerificate" button. Save it with the name `twist.cert`.
 Extract the public key with the following command:
 
