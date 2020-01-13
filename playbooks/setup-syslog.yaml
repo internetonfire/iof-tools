@@ -21,7 +21,7 @@
   - name: Copy master configuration
     become: true
     copy:
-      src: ../node0-iof.conf
+      src: files/node0-iof.conf
       dest: /etc/rsyslog.d/node0-iof.conf
       mode: '0644'
       owner: root
@@ -50,7 +50,7 @@
   - name: Copy  configuration
     become: true
     copy:
-      src: ../98-iof.conf
+      src: files/98-iof.conf
       dest: /etc/rsyslog.d/98-iof.conf
       mode: '0644'
       owner: root
