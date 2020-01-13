@@ -1,3 +1,0 @@
-# session_file: filename declaring the link between two instances (e.g.,
-# bgpSession_node0_node1.conf)
-include "{session_file}";

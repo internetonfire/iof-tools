@@ -62,7 +62,7 @@ def apply_none_strategy(G, adv_node):
 def apply_fabrikant_strategy(G, adv_node):
     """ set mrai timers according to the Fabrikant gadget paper """
     fl = fabrikant_levels(G, adv_node)
-    print(fl)
+    #print(fl)
     for i in G.nodes:
         if i in fl:
             set_node_mrai(G, i, default_mrai/(2**fl[i]))
@@ -158,7 +158,7 @@ def apply_uniformdistrmrai_strategy(G, adv_node):
         G.edges[e]['mrai2'] = round(random.uniform(min_value, max_value), 2)
 
 @bgp_strategy
-def apply_milanicent_strategy(G, adv_node):
+def apply_dpc_strategy(G, adv_node):
     """ set mrai timers so accordingly to Milani centrality (MiCe).
     Graph is split in three logic parts. """
     T = default_mrai  # max mrai in seconds
@@ -192,7 +192,7 @@ def apply_milanicent_strategy(G, adv_node):
 
 
 @bgp_strategy
-def apply_milanicent2_strategy(G, adv_node):
+def apply_dpc2_strategy(G, adv_node):
     """ set mrai timers so accordingly to Milani centrality (MiCe).
     Graph is split in three logic parts. """
     T = default_mrai  # max mrai in seconds
@@ -294,7 +294,7 @@ def fabrikant_levels(G, adv_node):
 def strategyfy(G, strategy, adv_node):
     if not adv_node:
         adv_node = list(G.nodes)[-1]
-    G.nodes[adv_node]['destinations'] = "10.0.0.0/24"
+    G.nodes[adv_node]['destinations'] = "100.0.0.0/24"
 
     if strategy in strategies:
         eval("apply_" + strategy + "_strategy")(G, adv_node)

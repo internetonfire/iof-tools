@@ -1,4 +1,4 @@
-from chain_gadget import gen_chain_gadget, ATTR_NODE_TYPE, \
+from graphGenerator.fabrikant.chain_gadget import gen_chain_gadget, ATTR_NODE_TYPE, \
     ATTR_EDGE_TYPE, ATTR_TIMER, DEFAULT_MRAI_TIMER
 
 

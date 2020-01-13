@@ -1,0 +1,4 @@
+    if bgp_path ~ [= {PATH} =] then{{
+      bgp_local_pref = {PREFERENCE};
+      return bgp_local_pref;
+    }}

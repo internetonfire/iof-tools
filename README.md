@@ -1,7 +1,7 @@
 Internet on FIRE Scripts Repo
 ===
 
-## ASSUMPTIONS
+# ASSUMPTIONS
 
 This `README` assumes that:
 * you are working on a Unix-like system, so the variable `$HOME` is available;
@@ -12,6 +12,27 @@ Please execute the following beforehand:
 ```
 mkdir -p $HOME/src
 ```
+
+## Key pair setup
+
+First of all, we assume that the user has a
+valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
+assume that the user's public and private keys associated with the iMinds
+Authority account are located in ~/.ssh/twist.pub and ~/.ssh/twist.key
+respectively (the private key MUST NOT be encrypted).
+If you don't have the keys already setup, you can follow these instructions:
+
+Go to [iMinds Authority account management](https://authority.ilabt.iminds.be/getcert.php) and download your certificate
+clicking on the "Download Login Cerificate" button. Save it with the name `twist.cert`.
+Extract the public key with the following command:
+
+`openssl x509 -pubkey -noout -in twist.cert > ~/.ssh/twist.pub`
+
+Edit the`twist.cert` file and copy the private key part in a new file named `twist.protected.key`.
+
+Remove the password from the private key:
+
+`openssl rsa -in twist.protected.key -out ~/.ssh/twist.key`
 
 ## Omni tool
 
@@ -29,7 +50,7 @@ On ubuntu, in order to install the `omni`'s software dependencies run the
 following command:
 
 ```
-sudo apt install python-m2crypto python-dateutil python-openssl libxmlsec1 \
+sudo apt install python-m2crypto python-dateutil python-openssl libxmlsec1 
     xmlsec1 libxmlsec1-openssl libxmlsec1-dev autoconf
 ```
 
@@ -41,14 +62,13 @@ page](https://github.com/GENI-NSF/geni-tools/wiki/QuickStart#debian--ubuntu)
 In order to install `omni` execute the following commands:
 
 ```
-cd $HOME/src
-git clone https://github.com/GENI-NSF/geni-tools omni
-cd omni
-./autogen.sh
-./configure
-make
-cd $HOME/src/iof-tools
-ln -s ./$HOME/src/omni/src/omni omni
+cd $HOME/src &&
+git clone https://github.com/GENI-NSF/geni-tools omni &&
+cd omni &&
+./autogen.sh &&
+./configure &&
+make &&
+make install 
 ```
 
 If you are using Python version 3 and you don't want to switch system-wide to
@@ -71,12 +91,6 @@ The `omni_config` file provided in this repository is a template of the `omni`
 configuration file. Before running any other `omni` command, this template file
 must be modified in order to adapt it to the local host environment.
 
-First of all, we assume that the user running the omni commands has a
-valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
-assume that the user's public and private keys associated with the iMinds
-Authority account are located in ~/.ssh/twist.cert and ~/.ssh/twist.prk
-respectively (the private key MUST NOT be encrypted
-`openssl rsa -in ssl.key.secure -out ssl.key`).
 
 The users whose public keys will be installed on the testbed's nodes are listed
 (comma separated list) in the value of the `users` key in the `omni` section.
@@ -92,16 +106,17 @@ keys = ~/.ssh/twist.pub
 ```
 
 The value of the field `keys` must be modified to point to the public key of the
-user `segata`. The public key can be extracted from the certificate file with
-```
-openssl x509 -pubkey -noout -in ~/.ssh/twist.cert > ~/.ssh/twist.pub
-```
+user `segata`.
 
 In case you need to add a new user, these are the required steps:
 1. append the new user name in the comma separated list of the `users` key in
    the `omni` section.
 2. add to the `omni_config` file a new section for the new user.
 3. commit and push the new `omni_config` template.
+
+# Testbed resource reservation
+You can use jFed directly to reserve nodes, if you plan on using a lot of nodes, you can use 
+the rspec generation scripts to ease this step.
 
 ## RSPEC generation
 
@@ -285,6 +300,9 @@ for each node in the testbed. The information can be used within python
 programs using the `nodes_info::NodesInfo` class. See the unit test
 `test_nodes_info.py` for an example usage.
 
+If you used the `setup-nodes-environment.sh` in the previous step, the informations have already
+beed retrieved by the script. If you want to do it by hand, be sure to delete the `cpu_info` direcroty first.
+
 # Topologies and BGP configurations
 
 This section describes the tools that are used to generate network topologies
@@ -322,6 +340,13 @@ parameters of the script have different names, but the same meaning):
  the graphical description of the topology in the paper) has the highest
  timer. Each ring's timer is halved with respect to the one of its left ring.
 
+As an example, if you want to generate an eight ring Fabrikant topology:
+
+``
+cd graphGenerator/fabrikant &&
+python3 gen_chain_gadget.py -r 8 -i 1 -t M -w OUTPUTFILE.graphml
+``
+
 ## AS graph generator
 
  This [tool](https://github.com/lucabaldesi/AS_graph_generator) generates graphs
@@ -329,6 +354,92 @@ resembling the Internet BGP speaker topology.
 
 Generation is as easy as typing:
 
-'''
-./generate.py <number_of_nodes> <number_of_graphs>
-'''
+``
+python3 generate.py <number_of_nodes> <number_of_graphs>
+``
+
+## MRAI Setter
+This tool sets the MRAI value on a graphml topology, using a specific strategy. You can look
+at the Readme file in the `mrai_setter` folder for a complete explanation of the arguments.
+
+## Bird Policy file generator
+If you want to simulate a chain gedget topology you must also generate a Bird policy file.
+This generator implements the routing policies needed on for the correct functioning of the Fabrikant topologies.
+The policy generator will also add three nodes needed to manage the routing change in the
+topology. It is mandatory to have a single destination route to be announced configured in 
+the graph. If you have more than one (because you added them to correctly calculate the DPC values), you 
+need to remove them by hand, editing the graphml file and deleting the "destination" entries
+on every node (except the last one).
+If you plan to use the Elmokashfi generator, you can skip this step.
+
+To generate the policy file, use the tools as follows:
+
+``
+cd birdPolicyGenerator &&
+python3 gen_bird_preferences.py -g <graph_name>
+``
+
+## Bird Config file generator
+This tool is available in the `confFileGenerator` folder, it can be used to generate the Bird
+configuration files to deploy on the Testbed. You can refer to the tool Readme for a complete explanation
+of the different options.
+
+## Custom modification needed on Bird config files
+If you plan to simulate a Fabrikant topology, some custom modification on the config must be made. In order to simulate the
+change in the network we added three additional nodes, these nodes are in charge of managing the "d" destination. The nodes
+are always identified as the three nodes with the highest number id. As an example, if you generated with the chain gadget generator
+a 17 nodes topology, the nodes with id 0 to 16 are the nodes of the chain gadget and the nodes with id 17,18 and 19 are
+in charge of managing the destination. The node exporting the destination is always the one with the highest id (in this case
+the node with id 19). To simulate a change in the network we use the path prepending technique. For this reason, before
+deploying the experiment you must enable the prepending on one of the links. In all our experiments we added the prepending
+in the highest odd numbered node not announcing the route. In the example of the 17 nodes Fabrikant topology you'll need
+to edit the bgp session file on node with id 17:
+
+``
+cd h_17/ && vim bgpSession_h_17_h_16.conf
+``
+
+In the section named filter *filter\_out\_h\_17\_h\_16* uncomment four of the six lines starting with *bgp_path.prepend*.
+
+With this modification, the initial path preferred will be the one between node 16 and 18 ( AS 17 and 19 respectively),and 
+this will be the link to be specified as the "broken" link (see section below for more details) with the command 
+``./run-experiment.sh -a 19 -n 17``
+
+# Experiment deployment and execution
+To deploy an experiment on the Testbed, a mix of ansible playbooks and various scripts is needed.
+You'll need:
+* A set of nodes reserved on the Testbed
+* The output directory of the Bird policy generator tool, containing the configuration files of the selected topology to be tested.
+ 
+ If you are testing a fabrikant gadget topology, only two nodes are needed. If you are testing an Elmokashfi topology, the total number
+ of *cores* needed is dependant upon the number of Autonomous Systems of the topology.
+ We tried topologies up to 4000 Autonomous Systems, using a 6:1 ratio (6 AS on a single core).
+ 
+ 
+## Deployment of the topology
+ 
+1. Copy the Bird config file directory in `~/src/iof-tools/`
+2. You can use the `./deploy-experiment.sh` script to automate all the deployment steps.
+ 
+ 
+## Running the experiment
+After you successfully deployed the experiment files, you can connect to the control node to run the experiment: 
+`ssh -F ssh-config node0`
+From the control node, execute the `./run-experiment.sh` script. You'll need to specify some arguments:
+ 
+1. `-a ASNumber` this flag specifies which AS is going to trigger the change in the topology
+2. `-n ASNumber` this flag specifies the adjacency that will be changed, if you want to trigger the change on the AS 10 over the adjacency with the AS 15, the command line will be `-a 10 -n 15`. If you don't specify a neighbor, the first one will be selected.
+3. `-r runs` this flag specifies the number of runs to execute, on each run the script will:
+   * Start via ansible the bird process on all the nodes;
+   * Check if all the bird processes and adjacencies are ok;
+   * Wait for the topology to converge;
+   * Trigger the change on the network;
+   * Wait for the topology to converge;
+   * Collect all the relevant logs;
+   * Kill all Bird processes.
+ 
+## Fetching the logs
+The `fetch-results.sh` script can be used to fetch the logs from the testbed control node. If you are experimenting with 
+a Fabrikant topology it will also clean the logs related to the nodes used to trigger the change in the network.
+
+## Analysis of the logs

@@ -1,0 +1,5 @@
+function set_bgp_pref(){{
+{PREFERENCES_LIST}
+    bgp_local_pref = {DEFAULT_PREF};
+    return bgp_local_pref;
+}}
