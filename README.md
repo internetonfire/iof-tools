@@ -404,6 +404,7 @@ You'll need:
  After you successfully deployed the experiment files, you can connect to the control node to run the experiment: 
  `ssh -F ssh-config node0`
  From the control node, execute the `./run-experiment.sh` script. You'll need to specify some arguments:
+ 
  * `-a ASNumber` this flag specifies which AS is going to trigger the change in the topology
  * `-n ASNumber` this flag specifies the adjacency that will be changed, if you want to trigger the 
  change on the AS 10 over the adjacency with the AS 15, the command line will be `-a 10 -n 15`. 
