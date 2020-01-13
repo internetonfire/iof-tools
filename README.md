@@ -13,6 +13,27 @@ Please execute the following beforehand:
 mkdir -p $HOME/src
 ```
 
+### Key pair setup
+
+First of all, we assume that the user has a
+valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
+assume that the user's public and private keys associated with the iMinds
+Authority account are located in ~/.ssh/twist.pub and ~/.ssh/twist.key
+respectively (the private key MUST NOT be encrypted).
+If you don't have the keys already setup, you can follow these instructions:
+
+Go to https://authority.ilabt.iminds.be/getcert.php and download your certificate
+clicking on the "Download Login Cerificate" button. Save it with the name `twist.cert`.
+Extract the public key with the following command:
+
+`openssl x509 -pubkey -noout -in twist.cert > ~/.ssh/twist.pub`
+
+Edit the`twist.cert` file and copy the private key part in a new file named `twist.protected.key`.
+
+Remove the password from the private key:
+
+`openssl rsa -in twist.protected.key -out ~/.ssh/twist.key`
+
 ## Omni tool
 
 The [Omni](https://github.com/GENI-NSF/geni-tools/wiki/Omni) command line tool is
@@ -29,7 +50,7 @@ On ubuntu, in order to install the `omni`'s software dependencies run the
 following command:
 
 ```
-sudo apt install python-m2crypto python-dateutil python-openssl libxmlsec1 \
+sudo apt install python-m2crypto python-dateutil python-openssl libxmlsec1 
     xmlsec1 libxmlsec1-openssl libxmlsec1-dev autoconf
 ```
 
@@ -41,14 +62,13 @@ page](https://github.com/GENI-NSF/geni-tools/wiki/QuickStart#debian--ubuntu)
 In order to install `omni` execute the following commands:
 
 ```
-cd $HOME/src
-git clone https://github.com/GENI-NSF/geni-tools omni
-cd omni
-./autogen.sh
-./configure
-make
-cd $HOME/src/iof-tools
-ln -s ./$HOME/src/omni/src/omni omni
+cd $HOME/src &&
+git clone https://github.com/GENI-NSF/geni-tools omni &&
+cd omni &&
+./autogen.sh &&
+./configure &&
+make &&
+make install 
 ```
 
 If you are using Python version 3 and you don't want to switch system-wide to
@@ -71,12 +91,6 @@ The `omni_config` file provided in this repository is a template of the `omni`
 configuration file. Before running any other `omni` command, this template file
 must be modified in order to adapt it to the local host environment.
 
-First of all, we assume that the user running the omni commands has a
-valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
-assume that the user's public and private keys associated with the iMinds
-Authority account are located in ~/.ssh/twist.cert and ~/.ssh/twist.prk
-respectively (the private key MUST NOT be encrypted
-`openssl rsa -in ssl.key.secure -out ssl.key`).
 
 The users whose public keys will be installed on the testbed's nodes are listed
 (comma separated list) in the value of the `users` key in the `omni` section.
@@ -92,10 +106,7 @@ keys = ~/.ssh/twist.pub
 ```
 
 The value of the field `keys` must be modified to point to the public key of the
-user `segata`. The public key can be extracted from the certificate file with
-```
-openssl x509 -pubkey -noout -in ~/.ssh/twist.cert > ~/.ssh/twist.pub
-```
+user `segata`.
 
 In case you need to add a new user, these are the required steps:
 1. append the new user name in the comma separated list of the `users` key in
