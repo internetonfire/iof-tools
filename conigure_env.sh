@@ -14,9 +14,8 @@ cd omni || exit
 ./autogen.sh
 ./configure
 make
+make install
 cd "$HOME"/src/iof-tools || exit
-ln -s "$HOME"/src/omni/src/omni omni
-export PATH="$PATH:."
 openssl rsa -in twist-encr.key -out twist.key
 openssl x509 -pubkey -noout -in ~/.ssh/twist.cert > ~/.ssh/twist.pub
 
