@@ -3,9 +3,9 @@ if (!exists("inputfile")) inputfile='logs.txt'
 if (!exists("type")) type=1
 if (!exists("timeRange")) timeRange="[s]"
 if (!exists("yrng")) yrng=20
-if (!exists("y2rng")) y2rng=20
+if (!exists("y2rng")) y2rng=1000
 if (!exists("xmin")) xmin=0
-if (!exists("xmax")) xmax=70
+if (!exists("xmax")) xmax=30
 
 set datafile separator ','
 set ylabel "Number of AS"
