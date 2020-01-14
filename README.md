@@ -427,8 +427,8 @@ Multiple destinations in Elmokashfi topologies are fully supported, but having a
 the first convergence phase (when the network topology is starting up). Depending on the number of nodes, if you don't remove
 the destinations this step can take hours/days (as an example, a 4000nodes topology with 4000 destinations configured
 is converging in around 37 hours using DPC MRAI settings). The best solution is to keep the destinations on the graph and have
-them configured and ready to use in the Bird configuration files and before we deploy the experiment we can easily comment
-out the exporting command on all the Bird configuration files. With this method you can easily start up a simulation with
+them configured and ready to use in the Bird configuration files. Before we deploy the experiment we can easily comment
+out the *export* command on all the Bird configuration files. With this method you can easily start up a simulation with
 a single node exporting a destination (we always export a destination on the node generating the change in the network). With a
 single destination exported, the network will usually converge in less than 5/10 minutes.
 
