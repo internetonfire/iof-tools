@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This script manages the setup of the deployment files on the Testbed. Given the
+# cpu resources reserved, and the Bird configuration directory, it will decide how
+# to spread the AS on the physical nodes.
+
 from argparse import ArgumentParser
 from glob import glob
 import json
