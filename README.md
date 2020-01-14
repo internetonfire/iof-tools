@@ -454,10 +454,11 @@ After this modification, when you deploy the topology, the AS100 will start anno
 # Experiment deployment and execution
 To deploy an experiment on the Testbed, a mix of ansible playbooks and various scripts is needed.
 You'll need:
+
 * A set of nodes reserved on the Testbed
 * The output directory of the Bird policy generator tool, containing the configuration files of the selected topology to be tested.
  
- If you are testing a fabrikant gadget topology, only two nodes are needed. If you are testing an Elmokashfi topology, the total number
+If you are testing a fabrikant gadget topology, only two nodes are needed. If you are testing an Elmokashfi topology, the total number
  of *cores* needed is dependant upon the number of Autonomous Systems of the topology.
  We tried topologies up to 4000 Autonomous Systems, using a 6:1 ratio (6 AS on a single core).
  
