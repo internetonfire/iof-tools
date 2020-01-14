@@ -18,21 +18,21 @@ mkdir -p $HOME/src
 First of all, we assume that the user has a
 valid [iMinds Authority account](https://authority.ilabt.iminds.be/). We also
 assume that the user's public and private keys associated with the iMinds
-Authority account are located in ~/.ssh/twist.pub and ~/.ssh/twist.key
+Authority account are located in ~/.ssh/iminds.pub and ~/.ssh/iminds.key
 respectively (the private key MUST NOT be encrypted).
 If you don't have the keys already setup, you can follow these instructions:
 
 Go to [iMinds Authority account management](https://authority.ilabt.iminds.be/getcert.php) and download your certificate
-clicking on the "Download Login Certificate" button. Save it with the name `twist.cert`.
+clicking on the "Download Login Certificate" button. Save it with the name `iminds.cert`.
 Extract the public key with the following command:
 
-`openssl x509 -pubkey -noout -in twist.cert > ~/.ssh/twist.pub`
+`openssl x509 -pubkey -noout -in iminds.cert > ~/.ssh/iminds.pub`
 
-Edit the`twist.cert` file and copy the private key part in a new file named `twist.protected.key`.
+Edit the`iminds.cert` file and copy the private key part in a new file named `iminds.protected.key`.
 
 Remove the password from the private key:
 
-`openssl rsa -in twist.protected.key -out ~/.ssh/twist.key`
+`openssl rsa -in iminds.protected.key -out ~/.ssh/iminds.key`
 
 ## Omni tool
 
@@ -102,7 +102,7 @@ is `segata`, and the corresponding configuration section looks like this:
 ```
 [segata]
 urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+segata
-keys = ~/.ssh/twist.pub
+keys = ~/.ssh/iminds.pub
 ```
 
 The value of the field `keys` must be modified to point to the public key of the
