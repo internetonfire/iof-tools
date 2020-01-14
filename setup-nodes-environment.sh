@@ -46,4 +46,4 @@ run_playbook playbooks/setup-nodes.yaml
 echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Setting up syslog collector..."
 run_playbook playbooks/setup-syslog.yaml
 
-echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Done. You can now use the './deploy-experiment.sh' script to deplon an experiment on the testbed"
+echo -n `date +"%Y-%m-%d %H:%M:%S"`; echo " Done. You can now use the './deploy-experiment.sh' script to deploy an experiment on the testbed"
