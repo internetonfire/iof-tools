@@ -357,6 +357,18 @@ Generation is as easy as typing:
 ``
 python3 generate.py <number_of_nodes> <number_of_graphs>
 ``
+## Adding multiple destinations on the topology
+
+If you plan to experiment on Elmokashfi graphs or you want to correctly calculate the DPC value for the nodes, you'll need
+to have all the nodes exporting a destination. In the *utils* folder you'll find a small tool you can use to add
+destinations to a graph. Actually it adds a single destination to every non-tier1 node. You can use it as follows:
+
+``
+cd utils &&
+python3 gen-destinations.py -g <input-graph> -o <output-graph>
+``
+
+In order to correctly set the DPC MRAI values, this step **MUST** be done before using the MRAI Setter tool.
 
 ## MRAI Setter
 This tool sets the MRAI value on a graphml topology, using a specific strategy. You can look
@@ -366,8 +378,8 @@ at the Readme file in the `mrai_setter` folder for a complete explanation of the
 If you want to simulate a chain gedget topology you must also generate a Bird policy file.
 This generator implements the routing policies needed on for the correct functioning of the Fabrikant topologies.
 The policy generator will also add three nodes needed to manage the routing change in the
-topology. It is mandatory to have a single destination route to be announced configured in 
-the graph. If you have more than one (because you added them to correctly calculate the DPC values), you 
+topology. **It is mandatory to have a single destination route to be announced configured in 
+the graph.** If you have more than one (because you added them to correctly calculate the DPC values), you 
 need to remove them by hand, editing the graphml file and deleting the "destination" entries
 on every node (except the last one).
 If you plan to use the Elmokashfi generator, you can skip this step.
@@ -384,7 +396,10 @@ This tool is available in the `confFileGenerator` folder, it can be used to gene
 configuration files to deploy on the Testbed. You can refer to the tool Readme for a complete explanation
 of the different options.
 
-## Custom modification needed on Bird config files
+## Custom modifications needed on Bird config files
+
+#### AS_PATH prepending on Fabrikant topologies
+
 If you plan to simulate a Fabrikant topology, some custom modification on the config must be made. In order to simulate the
 change in the network we added three additional nodes, these nodes are in charge of managing the "d" destination. The nodes
 are always identified as the three nodes with the highest number id. As an example, if you generated with the chain gadget generator
@@ -404,6 +419,37 @@ In the section named filter *filter\_out\_h\_17\_h\_16* uncomment four of the si
 With this modification, the initial path preferred will be the one between node 16 and 18 ( AS 17 and 19 respectively),and 
 this will be the link to be specified as the "broken" link (see section below for more details) with the command 
 ``./run-experiment.sh -a 19 -n 17``
+
+
+#### Destinations removal on Elmokashfi topologies
+
+Multiple destinations in Elmokashfi topologies are fully supported, but having a lot of destination routes will slow down
+the first convergence phase (when the network topology is starting up). Depending on the number of nodes, if you don't remove
+the destinations this step can take hours/days (as an example, a 4000nodes topology with 4000 destinations configured
+is converging in around 37 hours using DPC MRAI settings). The best solution is to keep the destinations on the graph and have
+them configured and ready to use in the Bird configuration files and before we deploy the experiment we can easily comment
+out the exporting command on all the Bird configuration files. With this method you can easily start up a simulation with
+a single node exporting a destination (we always export a destination on the node generating the change in the network). With a
+single destination exported, the network will usually converge in less than 5/10 minutes.
+
+To comment out all the exported destinations you can use sed:
+
+``
+cd BIRD-CONFIG-FILES-DIR &&
+sed -i -E 's/(^include  "bgpSessionExp.*)/#\1/' h_*/bgp_h_*.conf
+`` 
+
+You can then decide which node will trigger the change in the network, as an example if you decide to use the Autonomous System 100, you'll
+need to uncomment the export session on that node (so it will correctly announce his route). **IMPORTANT NOTE** to remember: on
+the graphml and on the Bird directory structure the Node ID is always the Autonomous System Number minus one (the graphml node
+ids are starting from 0, while the AS0 does not exist) so if you want to have AS 100 announcing his route this is the
+sed command to use:
+
+``
+cd BIRD-CONFIG-FILES-DIR && sed -i -E 's/(#)(include  "bgpSessionExp.*)/\2/' h_99/bgp_h_99.conf
+``
+
+After this modification, when you deploy the topology, the AS100 will start announcing his route.
 
 # Experiment deployment and execution
 To deploy an experiment on the Testbed, a mix of ansible playbooks and various scripts is needed.
@@ -437,7 +483,28 @@ From the control node, execute the `./run-experiment.sh` script. You'll need to 
    * Wait for the topology to converge;
    * Collect all the relevant logs;
    * Kill all Bird processes.
- 
+4. `-o outdir`
+
+### Running multiple experiments
+
+You can easily run the same topology (breaking the same link) using the `-r` flag on the `run-experiment.sh` script. This will
+generate a single output directory with a subdirectory for every run. You can use this method to have the same experiment
+running, as an example, 10 times, and then use the log parsing script to calculate the average convergence times.
+
+#### Changing the "breaking" node
+
+While on Fabrikant topologies changing how the network *breaks* does not make sense, on Elmokashfi topologies we can test the change
+on the network from different nodes, to see how the topology behaves. Having to redeploy all the topology files to do this
+kind of changes is very time consuming, so it's possible to do it directly on the testbed without having to redeploy a
+new set of Bird configuration files.
+
+To achieve this, some manual intervention is required. For every different type of "node break" you want to test, you need
+to:
+* Be sure that the Bird daemons have been killed;
+* Modify the nodes export configuration (remember, the node triggering the change is the one exporting a destination);
+* Restart the simulation, specifying the new AS of the node who will trigger the change.
+
+
 ## Fetching the logs
 The `fetch-results.sh` script can be used to fetch the logs from the testbed control node. If you are experimenting with 
 a Fabrikant topology it will also clean the logs related to the nodes used to trigger the change in the network.
