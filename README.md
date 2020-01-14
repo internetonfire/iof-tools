@@ -23,7 +23,7 @@ respectively (the private key MUST NOT be encrypted).
 If you don't have the keys already setup, you can follow these instructions:
 
 Go to [iMinds Authority account management](https://authority.ilabt.iminds.be/getcert.php) and download your certificate
-clicking on the "Download Login Cerificate" button. Save it with the name `twist.cert`.
+clicking on the "Download Login Certificate" button. Save it with the name `twist.cert`.
 Extract the public key with the following command:
 
 `openssl x509 -pubkey -noout -in twist.cert > ~/.ssh/twist.pub`
@@ -301,7 +301,7 @@ programs using the `nodes_info::NodesInfo` class. See the unit test
 `test_nodes_info.py` for an example usage.
 
 If you used the `setup-nodes-environment.sh` in the previous step, the informations have already
-beed retrieved by the script. If you want to do it by hand, be sure to delete the `cpu_info` direcroty first.
+been retrieved by the script. If you want to do it by hand, be sure to delete the `cpu_info` directory first.
 
 # Topologies and BGP configurations
 
@@ -363,7 +363,7 @@ This tool sets the MRAI value on a graphml topology, using a specific strategy. 
 at the Readme file in the `mrai_setter` folder for a complete explanation of the arguments.
 
 ## Bird Policy file generator
-If you want to simulate a chain gedget topology you must also generate a Bird policy file.
+If you want to simulate a chain gadget topology you must also generate a Bird policy file.
 This generator implements the routing policies needed on for the correct functioning of the Fabrikant topologies.
 The policy generator will also add three nodes needed to manage the routing change in the
 topology. It is mandatory to have a single destination route to be announced configured in 
@@ -443,3 +443,17 @@ The `fetch-results.sh` script can be used to fetch the logs from the testbed con
 a Fabrikant topology it will also clean the logs related to the nodes used to trigger the change in the network.
 
 ## Analysis of the logs
+
+Once you have collected all the logs files you can analyze them with our tolls, we developed two versions of them
+you can find both of them inside the `logHadlers` folder.
+
+* logToCSV, this logger will convert all the logs files in a CSV that can be analyzed with other tools
+* log_reader, this tool is used to produce an output that can be easily interpreted by our Gnuplot scripts
+
+For both of this tools there is a complete README inside each one folder.
+
+## Plot results
+
+When you have translated your logs into CSVs or Gnuplot compatible files you can plot them with our scripts.
+We developed some R scripts to interpret CSVs files and a Gnuplot script, both of them are in the folder `plotsGenerator`
+and inside each folder there is a README.md file that explains how to use them with the input files.
