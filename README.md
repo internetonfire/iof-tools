@@ -535,9 +535,9 @@ must be change to the correct node value obtained on the previous steps.
 * Now you need to configure AS200 to announce his own route: `ssh -F ssh-config nodeYY "sed -i -E 's/(#)(include  \"bgpSessionExp.*)/\2/' iof-bird-daemon/nodes-config/h_199/bgp_h_*.conf"`
 * Now you can launch a new set of simulations: `./run-experiment.sh -a 200 -r 5 -o RUN-AS200-BROKEN`
 
-##### Getting random nodes to break
+#### Getting random nodes to break
 
-A simple utility is available in *utils/get_random_nodes.py* to extract random nodes with some specific characteristics. In our tests
+A simple utility is available in *utils/get\_random\_nodes.py* to extract random nodes with some specific characteristics. In our tests
 we used this script to get the 10 different random nodes where the change on the network occurs. We wanted to reproduce a *worst case* scenario
 so we extracted 10 random client "C" nodes, with a single BGP adjacency (this ensures that the change of path will be spread on all the nodes of the network) with
 this command:
