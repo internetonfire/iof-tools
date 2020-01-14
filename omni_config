@@ -6,20 +6,20 @@ users = segata, mattia, mne
 type=pg
 ch = https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/geni-ma
 sa = https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/sa
-cert = ~/.ssh/twist.cert
-key = ~/.ssh/twist.key
+cert = ~/.ssh/iminds.cert
+key = ~/.ssh/iminds.key
 
 [segata]
 urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+segata
-keys = ~/.ssh/twist.pub
+keys = ~/.ssh/iminds.pub
 
 [mattia]
 urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+mattia
-keys = ~/.ssh/twist.pub
+keys = ~/.ssh/iminds.pub
 
 [mne]
 urn = urn:publicid:IDN+wall2.ilabt.iminds.be+user+mne
-keys = ~/.ssh/twist.pub
+keys = ~/.ssh/iminds.pub
 
 [aggregate_nicknames]
 twist=,https://api.twist.tu-berlin.de:8001

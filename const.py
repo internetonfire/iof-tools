@@ -21,7 +21,7 @@ NODE_NAME = "node{}"
 
 SSH_CONFIG_TEMPLATE = "./templates/ssh-config.template"
 HOST_CONFIG_TEMPLATE = "./templates/host.template"
-IDENTITY_FILE = "~/.ssh/twist.cert"
+IDENTITY_FILE = "~/.ssh/iminds.cert"
 PROXY_COMMAND_TEMPLATE = "./templates/proxy-command.template"
 
 ANSIBLE_CONFIG_TEMPLATE = "./templates/ansible-cfg.template"
