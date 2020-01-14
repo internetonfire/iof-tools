@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# This script can be used to dump BGP paths from a Bird running process
+# It will ask for the "birdc" path and the socket of the process and dump
+# every second the BGP rib of the process in a JSON-like format.
+#
 
 import subprocess
 from argparse import ArgumentParser
