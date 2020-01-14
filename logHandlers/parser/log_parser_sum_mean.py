@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='SEC',
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
-    parser.add_argument('-d', required=False, default=0, action='store', help="Use this option to see a negative delta")
+    parser.add_argument('-d', required=False, default=10, action='store', help="Use this option to see a negative delta")
     args = parser.parse_args()
 
     if not (args.f or args.ff):
@@ -275,11 +275,10 @@ def main():
 
         print_in_columns(['time', 'converged_ASes', 'non_converged_ASes', 'total_nodes'])
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i), str(len(AS_data)), '0', str(len(AS_data))])
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i), str(len(AS_data)), '0', str(len(AS_data))])
+                i -= 1
         convergence_time = []
         never_converged_ASes = 0
         non_reconfigured_ASes = 0
@@ -348,11 +347,10 @@ def main():
 
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i)] + ['0'] + ['0' for x in AS_data.keys()], width=4)
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i)] + ['0'] + ['0' for x in AS_data.keys()], width=4)
+                i -= 1
         # just a check that we are not leving any number behind
         control_total = 0
         for i in range(reconf_time, end_secs+1):
@@ -379,11 +377,10 @@ def main():
         #for i in range(reconf_time-int(args.d), end_secs+1):
         #   print_in_columns([str(i), str(tot_updates)])
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i)] + ['0'], width=4)
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i)] + ['0'], width=4)
+                i -= 1
         total_upd = 0
         if args.f and not args.ff:
             for i in range(reconf_time, end_secs+1):

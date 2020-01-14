@@ -13,7 +13,7 @@ set y2label "# of updates"
 set xlabel "Time from route change ".timeRange
 set y2tics
 set ytics nomirror
-set key right top
+set key outside center top horizontal
 set yrange [0:yrng]
 set y2range [0.01:y2rng]
 set xrange [xmin:xmax]
