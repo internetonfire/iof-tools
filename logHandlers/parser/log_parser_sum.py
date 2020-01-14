@@ -239,9 +239,9 @@ def main():
                         AS_data_all[dir][AS_number]['convergence_time'] = 1000000
 
                 if 'convergence_time' not in AS_data[AS_number]:
-                    AS_data[AS_number]['convergence_time'] = AS_data_all[dir][AS_number]['convergence_time']
+                    AS_data[AS_number]['convergence_time'] = [AS_data_all[dir][AS_number]['convergence_time']]
                 else:
-                    AS_data[AS_number]['convergence_time'] += AS_data_all[dir][AS_number]['convergence_time']
+                    AS_data[AS_number]['convergence_time'].append(AS_data_all[dir][AS_number]['convergence_time'])
 
                 if 'updates' in AS_data_all[dir][AS_number]:
                     new_counter = Counter()
@@ -260,17 +260,17 @@ def main():
                 else:
                     AS_data[AS_number]['updates'] += AS_data_all[dir][AS_number]['updates']
 
-        for AS_number in AS_data:
-            AS_data[AS_number]['convergence_time'] /= float(len(dirNames))
-            for key in AS_data[AS_number]['updates']:
-                AS_data[AS_number]['updates'][key] /= float(len(AS_data_all.keys()))
+        #for AS_number in AS_data:
+        #   AS_data[AS_number]['convergence_time'] /= float(len(dirNames))
+        #  for key in AS_data[AS_number]['updates']:
+        #     AS_data[AS_number]['updates'][key] /= float(len(AS_data_all.keys()))
 
     delta = reconf_time - last_message_before_reconf
 
     if args.c:
         print_in_columns(['AS', 'convergence_time'])
         for AS_number, c_data in sorted(AS_data.items()):
-            print_line = [AS_number, c_data['convergence_time']]
+            print_line = [AS_number, max(c_data['convergence_time'])]
             print_in_columns(print_line)
         print('\n\n')
 
@@ -287,14 +287,14 @@ def main():
         last_reconf = 0
         for AS_number, c_data in sorted(AS_data.items()):
             if 'convergence_time' in c_data:
-                conv_time = c_data['convergence_time']
+                for conv_time in c_data['convergence_time']:
 
-                if conv_time >= 0:
-                    convergence_time.append((AS_number, conv_time))
-                    if c_data['convergence_time'] > last_reconf:
-                        last_reconf = c_data['convergence_time']
-                else:
-                    non_reconfigured_ASes += 1
+                    if conv_time >= 0:
+                        convergence_time.append((AS_number, conv_time))
+                        if c_data['convergence_time'] > last_reconf:
+                            last_reconf = min(last_reconf,c_data['convergence_time'])
+                    else:
+                        non_reconfigured_ASes += 1
             else:
                 if AS_number not in reconf_ASes:
                     never_converged_ASes += 1
@@ -344,7 +344,7 @@ def main():
                     if i not in integral_on_time:
                         integral_on_time[i] = 0
                     integral_on_time[i] += integral[i]
-                integral_on_time[i] = integral_on_time[i]/float(len(integral_list))
+                #integral_on_time[i] = integral_on_time[i]/float(len(integral_list))
 
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
         if int(args.d) > 0:

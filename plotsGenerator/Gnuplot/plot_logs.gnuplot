@@ -15,7 +15,7 @@ set y2tics
 set ytics nomirror
 set key right top
 set yrange [0:yrng]
-set y2range [0:y2rng]
+set y2range [0.01:y2rng]
 set xrange [xmin:xmax]
 set terminal pdf
 set output outfile
