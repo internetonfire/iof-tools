@@ -2,7 +2,7 @@
 #
 # This script takes care of setting up the environment needed on the freshly booted testbed nodes
 
-FORKS=25
+FORKS=2
 
 run_playbook () {
 # This function runs an ansible playbook, sometimes when using a lot of nodes the playbook
