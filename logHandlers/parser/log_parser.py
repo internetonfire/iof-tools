@@ -170,7 +170,7 @@ def main():
                 reconf_ASes.append(AS_number)
             if args.c:
                 convergence_time, first_log = compute_convergence_time(data)
-                AS_data[AS_number]['convergence_time'] = convergence_time
+                AS_data[AS_number]['convergence_time'] = [convergence_time]
                 AS_data[AS_number]['first_log'] = first_log
             if args.t:
                 updates, min_secs, max_secs = compute_updates_number(data)
@@ -181,14 +181,14 @@ def main():
         for AS_number in AS_data:
             if AS_data[AS_number]['convergence_time']:
                 if reconf_time:
-                    AS_data[AS_number]['convergence_time'] -= reconf_time
+                    AS_data[AS_number]['convergence_time'][0] -= reconf_time
                 else:
-                    AS_data[AS_number]['convergence_time'] -= AS_data[AS_number]['first_log']
+                    AS_data[AS_number]['convergence_time'][0] -= AS_data[AS_number]['first_log']
             else:
                 if AS_number in reconf_ASes:
-                    AS_data[AS_number]['convergence_time'] = 0
+                    AS_data[AS_number]['convergence_time'] = [0]
                 else:
-                    AS_data[AS_number]['convergence_time'] = 1000000
+                    AS_data[AS_number]['convergence_time'] = [1000000]
 
             if 'updates' in AS_data[AS_number]:
                 new_counter = Counter()
@@ -289,8 +289,8 @@ def main():
 
                     if conv_time >= 0:
                         convergence_time.append((AS_number, conv_time))
-                        if c_data['convergence_time'] > last_reconf:
-                            last_reconf = min(last_reconf, c_data['convergence_time'])
+                        if conv_time > last_reconf:
+                            last_reconf = min(last_reconf, conv_time)
                     else:
                         non_reconfigured_ASes += 1
             else:
@@ -305,7 +305,8 @@ def main():
             for (AS, t) in convergence_time:
                 if i >= t:
                     conv_ASes += 1
-            conv_ASes /= float(len(AS_data_all.keys()))
+            if len(AS_data_all.keys()) != 0:
+                conv_ASes /= float(len(AS_data_all.keys()))
             print_in_columns([i, conv_ASes + non_reconfigured_ASes,
                               tot_nodes - conv_ASes - non_reconfigured_ASes,
                               tot_nodes])
