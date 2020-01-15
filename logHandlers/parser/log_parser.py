@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='SEC',
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
-    parser.add_argument('-d', required=False, default=0, action='store', help="Use this option to see a negative delta")
+    parser.add_argument('-d', required=False, default=10, action='store', help="Use this option to see a negative delta")
     args = parser.parse_args()
 
     if not (args.f or args.ff):
@@ -239,9 +239,9 @@ def main():
                         AS_data_all[dir][AS_number]['convergence_time'] = 1000000
 
                 if 'convergence_time' not in AS_data[AS_number]:
-                    AS_data[AS_number]['convergence_time'] = AS_data_all[dir][AS_number]['convergence_time']
+                    AS_data[AS_number]['convergence_time'] = [AS_data_all[dir][AS_number]['convergence_time']]
                 else:
-                    AS_data[AS_number]['convergence_time'] += AS_data_all[dir][AS_number]['convergence_time']
+                    AS_data[AS_number]['convergence_time'].append(AS_data_all[dir][AS_number]['convergence_time'])
 
                 if 'updates' in AS_data_all[dir][AS_number]:
                     new_counter = Counter()
@@ -261,7 +261,6 @@ def main():
                     AS_data[AS_number]['updates'] += AS_data_all[dir][AS_number]['updates']
 
         for AS_number in AS_data:
-            AS_data[AS_number]['convergence_time'] /= float(len(dirNames))
             for key in AS_data[AS_number]['updates']:
                 AS_data[AS_number]['updates'][key] /= float(len(AS_data_all.keys()))
 
@@ -270,31 +269,30 @@ def main():
     if args.c:
         print_in_columns(['AS', 'convergence_time'])
         for AS_number, c_data in sorted(AS_data.items()):
-            print_line = [AS_number, c_data['convergence_time']]
+            print_line = [AS_number, max(c_data['convergence_time'])]
             print_in_columns(print_line)
         print('\n\n')
 
         print_in_columns(['time', 'converged_ASes', 'non_converged_ASes', 'total_nodes'])
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i), str(len(AS_data)), '0', str(len(AS_data))])
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i), str(len(AS_data)), '0', str(len(AS_data))])
+                i -= 1
         convergence_time = []
         never_converged_ASes = 0
         non_reconfigured_ASes = 0
         last_reconf = 0
         for AS_number, c_data in sorted(AS_data.items()):
             if 'convergence_time' in c_data:
-                conv_time = c_data['convergence_time']
+                for conv_time in c_data['convergence_time']:
 
-                if conv_time >= 0:
-                    convergence_time.append((AS_number, conv_time))
-                    if c_data['convergence_time'] > last_reconf:
-                        last_reconf = c_data['convergence_time']
-                else:
-                    non_reconfigured_ASes += 1
+                    if conv_time >= 0:
+                        convergence_time.append((AS_number, conv_time))
+                        if c_data['convergence_time'] > last_reconf:
+                            last_reconf = min(last_reconf, c_data['convergence_time'])
+                    else:
+                        non_reconfigured_ASes += 1
             else:
                 if AS_number not in reconf_ASes:
                     never_converged_ASes += 1
@@ -307,6 +305,7 @@ def main():
             for (AS, t) in convergence_time:
                 if i >= t:
                     conv_ASes += 1
+            conv_ASes /= float(len(AS_data_all.keys()))
             print_in_columns([i, conv_ASes + non_reconfigured_ASes,
                               tot_nodes - conv_ASes - non_reconfigured_ASes,
                               tot_nodes])
@@ -348,11 +347,10 @@ def main():
 
         print_in_columns(['time'] + ['sum'] + sorted(AS_data.keys()), width=4)
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i)] + ['0'] + ['0' for x in AS_data.keys()], width=4)
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i)] + ['0'] + ['0' for x in AS_data.keys()], width=4)
+                i -= 1
         # just a check that we are not leving any number behind
         control_total = 0
         for i in range(reconf_time, end_secs+1):
@@ -379,11 +377,10 @@ def main():
         #for i in range(reconf_time-int(args.d), end_secs+1):
         #   print_in_columns([str(i), str(tot_updates)])
         if int(args.d) > 0:
-            if delta > int(args.d):
-                i = int(args.d)
-                while i > 0:
-                    print_in_columns(['-' + str(i)] + ['0'], width=4)
-                    i -= 1
+            i = int(args.d)
+            while i > 0:
+                print_in_columns(['-' + str(i)] + ['0'], width=4)
+                i -= 1
         total_upd = 0
         if args.f and not args.ff:
             for i in range(reconf_time, end_secs+1):
