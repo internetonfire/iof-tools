@@ -1,10 +1,10 @@
-#Conf file generator
+# Conf file generator
 
 This program will generate bird configurations starting from a graphml file.
 The protocol is BGP and all the main arguments could be modified.
 Follow the instructions to use the software.
 
-###Requirements
+## Requirements
 
 The requirement for this program is a well formed graph that respects the attribute specs, an internet 
 graph could be generated with the software developed by Luca Baldesi, you can obtain it at it's 
@@ -21,7 +21,7 @@ Are also required the following python libraries:
 * ipaddress
 * jinja2
 
-###Test
+## Test
 
 launch the generator on a basic test:
 
@@ -34,7 +34,7 @@ If the dir 'out/' does not exists it will be created.
 Now inside the folder `out` you will find all the files needed to start the nodes.
 And the scripts to configure the network for a specific node.
 
-###Args
+## Args
 Mandatory args are: 
 * --graph [file name]: name of the graphml (only graphml files are accepted) file that will be used to generate the conf files, this file needs to be correctly formatted and created. Only nodes of type 'C' generates routes. If this does not exists yet it will be created with a predefined number of nodes (20).
 * --out [folder name]: folder where the conf files will be saved
@@ -62,7 +62,7 @@ with this command will also be inserted the commands for mrai, to avoid this is 
 
 `python3 confFileGen.py --graph graph.graphml --out out/ --directories --nomrai`
 
-###Graph restrictions
+## Graph restrictions
 The following arguments are required to be formatted in the graphml file in the following way:
 
 Nodes attributes:
@@ -79,6 +79,6 @@ Edge attributes:
 * ip_eth_n1: [add/netmask] ip addr of the interface of termination1
 * ip_eth_n2: [add/netmask] ip addr of the interface of termination2
 
-###Graph example
+## Graph example
 
 Inside the file `graphExample` there is an example of graph with all the attributes needed to use the advanced options
