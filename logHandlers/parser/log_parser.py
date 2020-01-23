@@ -180,16 +180,22 @@ def main():
 
         for AS_number in AS_data:
             if AS_data[AS_number]['convergence_time']:
-                if reconf_time:
-                    AS_data[AS_number]['convergence_time'][0] -= reconf_time
+                if AS_data[AS_number]['convergence_time'][0] is not None:
+                    print(AS_number, AS_data[AS_number]['convergence_time'], reconf_time)
+                    if reconf_time:
+                        AS_data[AS_number]['convergence_time'][0] -= reconf_time
+                    else:
+                        AS_data[AS_number]['convergence_time'][0] -= AS_data[AS_number]['first_log']
                 else:
-                    AS_data[AS_number]['convergence_time'][0] -= AS_data[AS_number]['first_log']
+                    if AS_number in reconf_ASes:
+                        AS_data[AS_number]['convergence_time'] = [0]
+                    else:
+                        AS_data[AS_number]['convergence_time'] = [1000000]
             else:
                 if AS_number in reconf_ASes:
                     AS_data[AS_number]['convergence_time'] = [0]
                 else:
                     AS_data[AS_number]['convergence_time'] = [1000000]
-
             if 'updates' in AS_data[AS_number]:
                 new_counter = Counter()
                 for key in AS_data[AS_number]['updates']:
