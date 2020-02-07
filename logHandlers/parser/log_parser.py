@@ -46,7 +46,11 @@ def parse_args():
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='SEC',
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
-    parser.add_argument('-d', required=False, default=10, action='store', help="Use this option to see a negative delta")
+    parser.add_argument('-d', required=False, default=0, action='store', 
+            help="Use this option to see a negative delta")
+    parser.add_argument('-l', required=False, default=-1, 
+            help="Limit the number of runs to consider, helps speeding up development",
+            type=int)
     args = parser.parse_args()
 
     if not (args.f or args.ff):
@@ -120,12 +124,19 @@ def compute_convergence_time(data):
     convergence_time = ''
     best_path = ''
     first_log = None
+    AS_initial_distance = 0
+    AS_final_distance = 0
     for (t, d) in data:
         if not first_log:
             first_log = t
         if 'processing' in d and d['processing'] == 'NEW_BEST_PATH':
             convergence_time = t
             best_path = d['actual_best_path']
+            path_len = len(set(d['actual_best_path'].split('|')))
+            if not AS_initial_distance:
+                AS_initial_distance = path_len
+            if not AS_final_distance:
+                AS_final_distance = path_len
         if 'processing' in d and (d['processing'] == 'REMOVED_REPLACED_PATH'
                                   or d['processing'] == 'NEW_PATH'):
             if d['actual_best_path'] == 'NONE':
@@ -137,8 +148,8 @@ def compute_convergence_time(data):
         if args.v and 'processing' in d:
             print(t, d)
     if convergence_time:
-        return convergence_time, first_log
-    return None, None
+        return convergence_time, first_log, AS_initial_distance, AS_final_distance
+    return None, None, 0, 0
 
 
 def compute_updates_number(data):
@@ -169,9 +180,12 @@ def main():
                 last_message_before_reconf = last_message_before_tmp
                 reconf_ASes.append(AS_number)
             if args.c:
-                convergence_time, first_log = compute_convergence_time(data)
+                convergence_time, first_log, AS_initial_distance, AS_final_distance = \
+                    compute_convergence_time(data)
                 AS_data[AS_number]['convergence_time'] = [convergence_time]
                 AS_data[AS_number]['first_log'] = first_log
+                AS_data[AS_number]['initial_distance'] = AS_initial_distance
+                AS_data[AS_number]['final_distance'] = AS_final_distance
             if args.t:
                 updates, min_secs, max_secs = compute_updates_number(data)
                 AS_data[AS_number]['updates'] = updates
@@ -210,7 +224,11 @@ def main():
         for (dir_path, dir_names, filenames) in walk(args.ff):
             dirNames.extend(dir_names)
             break
-        for dir in dirNames:
+        if args.l:
+            slice_end = args.l
+        else:
+            slice_end = len(dirNames)
+        for dir in dirNames[:slice_end]:
             fileList = list()
             for (dir_path, dir_names, filenames) in walk(args.ff + "/" + dir):
                 fileList.extend(filenames)
@@ -218,15 +236,19 @@ def main():
             if dir not in AS_data_all:
                 AS_data_all[dir] = defaultdict(dict)
             for fname in fileList:
-                AS_number, data, last_message_before_tmp, reconf_temp = parse_file(args.ff + "/" + dir + "/" + fname)
+                AS_number, data, last_message_before_tmp, reconf_temp = \
+                    parse_file(args.ff + "/" + dir + "/" + fname)
                 if reconf_temp:
                     reconf_time = reconf_temp
                     last_message_before_reconf = last_message_before_tmp
                     reconf_ASes.append(AS_number)
                 if args.c:
-                    convergence_time, first_log = compute_convergence_time(data)
+                    convergence_time, first_log, AS_initial_distance, AS_final_distance = \
+                            compute_convergence_time(data)
                     AS_data_all[dir][AS_number]['convergence_time'] = convergence_time
                     AS_data_all[dir][AS_number]['first_log'] = first_log
+                    AS_data_all[dir][AS_number]['AS_initial_distance'] = AS_initial_distance
+                    AS_data_all[dir][AS_number]['AS_final_distance'] = AS_final_distance
                 if args.t:
                     updates, min_secs, max_secs = compute_updates_number(data)
                     AS_data_all[dir][AS_number]['updates'] = updates
@@ -245,9 +267,19 @@ def main():
                         AS_data_all[dir][AS_number]['convergence_time'] = 1000000
 
                 if 'convergence_time' not in AS_data[AS_number]:
-                    AS_data[AS_number]['convergence_time'] = [AS_data_all[dir][AS_number]['convergence_time']]
+                    AS_data[AS_number]['convergence_time'] = \
+                            [AS_data_all[dir][AS_number]['convergence_time']]
+                    AS_data[AS_number]['AS_initial_distance'] = \
+                            [AS_data_all[dir][AS_number]['AS_initial_distance']]
+                    AS_data[AS_number]['AS_final_distance'] = \
+                            [AS_data_all[dir][AS_number]['AS_final_distance']]
                 else:
-                    AS_data[AS_number]['convergence_time'].append(AS_data_all[dir][AS_number]['convergence_time'])
+                    AS_data[AS_number]['convergence_time'].append(
+                            AS_data_all[dir][AS_number]['convergence_time'])
+                    AS_data[AS_number]['AS_initial_distance'].append(
+                            AS_data_all[dir][AS_number]['AS_initial_distance'])
+                    AS_data[AS_number]['AS_final_distance'].append(
+                            AS_data_all[dir][AS_number]['AS_final_distance'])
 
                 if 'updates' in AS_data_all[dir][AS_number]:
                     new_counter = Counter()
@@ -266,18 +298,34 @@ def main():
                 else:
                     AS_data[AS_number]['updates'] += AS_data_all[dir][AS_number]['updates']
 
+
         for AS_number in AS_data:
             for key in AS_data[AS_number]['updates']:
                 AS_data[AS_number]['updates'][key] /= float(len(AS_data_all.keys()))
 
     delta = reconf_time - last_message_before_reconf
 
+    conv_time_by_dist = defaultdict(list)
+    updates_by_dist = defaultdict(int)
+    tot_runs = 0
     if args.c:
-        print_in_columns(['AS', 'convergence_time'])
+        print_in_columns(['AS', 'convergence_time', 
+                          'AS_initial_distance', 'AS_final_distance'])
+        T_AS_by_distance = defaultdict(int)
         for AS_number, c_data in sorted(AS_data.items()):
-            print_line = [AS_number, max(c_data['convergence_time'])]
+            if not tot_runs:
+                tot_runs = len(c_data['convergence_time'])
+            for d in c_data['AS_initial_distance']:
+                if AS_number < 7:
+                    T_AS_by_distance[d] += 1
+                if d:
+                    conv_time_by_dist[d].append(max(c_data['convergence_time']))
+            print_line = [AS_number, max(c_data['convergence_time']), 
+                max(c_data['AS_initial_distance']), max(c_data['AS_final_distance'])]
             print_in_columns(print_line)
         print('\n\n')
+
+        
 
         print_in_columns(['time', 'converged_ASes', 'non_converged_ASes', 'total_nodes'])
         if int(args.d) > 0:
@@ -373,9 +421,14 @@ def main():
             control_total += tot_udp
         tot_updates = 0
         for (AS_number, c_data) in sorted(AS_data.items()):
+            AS_updates = 0
             for k,v in c_data['updates'].items():
                 if k >= reconf_time and k < end_secs + 1:
                     tot_updates += v
+                    AS_updates += v
+            for d in c_data['AS_initial_distance']:
+                if d:
+                    updates_by_dist[d] += AS_updates
         if (tot_updates != control_total):
             print("Error in counting updates")
         print('\n\n')
@@ -409,4 +462,33 @@ def main():
                     if upd > 0:
                         total_upd += upd/counter"""
                 print_in_columns([str(i), str(integral_on_time[i])], width=4)
+
+    updates_CDF = 0
+    if args.c and args.t:
+        print('\n\n')               
+        ASes = len(AS_data.items())
+        dist_list = sorted(conv_time_by_dist.keys())
+        for d in dist_list:
+            if d not in T_AS_by_distance:
+                T_AS_by_distance[d] = 0
+            
+        print_in_columns(['distance', 'avg_conv_time', 'frac_of_ASes', 
+                          'T_ASes', 'avg_num_of_updates', 'updates CDF'])
+        tot_updates = sum(updates_by_dist.values())/tot_runs
+        for k in dist_list:
+            number_of_ASes = round(len(conv_time_by_dist[k])/tot_runs, 2) 
+            if not number_of_ASes:
+                print_in_columns([k, 0, 0, 0, 0])
+                break
+            avg_conv_time = round(sum(conv_time_by_dist[k])/len(conv_time_by_dist[k]), 3)
+            T_ASes = round(T_AS_by_distance[k]/tot_runs, 2)
+            if not T_ASes:
+                T_ASes = ""
+            else:
+                T_ASes = 0
+            avg_updates = round(updates_by_dist[k]/(tot_runs * number_of_ASes), 5)
+            updates_CDF += round(updates_by_dist[k]/(tot_runs), 2)
+            print_in_columns([k, avg_conv_time, round(number_of_ASes/ASes, 3), T_ASes, 
+                round(avg_updates,2), updates_CDF])
+        print('\n\n')               
 main()
