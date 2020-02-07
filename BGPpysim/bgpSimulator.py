@@ -11,7 +11,7 @@ import datetime
 import os
 import shutil
 from util.routing_table import Route
-import code  # code.interact(local=dict(globals(), **locals()))
+import code
 
 MAX_DURATION = 10000
 
@@ -115,10 +115,7 @@ if __name__ == '__main__':
 
     sim.runSimulation()
     print("FINISHED SIMULATION, MAX TIME OR CONVERGENCE REACHED")
-    # for n in sim.nodes.values():
-    #    print("RT of NODE: "+n.ID)
-    #    n.RT.dumps()
-    
+
     #code.interact(local=dict(globals(), **locals()))
     time1 = sim.sched.elapsed_time()
     time = time1 + 300
@@ -131,7 +128,6 @@ if __name__ == '__main__':
     event = {'actor': x1.ID, 'action': 'DECISION_PROCESS', 'update': (x1.ID, route)}
     time_with_jitter = time + sim.sched.jitter() - time1
     sim.sched.schedule_event(time_with_jitter, event)
-    # x1.log2("il tempo di merda é: " + str(time_with_jitter) + "\n")
     print("RESTARTED SIMULATION AFTER LINK FAILURE SIM")
 
     tim = x1.start_time + datetime.timedelta(0, time)
@@ -140,6 +136,3 @@ if __name__ == '__main__':
 
     sim.runSimulation()
     print("FINISHED AGAIN SIMULATION...")
-    # for n in sim.nodes.values():
-    #    print("RT of NODE: "+n.ID)
-    #    n.RT.dumps()

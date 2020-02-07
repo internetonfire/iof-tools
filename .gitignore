@@ -12,6 +12,8 @@ ansible-hosts
 ssh-config
 ssh-config-no-proxy
 id.cert
+**bird-conf
+**bird-conf2
 cpu_info
 nw_info
 /confFileGenerator/baseFiles/commonFilters.conf

@@ -4,6 +4,7 @@ users = segata, mattia, mne
 
 [iminds]
 type=pg
+# ch = https://www.emulab.net:12369/protogeni/xmlrpc/ch
 ch = https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/geni-ma
 sa = https://www.wall2.ilabt.iminds.be:12369/protogeni/xmlrpc/sa
 cert = ~/.ssh/iminds.cert
