@@ -135,8 +135,7 @@ def compute_convergence_time(data):
             path_len = len(set(d['actual_best_path'].split('|')))
             if not AS_initial_distance:
                 AS_initial_distance = path_len
-            if not AS_final_distance:
-                AS_final_distance = path_len
+            AS_final_distance = path_len
         if 'processing' in d and (d['processing'] == 'REMOVED_REPLACED_PATH'
                                   or d['processing'] == 'NEW_PATH'):
             if d['actual_best_path'] == 'NONE':
@@ -315,7 +314,7 @@ def main():
         for AS_number, c_data in sorted(AS_data.items()):
             if not tot_runs:
                 tot_runs = len(c_data['convergence_time'])
-            for d in c_data['AS_initial_distance']:
+            for d in c_data['AS_final_distance']:
                 if AS_number < 7:
                     T_AS_by_distance[d] += 1
                 if d:
@@ -426,7 +425,7 @@ def main():
                 if k >= reconf_time and k < end_secs + 1:
                     tot_updates += v
                     AS_updates += v
-            for d in c_data['AS_initial_distance']:
+            for d in c_data['AS_final_distance']:
                 if d:
                     updates_by_dist[d] += AS_updates
         if (tot_updates != control_total):
@@ -474,7 +473,6 @@ def main():
             
         print_in_columns(['distance', 'avg_conv_time', 'frac_of_ASes', 
                           'T_ASes', 'avg_num_of_updates', 'updates CDF'])
-        tot_updates = sum(updates_by_dist.values())/tot_runs
         for k in dist_list:
             number_of_ASes = round(len(conv_time_by_dist[k])/tot_runs, 2) 
             if not number_of_ASes:
