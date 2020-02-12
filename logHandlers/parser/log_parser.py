@@ -48,6 +48,8 @@ def parse_args():
                         choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
     parser.add_argument('-d', required=False, default=0, action='store', 
             help="Use this option to see a negative delta")
+    parser.add_argument('--tnodes', required=False, default=-1, type=int,
+            help="Assume the first X nodes are T nodes")
     parser.add_argument('-l', required=False, default=-1, 
             help="Limit the number of runs to consider, helps speeding up development",
             type=int)
@@ -315,7 +317,7 @@ def main():
             if not tot_runs:
                 tot_runs = len(c_data['convergence_time'])
             for d in c_data['AS_final_distance']:
-                if AS_number < 7:
+                if AS_number <= args.tnodes:
                     T_AS_by_distance[d] += 1
                 if d:
                     conv_time_by_dist[d].append(max(c_data['convergence_time']))
