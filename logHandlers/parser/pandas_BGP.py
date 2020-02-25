@@ -50,9 +50,12 @@ run_table = pd.DataFrame(data_set, index=run_table_index, columns = ['tot_update
 update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
 
 update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
-print(update_table)
 
 
+# just to recall how to slice on inner layers
+# print(update_table.loc[:, (('AS1', slice(None), 'AS1'))])
+# then slice the time serie
+# print(update_table.loc[:, (('AS1', slice(None), 'AS1'))]['00:00:00.770000':'00:00:00.870000'])
 
 
 # two tables on with run values (long list. each line with index: T_r, run_id), one dataframe qith X: time intervale from date_range(), Y: Run-id. For each row the updates received in the time interval. 
