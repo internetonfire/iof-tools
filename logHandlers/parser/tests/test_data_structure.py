@@ -5,11 +5,11 @@ import pandas as pd
 import numpy as np
 import pandas_BGP as bgp
 import helper_functions as hf
+from collections import defaultdict
 
 def test_equal(frame, value):
     return frame.min() == frame.max() == value
 
-bgp.samples=3
 class DataTest(unittest.TestCase):
 
     def setUp(self):
@@ -20,8 +20,6 @@ class DataTest(unittest.TestCase):
 
             
         self.run_table_index = pd.MultiIndex.from_product(self.indexes, names=bgp.index_names)
-        #self.run_table = pd.DataFrame(self.data_set, index=self.run_table_index, 
-        #                              columns = ['tot_updates'])
         self.update_table_index = pd.timedelta_range(0, periods=bgp.samples, freq=bgp.delta)
 
 
@@ -30,7 +28,7 @@ class DataTest(unittest.TestCase):
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='ZERO', 
-                                                       time_len=bgp.samples)
+                                                       samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
         self.assertFalse(update_table.values.any()) 
@@ -41,7 +39,7 @@ class DataTest(unittest.TestCase):
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='LINEAR', 
-                                                       time_len=bgp.samples)
+                                                       samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
@@ -57,7 +55,7 @@ class DataTest(unittest.TestCase):
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='LINEAR', 
-                                                       time_len=bgp.samples)
+                                                       samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
@@ -89,7 +87,7 @@ class DataTest(unittest.TestCase):
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     mode='INCREASING_L', 
-                                                    time_len=bgp.samples)
+                                                    samples=bgp.samples)
         update_table = pd.DataFrame(time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
@@ -120,10 +118,27 @@ class DataTest(unittest.TestCase):
                                     updates_per_AS_per_sec[(t_r, AS)]))
 
 
+    def test_convergence(self):
 
-
-                
-
-
-                
-
+        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+                                                    self.indexes[1], 
+                                                    self.indexes[2], 
+                                                    mode='INCREASING_L', 
+                                                    samples=bgp.samples)
+        run_table = pd.DataFrame(data_set, index=self.run_table_index)
+        conv_dict = {}
+        for t in self.update_table_index:
+            conv_dict[t] = 0
+        for t in sorted(run_table['conv_time'].values):
+            for tt in conv_dict.keys():
+                if pd.Timedelta(t) <= tt:
+                    conv_dict[tt] += 1
+        #print(run_table['conv_time'])
+        #print(conv_dict)
+        conv_time = bgp.conv_time(run_table, self.update_table_index)
+        #print(conv_time)
+        self.assertEqual(max(conv_time), self.t_r*self.runs*self.ASes)
+        keys = conv_time.keys()[:-1]
+        for idx, k in enumerate(keys):
+            if k in conv_dict:
+                self.assertEqual(conv_time[k], conv_dict[k])
