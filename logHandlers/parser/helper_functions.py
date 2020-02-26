@@ -1,7 +1,6 @@
 import itertools as it
 import numpy as np
 
-names=['t_r', 'run_id', 'AS']
 def make_index(t_r_number=3, run_id_number=3, AS_number=5):
     AS_list = ['AS' + str(x) for x in range(AS_number)]
     t_r_list = AS_list[:t_r_number]
@@ -30,6 +29,7 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, mode='ZERO', time_len=
         for i in range(len(names)): 
             data_dict[names[i]] = str(val[i])
         data_dict['tot_updates'] =  str(tot_updates)
+        data_dict['distance'] =  np.random.randint(10)
         data.append(data_dict)
         time_data.append(updates)
     return data, np.matrix.transpose(np.array(time_data))

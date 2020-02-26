@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 import numpy as np
 import pandas_BGP as bgp
-from helper_functions import *
+import helper_functions as hf
 
 def test_equal(frame, value):
     return frame.min() == frame.max() == value
@@ -16,17 +16,17 @@ class DataTest(unittest.TestCase):
         self.t_r = 2
         self.runs = 2
         self.ASes = 3
-        self.indexes = make_index(self.t_r, self.runs, self.ASes)
+        self.indexes = hf.make_index(self.t_r, self.runs, self.ASes)
 
             
-        self.run_table_index = pd.MultiIndex.from_product(self.indexes, names=bgp.names)
+        self.run_table_index = pd.MultiIndex.from_product(self.indexes, names=bgp.index_names)
         #self.run_table = pd.DataFrame(self.data_set, index=self.run_table_index, 
         #                              columns = ['tot_updates'])
         self.update_table_index = pd.timedelta_range(0, periods=bgp.samples, freq=bgp.delta)
 
 
     def test_zero(self):
-        self.data_set, self.time_data = fill_run_table(bgp.names, self.indexes[0], 
+        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='ZERO', 
@@ -37,7 +37,7 @@ class DataTest(unittest.TestCase):
 
 
     def test_linear(self):
-        self.data_set, self.time_data = fill_run_table(names, self.indexes[0], 
+        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='LINEAR', 
@@ -53,7 +53,7 @@ class DataTest(unittest.TestCase):
         self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1'))], 1))
 
     def test_avg(self):
-        self.data_set, self.time_data = fill_run_table(names, self.indexes[0], 
+        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        mode='LINEAR', 
@@ -85,7 +85,7 @@ class DataTest(unittest.TestCase):
 
 
     def test_per_sec(self):
-        data_set, time_data = fill_run_table(names, self.indexes[0], 
+        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     mode='INCREASING_L', 
