@@ -20,10 +20,16 @@ def avg_update_per_t_r_per_AS(update_table):
 def avg_update(update_table):
     return _compute_average(update_table).mean()
 
+def update_per_sec(update_table):
+    return update_table.sum(axis=1)
+
+def update_per_t_r_per_sec(update_table):
+    return update_table.sum(axis=1)
+
 if __name__ == '__main__':
     indexes = make_index()
     data_set, time_data = fill_run_table(names, indexes[0], indexes[1], indexes[2], 
-            mode='LINEAR', time_len=samples)
+            mode='INCREASING_L', time_len=samples)
     #            
     run_table_index = pd.MultiIndex.from_product(indexes, names=names)
     run_table = pd.DataFrame(data_set, index=run_table_index, columns = ['tot_updates'])
@@ -31,10 +37,13 @@ if __name__ == '__main__':
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
+    print(update_per_sec(update_table))
+
+
+
     #
-    print(_compute_average(update_table))
-    #print(avg_update(update_table))
-    #print(avg_update_per_t_r(update_table))
+    print(update_table)
+    #print(_compute_average(update_table))
     #print(avg_update_per_t_r_per_AS(update_table))
     
     # just to recall how to slice on inner layers

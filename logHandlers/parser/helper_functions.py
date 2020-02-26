@@ -18,12 +18,15 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, mode='ZERO', time_len=
         tot_updates = idx
         updates = [0] * time_len
         if mode == 'RANDOM':
-            tot_updates = np.random.random()
-            updates = np.random.randn(time_len) + idx
+            updates = np.random.randn(time_len)
         if mode == 'LINEAR':
-            tot_updates = idx
             updates = [idx] * time_len
+        if mode == 'INCREASING':
+            updates = range(time_len)
+        if mode == 'INCREASING_L':
+            updates = [x*idx for x in range(time_len)]
         data_dict = {}
+        tot_updates = sum(updates)
         for i in range(len(names)): 
             data_dict[names[i]] = str(val[i])
         data_dict['tot_updates'] =  str(tot_updates)
