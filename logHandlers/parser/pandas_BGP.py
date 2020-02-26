@@ -24,7 +24,13 @@ def update_per_sec(update_table):
     return update_table.sum(axis=1)
 
 def update_per_t_r_per_sec(update_table):
-    return update_table.sum(axis=1)
+    return update_table.groupby(level=[0], axis='columns').sum()
+
+def update_per_t_r_per_AS_per_sec(update_table):
+    return update_table.groupby(level=[0,2], axis='columns').sum()
+
+
+
 
 if __name__ == '__main__':
     indexes = make_index()
@@ -37,12 +43,12 @@ if __name__ == '__main__':
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
-    print(update_per_sec(update_table))
+    print(update_table)
 
 
 
     #
-    print(update_table)
+    print(update_per_t_r_per_sec(update_table))
     #print(_compute_average(update_table))
     #print(avg_update_per_t_r_per_AS(update_table))
     
