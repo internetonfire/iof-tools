@@ -196,14 +196,19 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
                 update_received.append(t)
 
     path_len, hops_before_t, hops_after_t = path_analysis(best_path, T_ASes)
+    if convergence_time:
+        conv_time = convergence_time - reconf_time
+    else:
+        conv_time = 'NaN'
     AS_data = [
     ('distance_AS_from_tr', AS_t_r_distance),
     ('distance_AS_after_t', hops_after_t ),
     ('distance_AS_before_t', hops_before_t ),
     ('first_up_time', None), #FIXME 
-    ('conv_time', convergence_time),
+    ('conv_time', conv_time),
     ('last_up_time', None), # FIXME
     ('tot_updates', tot_updates)]
+    print(conv_time)
     return  AS_data, reconf_time, update_received
 
 
@@ -254,18 +259,20 @@ def parse_folders(args, T_ASes):
         AS_index_all.append(AS_index)
         AS_data_all.append(dict(tr_data))
         for fname in fileList[:slice_end*100]:
+            if fname == broken_AS:
+                continue
             try:
                 AS = int(fname.split('_')[2].split('.')[0])
             except IndexError:
                 print('ERROR: I expect each log file name to be like: "log_h_23.log"')
                 print('       While it is: {}'.format(fname))
                 exit()
-            data, reconf_time, update_received = \
+            data, _, update_received = \
                 parse_file(args.ff + "/" + dir + "/" + fname, 
                            reconf_time=reconf_time, T_ASes=T_ASes)
             AS_index_all.append([t_r, run_id, AS, strategy])
             AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
-    print(AS_index_all, index_names)
+            up_series = pd.Series(index=update_received)
     index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
     #run_table_index = pd.MultiIndex.from_product(indexes, names=index_names)
     return pd.DataFrame(AS_data_all, index=index, columns=column_names)
