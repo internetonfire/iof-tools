@@ -10,6 +10,11 @@ index_names=['t_r', 'run_id', 'AS']
 column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t', 
               'first_up_time', 'conv_time', 'last_up_time', 'tot_updates']
 
+def check_data(update_table, run_table):
+    for col, b in run_table.all().items():
+        if not b:
+            print('There are some negative values in the {} column'.format(col))
+
 def conv_time(run_table, update_table_index):
     conv_times = run_table['conv_time']
     start = {pd.Timedelta('00:00:00.000000'):0}
@@ -18,15 +23,15 @@ def conv_time(run_table, update_table_index):
                             pd.Series(start)).resample(delta, label='right').sum().cumsum()
     return conv_series.reindex(index=update_table_index, method='pad')
 
-def conv_time_per_distance(run_table, update_table_index):
-    distances = run_table['distance_AS_from_tr'].unique()
-    conv_list = []
+def conv_time_per_distance(run_table, update_table_index, column='distance_AS_from_tr'):
+    distances = run_table[column].unique()
+    conv_list = {}
     for d in distances:
-        conv_list.append(conv_time(run_table[run_table['distance_AS_from_tr'] == d], 
-                                           update_table_index))
-    #print(conv_list)
+        x  = conv_time(run_table[run_table['distance_AS_from_tr'] == d], 
+                                           update_table_index).values
+        conv_list[d] = x
     convergence_table = pd.DataFrame(conv_list, index=update_table_index, columns=distances)
-    return convergence_table
+    return convergence_table.reindex(sorted(convergence_table.columns), axis='columns')
 
 def _compute_average(update_table, query=(slice(None), slice(None), slice(None)),
         time_start='00:00:00.000000', time_end='99:99:99.999999'):
@@ -64,9 +69,10 @@ if __name__ == '__main__':
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
+    check_data(update_table, run_table)
     #print(run_table)
     x = conv_time(run_table, update_table_index)
-    #print(x)
+    print(x)
     #print(x.reindex(index=update_table_index, method='pad'))
     #print(conv_time(run_table[run_table['distance_AS_from_tr'] < 6], update_table_index))
     print(conv_time_per_distance(run_table, update_table_index))

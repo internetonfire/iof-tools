@@ -10,6 +10,10 @@ from collections import defaultdict
 def test_equal(frame, value):
     return frame.min() == frame.max() == value
 
+def is_monotone(array):
+    # diff returns array of differences with next value
+    return np.all(np.diff(array) >= 0)
+
 class DataTest(unittest.TestCase):
 
     def setUp(self):
@@ -126,6 +130,25 @@ class DataTest(unittest.TestCase):
                                                     mode='INCREASING_L', 
                                                     samples=bgp.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
+        conv_time = bgp.conv_time(run_table, self.update_table_index)
+        conv_time_per_dist = bgp.conv_time_per_distance(run_table, self.update_table_index)
+        self.assertEqual(max(conv_time), self.t_r*self.runs*self.ASes)
+        self.assertTrue(is_monotone(conv_time))
+        self.assertEqual(conv_time_per_dist[-1:].values.sum(), self.t_r*self.runs*self.ASes)
+        for c in conv_time_per_dist:
+            self.assertTrue(is_monotone(conv_time_per_dist[c]))
+        for t in conv_time_per_dist.index:
+            self.assertEqual(conv_time_per_dist.loc[t].sum(), conv_time[t])
+
+
+    def test_convergence_fail(self):
+
+        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+                                                    self.indexes[1], 
+                                                    self.indexes[2], 
+                                                    mode='INCREASING_L', 
+                                                    samples=bgp.samples)
+        run_table = pd.DataFrame(data_set, index=self.run_table_index)
         conv_dict = {}
         for t in self.update_table_index:
             conv_dict[t] = 0
@@ -133,11 +156,7 @@ class DataTest(unittest.TestCase):
             for tt in conv_dict.keys():
                 if pd.Timedelta(t) <= tt:
                     conv_dict[tt] += 1
-        #print(run_table['conv_time'])
-        #print(conv_dict)
         conv_time = bgp.conv_time(run_table, self.update_table_index)
-        #print(conv_time)
-        self.assertEqual(max(conv_time), self.t_r*self.runs*self.ASes)
         keys = conv_time.keys()[:-1]
         for idx, k in enumerate(keys):
             if k in conv_dict:
