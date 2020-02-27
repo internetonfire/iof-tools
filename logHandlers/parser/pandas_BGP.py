@@ -4,7 +4,7 @@ import numpy as np
 from helper_functions import *
 
 
-samples = 10
+samples = 25
 delta = '100ms'
 index_names=['t_r', 'run_id', 'AS']
 column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t', 
@@ -17,6 +17,16 @@ def conv_time(run_table, update_table_index):
                             pd.Series(start)).resample(delta, label='right', loffset='1h').sum().cumsum()
     #FIXME label is ignored, thus must be a bug in pandas
     return conv_series 
+
+def conv_time_per_distance(run_table, update_table_index):
+    distances = run_table['distance_AS_from_tr'].unique()
+    conv_list = []
+    for d in distances:
+        conv_list.append(conv_time(run_table[run_table['distance_AS_from_tr'] == d], 
+                                           update_table_index))
+    print(conv_list)
+    convergence_table = pd.DataFrame(conv_list, index=update_table_index, columns=distances)
+    return convergence_table
 
 def _compute_average(update_table, query=(slice(None), slice(None), slice(None)),
         time_start='00:00:00.000000', time_end='99:99:99.999999'):
@@ -54,8 +64,10 @@ if __name__ == '__main__':
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
-    print(run_table)
-    conv_time(run_table, update_table_index)
+    #print(run_table)
+    #print(conv_time(run_table, update_table_index))
+    #print(conv_time(run_table[run_table['distance_AS_from_tr'] < 6], update_table_index))
+    print(conv_time_per_distance(run_table, update_table_index))
 
 
 
