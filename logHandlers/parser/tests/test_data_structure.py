@@ -55,7 +55,7 @@ class DataTest(unittest.TestCase):
                                               self.indexes[1][0],
                                               self.indexes[2][0],
                                               self.indexes[3][0]))].any())
-        self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1', '30s'))], 1))
+        self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1', ''))], 1))
 
     def test_avg(self):
         self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 

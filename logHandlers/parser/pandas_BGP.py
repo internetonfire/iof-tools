@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import pandas as pd
 import numpy as np
-from helper_functions import *
+import helper_functions as hf
 
 
+args = None
 samples = 25
 delta = '100ms'
 index_names=['t_r', 'run_id', 'AS', 'strategy']
@@ -67,14 +68,19 @@ def update_per_t_r_per_AS_per_sec(update_table):
 
 
 if __name__ == '__main__':
-    indexes = make_index()
-    data_set, time_data = fill_run_table(index_names, indexes[0], indexes[1], indexes[2],
+    indexes = hf.make_index()
+    data_set, time_data = hf.fill_run_table(index_names, indexes[0], indexes[1], indexes[2],
             indexes[3], mode='INCREASING_L', samples=samples)
     run_table_index = pd.MultiIndex.from_product(indexes, names=index_names)
     run_table = pd.DataFrame(data_set, index=run_table_index, columns=column_names)
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
     check_data(update_table, run_table)
+    hf.parse_args()
+    hf.parse_folders()
+    #print(run_table)
+    #print(update_table)
+    
 
 
 
