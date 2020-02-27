@@ -4,12 +4,12 @@ import numpy as np
 import helper_functions as hf
 
 
-args = None
 samples = 25
 delta = '100ms'
 index_names=['t_r', 'run_id', 'AS', 'strategy']
 column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t', 
-              'first_up_time', 'conv_time', 'last_up_time', 'tot_updates']
+              'distance_AS_before_t', 'first_up_time', 'conv_time', 'last_up_time', 
+              'tot_updates']
 
 def check_data(update_table, run_table):
     max_time = max(update_table.index)
@@ -75,9 +75,17 @@ if __name__ == '__main__':
     run_table = pd.DataFrame(data_set, index=run_table_index, columns=column_names)
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
+    args = hf.parse_args()
     check_data(update_table, run_table)
-    hf.parse_args()
-    hf.parse_folders()
+    T_ASes = set()
+    if args.G:
+        pass # TODO implement graph parsing here
+    else:
+        T_ASes = set(range(args.tnodes))
+
+    update_table = hf.parse_folders(args, T_ASes)
+    print(update_table)
+    print(conv_time(run_table))
     #print(run_table)
     #print(update_table)
     

@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 import datetime
 from os import walk, path
-from pandas_BGP import args, delta
+from pandas_BGP import delta, index_names, column_names
 
 log_types = ['FATAL', 'RECONF']
 
@@ -70,9 +70,9 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO',
 # 
 
 def parse_args():
-    global args
     parser = argparse.ArgumentParser()
     #parser.add_argument('-f', help='the log file', required=False, nargs='*')
+    parser.add_argument('-G', help='The graphml file (unused, TBD)', required=False)
     parser.add_argument('-ff', help='Folder with log Folders', required=False)
     parser.add_argument('-v', help='be more verbose', default=False,
                         action='store_true')
@@ -103,16 +103,17 @@ def parse_args():
         delta = '10ms'
     elif args.T == 'MSEC':
         delta = '1ms'
+    return args
 
 
 
-def parse_line(line, verb):
+def parse_line(line, verb=False):
     split_line = line.split()
     try:
         date_time = split_line[0] + " " + split_line[1]
         log_time = datetime.datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S.%f')
     except (ValueError, IndexError):
-        if args.v:
+        if verb:
             print("Ignoring this log line:", line)
         raise WrongLogLine
     log_type = ''.join(split_line[2][1:-1])
@@ -135,13 +136,13 @@ def parse_line(line, verb):
     return log_time, log_dict, False
 
 
-def check_convergence_time(t, d, convergence_time, best_path, AS_initial_distance):
+def check_convergence_time(t, d, convergence_time, best_path, AS_t_r_distance):
     if 'processing' in d and d['processing'] == 'NEW_BEST_PATH':
         convergence_time = t
         best_path = d['actual_best_path']
         path_len = len(set(d['actual_best_path'].split('|')))
-        if not AS_initial_distance:
-            AS_initial_distance = path_len
+        if not AS_t_r_distance:
+            AS_t_r_distance = path_len
     if 'processing' in d and (d['processing'] == 'REMOVED_REPLACED_PATH'
                               or d['processing'] == 'NEW_PATH'):
         if d['actual_best_path'] == 'NONE':
@@ -150,35 +151,67 @@ def check_convergence_time(t, d, convergence_time, best_path, AS_initial_distanc
         elif d['actual_best_path'] != best_path:
             best_path = d['actual_best_path']
             convergence_time = t
-    return convergence_time, best_path, AS_initial_distance
+    return convergence_time, best_path, AS_t_r_distance
 
+def path_analysis(best_path, T_ASes):
+    best_path_unique = []
+    hops_before_t = 0
+    hops_after_t = 0
+    for AS in reversed(best_path.split('|')): 
+        # remove duplicates and maintain order
+        if not AS:
+            continue
+        if AS not in best_path_unique:
+            best_path_unique.append(AS)
+            if int(AS) in T_ASes or hops_after_t:
+                hops_after_t += 1
+            if not hops_after_t:
+                hops_before_t += 1
+    path_len = len(best_path_unique) # path does not include node itself
+    if not path_len == hops_before_t + hops_after_t:
+        raise Exception("Problems in countin path lenght!")
+    return path_len, hops_before_t, hops_after_t
 
-def parse_file(fname, reconf_time=None):
-    data = []
-    reconf_time = None
+def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
+    tot_updates = 0
     last_message_before_reconf = None
     convergence_time = ''
     best_path = ''
-    AS_initial_distance = 0
+    AS_t_r_distance = 0
+    update_received = []
     with open(fname, 'r') as f:
         for line in f:
             try:
-                t, d, reconf = parse_line(line, args.v)
+                t, d, reconf = parse_line(line, verb)
                 if reconf:
                     reconf_time = t
                     last_message_before_reconf = last_one
                 last_one = t
             except WrongLogLine:
                 continue
-            data.append([t, d])
-            convergence_time, best_path, AS_initial_distance = \
-                    check_convergence_time(t, d, convergence_time, best_path, AS_initial_distance)
-    return data, last_message_before_reconf, reconf_time
+            convergence_time, best_path, AS_t_r_distance = \
+                    check_convergence_time(t, d, convergence_time, best_path, AS_t_r_distance)
+            if d['type'] == 'UPDATE_RX':
+                tot_updates += 1
+                update_received.append(t)
+
+    path_len, hops_before_t, hops_after_t = path_analysis(best_path, T_ASes)
+    AS_data = [
+    ('distance_AS_from_tr', AS_t_r_distance),
+    ('distance_AS_after_t', hops_after_t ),
+    ('distance_AS_before_t', hops_before_t ),
+    ('first_up_time', None), #FIXME 
+    ('conv_time', convergence_time),
+    ('last_up_time', None), # FIXME
+    ('tot_updates', tot_updates)]
+    return  AS_data, reconf_time, update_received
 
 
-def parse_folders():
+def parse_folders(args, T_ASes):
     #extract info from names
     dirNames = []
+    AS_index_all = []
+    AS_data_all = []
     fname = path.basename(path.normpath(args.ff))
     try:
         _, net_size, strategy = fname.split('-')
@@ -199,8 +232,8 @@ def parse_folders():
         try:
             _, _ , _, run_data = dir.split('-')
             t_r = int(run_data.split('_')[0][6:])
-            run = int(run_data.split('_')[1][3:])
-            if run > slice_end:
+            run_id = int(run_data.split('_')[1][3:])
+            if run_id > slice_end:
                 continue
         except ValueError:
             print('ERROR: I expect each subfolder name to be like: "RES-12K-30SEC-BROKEN10883_run10"')
@@ -210,20 +243,34 @@ def parse_folders():
         for (dir_path, dir_names, filenames) in walk(args.ff + "/" + dir):
             fileList.extend(filenames)
             break
-        # Note ASes are numbered starting from zero
+        # Note file are numbered starting from zero
         broken_AS = "log_h_" + str(t_r-1) + ".log" 
 
-        data, last_message_before_reconf, reconf_time = \
-                parse_file(args.ff + "/" + dir + "/" + broken_AS)
-        for fname in fileList:
+        tr_data, reconf_time, update_received = \
+                parse_file(args.ff + "/" + dir + "/" + broken_AS, reconf_time='', 
+                        T_ASes=T_ASes)
+        tr_data.append(('distance_tr_to_t', 0)) # FIXME
+        AS_index = [t_r, run_id, t_r, strategy] 
+        AS_index_all.append(AS_index)
+        AS_data_all.append(dict(tr_data))
+        for fname in fileList[:slice_end*100]:
             try:
                 AS = int(fname.split('_')[2].split('.')[0])
             except IndexError:
                 print('ERROR: I expect each log file name to be like: "log_h_23.log"')
                 print('       While it is: {}'.format(fname))
                 exit()
-            data, last_message_before_tmp, reconf_temp = \
-                parse_file(args.ff + "/" + dir + "/" + fname)
+            data, reconf_time, update_received = \
+                parse_file(args.ff + "/" + dir + "/" + fname, 
+                           reconf_time=reconf_time, T_ASes=T_ASes)
+            AS_index_all.append([t_r, run_id, AS, strategy])
+            AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
+    print(AS_index_all, index_names)
+    index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
+    #run_table_index = pd.MultiIndex.from_product(indexes, names=index_names)
+    return pd.DataFrame(AS_data_all, index=index, columns=column_names)
+
+
 
 
          
