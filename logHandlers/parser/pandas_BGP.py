@@ -13,10 +13,10 @@ column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t',
 def conv_time(run_table, update_table_index):
     conv_times = run_table['conv_time']
     start = {pd.Timedelta('00:00:00.000000'):0}
-    conv_series = pd.Series([1]*len(conv_times), index=conv_times).append(
-                            pd.Series(start)).resample(delta, label='right', loffset='1h').sum().cumsum()
     #FIXME label is ignored, thus must be a bug in pandas
-    return conv_series 
+    conv_series = pd.Series([1]*len(conv_times), index=conv_times).append(
+                            pd.Series(start)).resample(delta, label='right').sum().cumsum()
+    return conv_series.reindex(index=update_table_index, method='pad')
 
 def conv_time_per_distance(run_table, update_table_index):
     distances = run_table['distance_AS_from_tr'].unique()
@@ -24,7 +24,7 @@ def conv_time_per_distance(run_table, update_table_index):
     for d in distances:
         conv_list.append(conv_time(run_table[run_table['distance_AS_from_tr'] == d], 
                                            update_table_index))
-    print(conv_list)
+    #print(conv_list)
     convergence_table = pd.DataFrame(conv_list, index=update_table_index, columns=distances)
     return convergence_table
 
@@ -65,7 +65,9 @@ if __name__ == '__main__':
     #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
     #print(run_table)
-    #print(conv_time(run_table, update_table_index))
+    x = conv_time(run_table, update_table_index)
+    #print(x)
+    #print(x.reindex(index=update_table_index, method='pad'))
     #print(conv_time(run_table[run_table['distance_AS_from_tr'] < 6], update_table_index))
     print(conv_time_per_distance(run_table, update_table_index))
 
