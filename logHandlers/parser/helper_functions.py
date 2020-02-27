@@ -33,17 +33,17 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, mode='ZERO', samples=0
         tot_updates = sum(updates)
         for i in range(len(names)): 
             data_dict[names[i]] = str(val[i])
-        data_dict['tot_updates'] =  str(tot_updates)
+        data_dict['tot_updates'] =  tot_updates
         data_dict['distance_AS_from_tr'] =  np.random.randint(max_d) + 1
         data_dict['distance_tr_to_t'] =  np.random.randint(1,4)
-        data_dict['distance_AS_after_t'] = data_dict['distance_AS_from_tr'] -\
-                                           data_dict['distance_tr_to_t']
+        data_dict['distance_AS_after_t'] = max(data_dict['distance_AS_from_tr'] -\
+                                           data_dict['distance_tr_to_t'], 0)
         slot_len = samples/max_d
         conv_sample = max((data_dict['distance_AS_from_tr']-1) * slot_len +\
                 np.random.randint(-slot_len, slot_len-1), 0)
         data_dict['conv_time'] = zero_time + timedelta*conv_sample
-        data_dict['last_up_time'] = min(data_dict['conv_time'] +\
-                timedelta*np.random.rand()*slot_len, end_time)
+        data_dict['last_up_time'] = max(data_dict['conv_time'] +\
+                timedelta*np.random.rand()*slot_len, zero_time)
         data_dict['first_up_time'] = max(data_dict['conv_time'] -\
                 timedelta*np.random.rand()*slot_len, zero_time)
         data.append(data_dict)

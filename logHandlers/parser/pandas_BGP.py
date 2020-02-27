@@ -11,10 +11,18 @@ column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t',
               'first_up_time', 'conv_time', 'last_up_time', 'tot_updates']
 
 def check_data(update_table, run_table):
-    for col, b in run_table.all().items():
-        if not b:
-            print('There are some negative values in the {} column'.format(col))
+    max_time = max(update_table.index)
+    for c in run_table:
+        if "time" not in c:
+            if (run_table[c] < 0).all():
+                print('There are some negative values in the {} column'.format(c))
+        else:
+            if (run_table[c] < pd.Timedelta(0)).all():
+                print('There are some negative values in the {} column'.format(c))
+            if (run_table[c] > max_time).all():
+                print('There are some convergence time beyond maximum time in the {} column'.format(c))
 
+    
 def conv_time(run_table, update_table_index):
     conv_times = run_table['conv_time']
     start = {pd.Timedelta('00:00:00.000000'):0}
