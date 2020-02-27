@@ -6,7 +6,7 @@ from helper_functions import *
 
 samples = 25
 delta = '100ms'
-index_names=['t_r', 'run_id', 'AS']
+index_names=['t_r', 'run_id', 'AS', 'strategy']
 column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t', 
               'first_up_time', 'conv_time', 'last_up_time', 'tot_updates']
 
@@ -68,22 +68,13 @@ def update_per_t_r_per_AS_per_sec(update_table):
 
 if __name__ == '__main__':
     indexes = make_index()
-    data_set, time_data = fill_run_table(index_names, indexes[0], indexes[1], indexes[2], 
-            mode='INCREASING_L', samples=samples)
-    #            
+    data_set, time_data = fill_run_table(index_names, indexes[0], indexes[1], indexes[2],
+            indexes[3], mode='INCREASING_L', samples=samples)
     run_table_index = pd.MultiIndex.from_product(indexes, names=index_names)
     run_table = pd.DataFrame(data_set, index=run_table_index, columns=column_names)
-    #
     update_table_index = pd.timedelta_range(0, periods=samples, freq=delta)
-    #
     update_table = pd.DataFrame(time_data, index=update_table_index, columns=run_table_index)
     check_data(update_table, run_table)
-    #print(run_table)
-    x = conv_time(run_table, update_table_index)
-    print(x)
-    #print(x.reindex(index=update_table_index, method='pad'))
-    #print(conv_time(run_table[run_table['distance_AS_from_tr'] < 6], update_table_index))
-    print(conv_time_per_distance(run_table, update_table_index))
 
 
 
@@ -92,7 +83,3 @@ if __name__ == '__main__':
     # print(update_table.loc[:, (('AS1', slice(None), 'AS1'))])
     # then slice the time serie
     # print(update_table.loc[:, (('AS1', slice(None), 'AS1'))]['00:00:00.770000':'00:00:00.870000'])
-    
-    
-    # two tables on with run values (long list. each line with index: T_r, run_id), one dataframe qith X: time intervale from date_range(), Y: Run-id. For each row the updates received in the time interval. 
-    # dopo faccio join su tr e run id, controlla che si possa fare join su una chiave con due campi

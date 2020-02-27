@@ -31,6 +31,7 @@ class DataTest(unittest.TestCase):
         self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
+                                                       self.indexes[3], 
                                                        mode='ZERO', 
                                                        samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
@@ -42,6 +43,7 @@ class DataTest(unittest.TestCase):
         self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
+                                                       self.indexes[3], 
                                                        mode='LINEAR', 
                                                        samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
@@ -51,13 +53,15 @@ class DataTest(unittest.TestCase):
 
         self.assertFalse(update_table.loc[:,((self.indexes[0][0], 
                                               self.indexes[1][0],
-                                              self.indexes[2][0]))].any())
-        self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1'))], 1))
+                                              self.indexes[2][0],
+                                              self.indexes[3][0]))].any())
+        self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1', '30s'))], 1))
 
     def test_avg(self):
         self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
+                                                       self.indexes[3], 
                                                        mode='LINEAR', 
                                                        samples=bgp.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
@@ -90,6 +94,7 @@ class DataTest(unittest.TestCase):
         data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
+                                                    self.indexes[3], 
                                                     mode='INCREASING_L', 
                                                     samples=bgp.samples)
         update_table = pd.DataFrame(time_data, index=self.update_table_index, 
@@ -127,6 +132,7 @@ class DataTest(unittest.TestCase):
         data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
+                                                    self.indexes[3], 
                                                     mode='INCREASING_L', 
                                                     samples=bgp.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
@@ -146,6 +152,7 @@ class DataTest(unittest.TestCase):
         data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
+                                                    self.indexes[3], 
                                                     mode='INCREASING_L', 
                                                     samples=bgp.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
