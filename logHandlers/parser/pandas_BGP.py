@@ -83,9 +83,11 @@ if __name__ == '__main__':
     else:
         T_ASes = set(range(args.tnodes))
 
-    update_table = hf.parse_folders(args, T_ASes)
-    #print(update_table)
+    run_table, update_table = hf.parse_folders(args, T_ASes)
+    #print(update_table.sum())
     #print(conv_time(run_table))
+    print(update_per_sec(update_table))
+    print(update_per_t_r_per_sec(update_table))
     #print(run_table)
     #print(update_table)
     

@@ -194,12 +194,17 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
             if d['type'] == 'UPDATE_RX':
                 tot_updates += 1
                 update_received.append(t)
-
+    
     path_len, hops_before_t, hops_after_t = path_analysis(best_path, T_ASes)
     if convergence_time:
         conv_time = convergence_time - reconf_time
     else:
-        conv_time = 'NaN'
+        conv_time = pd.Timedelta(0)
+    # [:] writes the data in the same memory of the original structure, 
+    # does not reallocate
+    update_received[:] = map(lambda x: x-reconf_time, update_received)
+    zero_time = pd.Timedelta(0)
+    update_received[:] = filter(lambda x: x >= zero_time, update_received)
     AS_data = [
     ('distance_AS_from_tr', AS_t_r_distance),
     ('distance_AS_after_t', hops_after_t ),
@@ -208,8 +213,17 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     ('conv_time', conv_time),
     ('last_up_time', None), # FIXME
     ('tot_updates', tot_updates)]
-    print(conv_time)
-    return  AS_data, reconf_time, update_received
+    update_series = pd.Series([1]*len(update_received), index=update_received)
+    dup = update_series.index.duplicated()
+    reindex = [x for x in update_series.index]
+    while dup.any():
+        for idx, check in enumerate(dup):
+            if check:
+                reindex[idx] = reindex[idx] +\
+                        pd.Timedelta('0.001ms')*np.random.randint(1,99)
+        dup = pd.Index(reindex).duplicated()
+
+    return  AS_data, reconf_time, reindex
 
 
 def parse_folders(args, T_ASes):
@@ -217,6 +231,7 @@ def parse_folders(args, T_ASes):
     dirNames = []
     AS_index_all = []
     AS_data_all = []
+    update_event = []
     fname = path.basename(path.normpath(args.ff))
     try:
         _, net_size, strategy = fname.split('-')
@@ -258,6 +273,7 @@ def parse_folders(args, T_ASes):
         AS_index = [t_r, run_id, t_r, strategy] 
         AS_index_all.append(AS_index)
         AS_data_all.append(dict(tr_data))
+        update_event.append(update_received)
         for fname in fileList[:slice_end*100]:
             if fname == broken_AS:
                 continue
@@ -272,10 +288,23 @@ def parse_folders(args, T_ASes):
                            reconf_time=reconf_time, T_ASes=T_ASes)
             AS_index_all.append([t_r, run_id, AS, strategy])
             AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
-            up_series = pd.Series(index=update_received)
-    index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
-    #run_table_index = pd.MultiIndex.from_product(indexes, names=index_names)
-    return pd.DataFrame(AS_data_all, index=index, columns=column_names)
+            update_event.append(update_received)
+    run_index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
+    update_index = pd.Index(it.chain.from_iterable(update_event))
+    max_time = max(update_index)
+    min_time = min(update_index)
+    start = {min_time:0}
+    end = {max_time:0}
+    update_table = pd.DataFrame([])#, index=update_index)
+    u_series = []
+    for update_list in update_event:
+        tmp = pd.Series([1]*len(update_list), index=update_list)
+        tmp = tmp.append(pd.Series(start))
+        tmp = tmp.append(pd.Series(end))
+        tmp = tmp.resample(delta, label='right').sum()
+        u_series.append(tmp)
+    update_table = pd.concat(u_series, axis='columns', keys=run_index)
+    return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
 
 
 
