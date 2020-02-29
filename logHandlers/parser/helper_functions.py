@@ -72,6 +72,11 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO',
 def parse_args():
     parser = argparse.ArgumentParser()
     #parser.add_argument('-f', help='the log file', required=False, nargs='*')
+    parser.add_argument('-p', help='Save binary parsed file to "pickle" format', 
+                        required=False)
+    parser.add_argument('-P', help='Load binary pickle files (two files expected)' 
+                        ' first for run_table, second for update_table',
+                        required=False, nargs=2)
     parser.add_argument('-G', help='The graphml file (unused, TBD)', required=False)
     parser.add_argument('-ff', help='Folder with log Folders', required=False)
     parser.add_argument('-v', help='be more verbose', default=False,
@@ -87,13 +92,14 @@ def parse_args():
     #        help="Use this option to see a negative delta")
     parser.add_argument('--tnodes', required=False, default=-1, type=int,
             help="Assume the first X nodes are T nodes")
-    parser.add_argument('-l', required=False, default=-1, 
+    parser.add_argument('-l', required=False,
             help="Limit the number of runs to consider, helps speeding up development",
-            type=int)
+            type=int, default=0)
     args = parser.parse_args()
 
-    if not (args.ff):
-        parser.error('No folders provided, you have to choose at one type of folder to pass')
+    if not (args.ff or args.P):
+        parser.error('No folders provided, you have to choose'
+                'at one folder of one pickle file')
 
     if args.T == 'SEC':
         delta = '1s'
@@ -249,46 +255,11 @@ def parse_folders(args, T_ASes):
     else:
         slice_end = len(dirNames)
     for dir in dirNames:
-        try:
-            _, _ , _, run_data = dir.split('-')
-            t_r = int(run_data.split('_')[0][6:])
-            run_id = int(run_data.split('_')[1][3:])
-            if run_id > slice_end:
-                continue
-        except ValueError:
-            print('ERROR: I expect each subfolder name to be like: "RES-12K-30SEC-BROKEN10883_run10"')
-            print('       While it is: {}'.format(dir))
-            exit()
-        fileList = list()
-        for (dir_path, dir_names, filenames) in walk(args.ff + "/" + dir):
-            fileList.extend(filenames)
-            break
-        # Note file are numbered starting from zero
-        broken_AS = "log_h_" + str(t_r-1) + ".log" 
+        idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, strategy)
+        AS_index_all.extend(idx)
+        AS_data_all.extend(data)
+        update_event.extend(update)
 
-        tr_data, reconf_time, update_received = \
-                parse_file(args.ff + "/" + dir + "/" + broken_AS, reconf_time='', 
-                        T_ASes=T_ASes)
-        tr_data.append(('distance_tr_to_t', 0)) # FIXME
-        AS_index = [t_r, run_id, t_r, strategy] 
-        AS_index_all.append(AS_index)
-        AS_data_all.append(dict(tr_data))
-        update_event.append(update_received)
-        for fname in fileList[:slice_end*100]:
-            if fname == broken_AS:
-                continue
-            try:
-                AS = int(fname.split('_')[2].split('.')[0])
-            except IndexError:
-                print('ERROR: I expect each log file name to be like: "log_h_23.log"')
-                print('       While it is: {}'.format(fname))
-                exit()
-            data, _, update_received = \
-                parse_file(args.ff + "/" + dir + "/" + fname, 
-                           reconf_time=reconf_time, T_ASes=T_ASes)
-            AS_index_all.append([t_r, run_id, AS, strategy])
-            AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
-            update_event.append(update_received)
     run_index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
     update_index = pd.Index(it.chain.from_iterable(update_event))
     max_time = max(update_index)
@@ -305,6 +276,55 @@ def parse_folders(args, T_ASes):
         u_series.append(tmp)
     update_table = pd.concat(u_series, axis='columns', keys=run_index)
     return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
+
+
+
+def parse_folder(dir, f_path, slice_end, T_ASes, strategy):
+    AS_index_all = []
+    AS_data_all = []
+    update_event = []
+    try:
+        _, _ , _, run_data = dir.split('-')
+        t_r = int(run_data.split('_')[0][6:])
+        run_id = int(run_data.split('_')[1][3:])
+        if run_id > slice_end:
+            return [], [], []
+    except ValueError:
+        print('ERROR: I expect each subfolder name to be like:' 
+              '"RES-12K-30SEC-BROKEN10883_run10"')
+        print('       While it is: {}'.format(dir))
+        exit()
+    fileList = list()
+    for (dir_path, dir_names, filenames) in walk(f_path + "/" + dir):
+        fileList.extend(filenames)
+        break
+    # Note file are numbered starting from zero
+    broken_AS = "log_h_" + str(t_r-1) + ".log" 
+
+    tr_data, reconf_time, update_received = \
+            parse_file(f_path + "/" + dir + "/" + broken_AS, reconf_time='', 
+                    T_ASes=T_ASes)
+    tr_data.append(('distance_tr_to_t', 0)) # FIXME
+    AS_index = [t_r, run_id, t_r, strategy] 
+    AS_index_all.append(AS_index)
+    AS_data_all.append(dict(tr_data))
+    update_event.append(update_received)
+    for fname in fileList[:slice_end*100]:
+        if fname == broken_AS:
+            continue
+        try:
+            AS = int(fname.split('_')[2].split('.')[0])
+        except IndexError:
+            print('ERROR: I expect each log file name to be like: "log_h_23.log"')
+            print('       While it is: {}'.format(fname))
+            exit()
+        data, _, update_received = \
+            parse_file(f_path + "/" + dir + "/" + fname, 
+                       reconf_time=reconf_time, T_ASes=T_ASes)
+        AS_index_all.append([t_r, run_id, AS, strategy])
+        AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
+        update_event.append(update_received)
+    return AS_index_all, AS_data_all, update_event
 
 
 

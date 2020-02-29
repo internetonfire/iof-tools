@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import helper_functions as hf
+import matplotlib.pyplot as plt
 
 
 samples = 25
@@ -66,7 +67,6 @@ def update_per_t_r_per_AS_per_sec(update_table):
 
 
 
-
 if __name__ == '__main__':
     indexes = hf.make_index()
     data_set, time_data = hf.fill_run_table(index_names, indexes[0], indexes[1], indexes[2],
@@ -83,11 +83,24 @@ if __name__ == '__main__':
     else:
         T_ASes = set(range(args.tnodes))
 
-    run_table, update_table = hf.parse_folders(args, T_ASes)
+    if args.ff:
+        run_table, update_table = hf.parse_folders(args, T_ASes)
+    elif args.P:
+        run_table = pd.read_pickle(args.P[0])
+        update_table = pd.read_pickle(args.P[1])
+    if args.p:
+        run_table.to_pickle(args.p + "-runs.pickle")
+        update_table.to_pickle(args.p + "-update.pickle")
     #print(update_table.sum())
-    #print(conv_time(run_table))
-    print(update_per_sec(update_table))
-    print(update_per_t_r_per_sec(update_table))
+    ct = conv_time(run_table, update_table.index)
+    ct.plot()
+    plt.show()
+    ps = update_per_sec(update_table)
+    ps.plot()
+    plt.show()
+    pts = update_per_t_r_per_sec(update_table)
+    pts.plot()
+    plt.show()
     #print(run_table)
     #print(update_table)
     
