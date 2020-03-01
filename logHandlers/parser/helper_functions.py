@@ -220,16 +220,16 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     ('last_up_time', None), # FIXME
     ('tot_updates', tot_updates)]
     update_series = pd.Series([1]*len(update_received), index=update_received)
-    dup = update_series.index.duplicated()
+    dup = update_series.index
     reindex = [x for x in update_series.index]
-    while dup.any():
+    while dup.duplicated().any():
         for idx, check in enumerate(dup):
             if check:
                 reindex[idx] = reindex[idx] +\
                         pd.Timedelta('0.001ms')*np.random.randint(1,99)
-        dup = pd.Index(reindex).duplicated()
+        dup = pd.Index(reindex)
 
-    return  AS_data, reconf_time, reindex
+    return  AS_data, reconf_time, pd.Series([1]*len(dup), index=dup)
 
 
 def parse_folders(args, T_ASes):
@@ -254,11 +254,21 @@ def parse_folders(args, T_ASes):
         slice_end = args.l
     else:
         slice_end = len(dirNames)
+    dir_n = len(dirNames)
+    count = 1
     for dir in dirNames:
+        if args.v:
+            if int(100*count/dir_n) in range(1,100):
+                print("Parsed {}% of the folders".format(int(100*count/dir_n)))
+        count+=1
+            
+        
         idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, strategy)
         AS_index_all.extend(idx)
         AS_data_all.extend(data)
         update_event.extend(update)
+    if args.v:
+        print('Done with reading files')
 
     run_index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
     update_index = pd.Index(it.chain.from_iterable(update_event))
@@ -268,18 +278,20 @@ def parse_folders(args, T_ASes):
     end = {max_time:0}
     update_table = pd.DataFrame([])#, index=update_index)
     u_series = []
-    for update_list in update_event:
-        tmp = pd.Series([1]*len(update_list), index=update_list)
-        tmp = tmp.append(pd.Series(start))
-        tmp = tmp.append(pd.Series(end))
-        tmp = tmp.resample(delta, label='right').sum()
-        u_series.append(tmp)
-    update_table = pd.concat(u_series, axis='columns', keys=run_index)
+    print("Let's make pandas series")
+    # What follows it horribly slow
+    #for update_list in update_event:
+        #tmp = pd.Series([1]*len(update_list), index=update_list)
+        #u_series.append(update_list)
+    print("Let's concat")
+    update_table = pd.concat(update_event, axis='columns', 
+                             keys=run_index).resample(delta, label='right').sum()
+    print("Let's do the dataframe")
     return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
 
 
 
-def parse_folder(dir, f_path, slice_end, T_ASes, strategy):
+def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False):
     AS_index_all = []
     AS_data_all = []
     update_event = []
@@ -303,7 +315,7 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy):
 
     tr_data, reconf_time, update_received = \
             parse_file(f_path + "/" + dir + "/" + broken_AS, reconf_time='', 
-                    T_ASes=T_ASes)
+                    T_ASes=T_ASes, verb=verb)
     tr_data.append(('distance_tr_to_t', 0)) # FIXME
     AS_index = [t_r, run_id, t_r, strategy] 
     AS_index_all.append(AS_index)
@@ -320,14 +332,8 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy):
             exit()
         data, _, update_received = \
             parse_file(f_path + "/" + dir + "/" + fname, 
-                       reconf_time=reconf_time, T_ASes=T_ASes)
+                       reconf_time=reconf_time, T_ASes=T_ASes, verb=verb)
         AS_index_all.append([t_r, run_id, AS, strategy])
         AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
         update_event.append(update_received)
     return AS_index_all, AS_data_all, update_event
-
-
-
-
-         
-

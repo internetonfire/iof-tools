@@ -83,24 +83,27 @@ if __name__ == '__main__':
     else:
         T_ASes = set(range(args.tnodes))
 
-    if args.ff:
-        run_table, update_table = hf.parse_folders(args, T_ASes)
-    elif args.P:
+    if args.P:
         run_table = pd.read_pickle(args.P[0])
         update_table = pd.read_pickle(args.P[1])
+    elif args.ff:
+        run_table, update_table = hf.parse_folders(args, T_ASes)
     if args.p:
         run_table.to_pickle(args.p + "-runs.pickle")
         update_table.to_pickle(args.p + "-update.pickle")
     #print(update_table.sum())
-    ct = conv_time(run_table, update_table.index)
-    ct.plot()
-    plt.show()
-    ps = update_per_sec(update_table)
-    ps.plot()
-    plt.show()
-    pts = update_per_t_r_per_sec(update_table)
-    pts.plot()
-    plt.show()
+    ct = conv_time_per_distance(run_table, update_table.index)
+    pl = ct.plot(title="Convergence time by distance from T_r")
+    pl.set_xlabel('time')
+    pl.set_ylabel('# of ASes')
+    ct = conv_time_per_distance(run_table, update_table.index, column='distance_AS_after_t')
+    pl = ct.plot(title="Convergence time by hops after T nodes")
+    pl.set_xlabel('time')
+    pl.set_ylabel('# of ASes')
+    ct = conv_time_per_distance(run_table, update_table.index, column='distance_AS_before_t')
+    pl = ct.plot(title="Convergence time by hops before T nodes")
+    pl.set_xlabel('time')
+    #plt.show()
     #print(run_table)
     #print(update_table)
     
