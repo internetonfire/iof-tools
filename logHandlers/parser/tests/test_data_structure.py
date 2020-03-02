@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pandas_lib as plib
 from os import path
+from shutil import unpack_archive 
 from collections import defaultdict
 
 def test_equal(frame, value):
@@ -28,7 +29,11 @@ class DataTest(unittest.TestCase):
         self.update_table_index = pd.timedelta_range(0, periods=plib.samples, 
                                                      freq=plib.delta)
 
-        #print("DIR is:", path.isdir('test-data/RES-1K'))
+        test_data = 'tests/test-data/'
+        test_datafile = 'tests/test-data/RES-1K.tgz'
+        if not path.isdir(test_data + 'RES-1K'):
+            unpack_archive(test_datafile, test_data)
+
 
 
     def test_zero(self):
