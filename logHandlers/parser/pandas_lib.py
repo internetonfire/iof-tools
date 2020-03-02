@@ -262,7 +262,6 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
             if d['type'] == 'UPDATE_RX':
                 tot_updates += 1
                 update_received.append(t)
-    
     path_len, hops_before_t, hops_after_t = path_analysis(best_path, T_ASes)
     if convergence_time:
         conv_time = convergence_time - reconf_time
