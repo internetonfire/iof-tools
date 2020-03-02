@@ -379,6 +379,10 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False):
     AS_index_all = []
     AS_data_all = []
     update_event = []
+    # AS number goes from 1 up, 
+    # Node IDs in the graph go from 0 up, logfiles are named after ID
+    # DataFrame are organized to use only AS numbers
+
     try:
         _, _ , _, run_data = dir.split('-')
         t_r = int(run_data.split('_')[0][6:])
@@ -394,22 +398,20 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False):
     for (dir_path, dir_names, filenames) in walk(f_path + "/" + dir):
         fileList.extend(filenames)
         break
-    # Note file are numbered starting from zero
-    broken_AS = "log_h_" + str(t_r-1) + ".log" 
-
+    broken_AS_file = "log_h_" + str(t_r-1) + ".log" 
     tr_data, reconf_time, update_received = \
-            parse_file(f_path + "/" + dir + "/" + broken_AS, reconf_time='', 
+            parse_file(f_path + "/" + dir + "/" + broken_AS_file, reconf_time='', 
                     T_ASes=T_ASes, verb=verb)
     tr_data.append(('distance_tr_to_t', 0)) # FIXME
     AS_index = [t_r, run_id, t_r, strategy] 
     AS_index_all.append(AS_index)
     AS_data_all.append(dict(tr_data))
     update_event.append(update_received)
-    for fname in fileList[:slice_end*100]:
-        if fname == broken_AS:
+    for fname in sorted(fileList):
+        if fname == broken_AS_file:
             continue
         try:
-            AS = int(fname.split('_')[2].split('.')[0])
+            AS = int(fname.split('_')[2].split('.')[0]) + 1
         except IndexError:
             print('ERROR: I expect each log file name to be like: "log_h_23.log"')
             print('       While it is: {}'.format(fname))

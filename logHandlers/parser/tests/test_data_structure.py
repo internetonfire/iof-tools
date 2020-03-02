@@ -29,10 +29,12 @@ class DataTest(unittest.TestCase):
         self.update_table_index = pd.timedelta_range(0, periods=plib.samples, 
                                                      freq=plib.delta)
 
-        test_data = 'tests/test-data/'
-        test_datafile = 'tests/test-data/RES-1K.tgz'
-        if not path.isdir(test_data + 'RES-1K'):
-            unpack_archive(test_datafile, test_data)
+        self.test_data = 'tests/test-data/'
+        self.test_datafile = self.test_data + 'RES-1K.tgz'
+        self.test_datafolder = self.test_data + 'RES-1K/'
+        self.test_data_strategy = self.test_datafolder + 'RES-1K-1SEC'
+        if not path.isdir(self.test_datafolder):
+            unpack_archive(self.test_datafile, self.test_data)
 
 
 
@@ -185,5 +187,24 @@ class DataTest(unittest.TestCase):
             if k in conv_dict:
                 self.assertEqual(conv_time[k], conv_dict[k])
 
-    def test_realistic_data(self):
-        pass
+    def test_real_data(self):
+        class FakeArgs():
+            def __init__(self, ff):
+                self.ff = ff
+                self.l = 2
+                self.v = False
+        
+        indexes = plib.make_index()
+        t_r_list = [285, 514, 529] # see comment at beginning of parse_folder()
+        run_id_list = [1,2]
+        AS_list = [x for x in range(1, 1001)]
+        strategy = ['1SEC']
+        run_table_index = pd.MultiIndex.from_product([t_r_list, run_id_list, 
+                                                      AS_list, strategy])
+
+        run_table, update_event = plib.parse_folders(
+                                                  FakeArgs(self.test_data_strategy), 
+                                                  [0,1,2,3,4,5])
+        run_set = set(run_table_index)
+        run_set_II = set(run_table.index)
+        self.assertEqual(run_set, run_set_II)
