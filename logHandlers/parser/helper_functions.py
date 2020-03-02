@@ -86,8 +86,8 @@ def parse_args():
     #parser.add_argument('-t', help='compute the number of updates generated',
     #                    default=False, action='store_true')
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
-                        default='SEC',
-                        choices=['SECS', 'DSEC', 'CSEC', 'MSEC'])
+                        default='100ms',
+                        choices=['1s', '100ms', '10ms', '1ms'])
     #parser.add_argument('-d', required=False, default=0, action='store', 
     #        help="Use this option to see a negative delta")
     parser.add_argument('--tnodes', required=False, default=-1, type=int,
@@ -229,7 +229,7 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
                         pd.Timedelta('0.001ms')*np.random.randint(1,99)
         dup = pd.Index(reindex)
 
-    return  AS_data, reconf_time, pd.Series([1]*len(dup), index=dup)
+    return  AS_data, reconf_time, dup
 
 
 def parse_folders(args, T_ASes):
@@ -256,10 +256,12 @@ def parse_folders(args, T_ASes):
         slice_end = len(dirNames)
     dir_n = len(dirNames)
     count = 1
+    print_step = list(range(10,100,10))
     for dir in dirNames:
         if args.v:
-            if int(100*count/dir_n) in range(1,100):
+            if int(100*count/dir_n) in print_step:
                 print("Parsed {}% of the folders".format(int(100*count/dir_n)))
+                del print_step[0]
         count+=1
             
         
@@ -268,25 +270,45 @@ def parse_folders(args, T_ASes):
         AS_data_all.extend(data)
         update_event.extend(update)
     if args.v:
-        print('Done with reading files')
+        print('Done with reading files, now resampling')
 
     run_index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
     update_index = pd.Index(it.chain.from_iterable(update_event))
     max_time = max(update_index)
     min_time = min(update_index)
-    start = {min_time:0}
-    end = {max_time:0}
-    update_table = pd.DataFrame([])#, index=update_index)
     u_series = []
-    print("Let's make pandas series")
-    # What follows it horribly slow
-    #for update_list in update_event:
-        #tmp = pd.Series([1]*len(update_list), index=update_list)
-        #u_series.append(update_list)
-    print("Let's concat")
-    update_table = pd.concat(update_event, axis='columns', 
-                             keys=run_index).resample(delta, label='right').sum()
-    print("Let's do the dataframe")
+    count = 0
+    up_len = len(update_event)
+    print_step = list(range(10,100,10))
+    for update_list in update_event:
+        if args.v:
+            if int(100*count/up_len) in print_step:
+                print("Resampled {}% of the series".format(int(100*count/up_len)))
+                del print_step[0]
+        count += 1
+        tmp = pd.Series([1]*len(update_list), index=update_list)
+        if min_time not in update_list:
+            tmp.loc[min_time] = 0
+        if max_time not in update_list:
+            tmp.loc[max_time] = 0
+        tmp = tmp.resample(delta, label='right').sum()
+        u_series.append(tmp.values)
+    all_index = tmp.index # they are all the same, pick the last one
+    if args.v:
+        print('Done resampling, now creating DataFrame')
+    
+
+     
+    # What follows it slow but I cant find a better way:
+    #  - either we first resample (as I do now) and then I can create a DataFrame,
+    #    then resampling is slow or,
+    #  - I concat each dataframe (which is slow because it reorders the index) 
+    #    and after that I resample the dataframe all together 
+    # Both seems slow solutions
+    update_table = pd.DataFrame(np.stack(u_series).transpose(), index=all_index, 
+                             columns=run_index)
+    if args.v:
+        print("Done creating DataFrame")
     return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
 
 

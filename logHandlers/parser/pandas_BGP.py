@@ -91,7 +91,6 @@ if __name__ == '__main__':
     if args.p:
         run_table.to_pickle(args.p + "-runs.pickle")
         update_table.to_pickle(args.p + "-update.pickle")
-    #print(update_table.sum())
     ct = conv_time_per_distance(run_table, update_table.index)
     pl = ct.plot(title="Convergence time by distance from T_r")
     pl.set_xlabel('time')
