@@ -3,8 +3,8 @@
 import unittest 
 import pandas as pd
 import numpy as np
-import pandas_BGP as bgp
-import helper_functions as hf
+import pandas_lib as plib
+from os import path
 from collections import defaultdict
 
 def test_equal(frame, value):
@@ -20,32 +20,38 @@ class DataTest(unittest.TestCase):
         self.t_r = 2
         self.runs = 2
         self.ASes = 3
-        self.indexes = hf.make_index(self.t_r, self.runs, self.ASes)
+        self.indexes = plib.make_index(self.t_r, self.runs, self.ASes)
 
             
-        self.run_table_index = pd.MultiIndex.from_product(self.indexes, names=bgp.index_names)
-        self.update_table_index = pd.timedelta_range(0, periods=bgp.samples, freq=bgp.delta)
+        self.run_table_index = pd.MultiIndex.from_product(self.indexes, 
+                                                          names=plib.index_names)
+        self.update_table_index = pd.timedelta_range(0, periods=plib.samples, 
+                                                     freq=plib.delta)
+
+        #print("DIR is:", path.isdir('test-data/RES-1K'))
 
 
     def test_zero(self):
-        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+                                                       self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        self.indexes[3], 
                                                        mode='ZERO', 
-                                                       samples=bgp.samples)
+                                                       samples=plib.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
         self.assertFalse(update_table.values.any()) 
 
 
     def test_linear(self):
-        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+                                                       self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        self.indexes[3], 
                                                        mode='LINEAR', 
-                                                       samples=bgp.samples)
+                                                       samples=plib.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
@@ -58,12 +64,13 @@ class DataTest(unittest.TestCase):
         self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1', ''))], 1))
 
     def test_avg(self):
-        self.data_set, self.time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+                                                       self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
                                                        self.indexes[3], 
                                                        mode='LINEAR', 
-                                                       samples=bgp.samples)
+                                                       samples=plib.samples)
         update_table = pd.DataFrame(self.time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
@@ -80,28 +87,30 @@ class DataTest(unittest.TestCase):
             data[t_r] += update_table[column].sum()
             AS = column[2]
             per_AS[t_r][AS] += update_table[column].sum()
-        avg = bgp.avg_update_per_t_r(update_table)
-        avg_per_AS = bgp.avg_update_per_t_r_per_AS(update_table)
+        avg = plib.avg_update_per_t_r(update_table)
+        avg_per_AS = plib.avg_update_per_t_r_per_AS(update_table)
         for t_r,v in data.items():
-            self.assertTrue(np.isclose(v/(self.runs*self.ASes*bgp.samples), avg[t_r]))
+            self.assertTrue(np.isclose(v/(self.runs*self.ASes*plib.samples), 
+                            avg[t_r]))
             for AS, vv in per_AS[t_r].items():
-                self.assertTrue(np.isclose(vv/(self.runs*bgp.samples), avg_per_AS[t_r][AS]))
-        self.assertTrue(np.isclose(mean/(self.t_r*self.runs*self.ASes*bgp.samples), 
-                        bgp.avg_update(update_table)))
+                self.assertTrue(np.isclose(vv/(self.runs*plib.samples), 
+                                avg_per_AS[t_r][AS]))
+        self.assertTrue(np.isclose(mean/(self.t_r*self.runs*self.ASes*plib.samples), 
+                        plib.avg_update(update_table)))
 
 
     def test_per_sec(self):
-        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
                                                     mode='INCREASING_L', 
-                                                    samples=bgp.samples)
+                                                    samples=plib.samples)
         update_table = pd.DataFrame(time_data, index=self.update_table_index, 
                                          columns=self.run_table_index)
 
 
-        per_sec = bgp.update_per_sec(update_table)
+        per_sec = plib.update_per_sec(update_table)
         per_t_r = dict.fromkeys(self.indexes[0], None)
         per_t_r_per_AS = dict.fromkeys(self.indexes[0], dict())
         for t_r in per_t_r:
@@ -118,8 +127,8 @@ class DataTest(unittest.TestCase):
                 per_t_r_per_AS[t_r][AS] += update_table[column]
             except TypeError:
                 per_t_r_per_AS[t_r][AS] = update_table[column].copy()
-        updates_per_sec = bgp.update_per_t_r_per_sec(update_table)
-        updates_per_AS_per_sec = bgp.update_per_t_r_per_AS_per_sec(update_table)
+        updates_per_sec = plib.update_per_t_r_per_sec(update_table)
+        updates_per_AS_per_sec = plib.update_per_t_r_per_AS_per_sec(update_table)
         for t_r in per_t_r:
             self.assertTrue(per_t_r[t_r].equals(updates_per_sec[t_r]))
             for AS in per_t_r_per_AS[t_r]:
@@ -129,18 +138,20 @@ class DataTest(unittest.TestCase):
 
     def test_convergence(self):
 
-        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
                                                     mode='INCREASING_L', 
-                                                    samples=bgp.samples)
+                                                    samples=plib.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
-        conv_time = bgp.conv_time(run_table, self.update_table_index)
-        conv_time_per_dist = bgp.conv_time_per_distance(run_table, self.update_table_index)
+        conv_time = plib.conv_time(run_table, self.update_table_index)
+        conv_time_per_dist = plib.conv_time_per_distance(run_table, 
+                                                         self.update_table_index)
         self.assertEqual(max(conv_time), self.t_r*self.runs*self.ASes)
         self.assertTrue(is_monotone(conv_time))
-        self.assertEqual(conv_time_per_dist[-1:].values.sum(), self.t_r*self.runs*self.ASes)
+        self.assertEqual(conv_time_per_dist[-1:].values.sum(), 
+                         self.t_r*self.runs*self.ASes)
         for c in conv_time_per_dist:
             self.assertTrue(is_monotone(conv_time_per_dist[c]))
         for t in conv_time_per_dist.index:
@@ -149,12 +160,12 @@ class DataTest(unittest.TestCase):
 
     def test_convergence_fail(self):
 
-        data_set, time_data = hf.fill_run_table(bgp.index_names, self.indexes[0], 
+        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
                                                     mode='INCREASING_L', 
-                                                    samples=bgp.samples)
+                                                    samples=plib.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
         conv_dict = {}
         for t in self.update_table_index:
@@ -163,8 +174,11 @@ class DataTest(unittest.TestCase):
             for tt in conv_dict.keys():
                 if pd.Timedelta(t) <= tt:
                     conv_dict[tt] += 1
-        conv_time = bgp.conv_time(run_table, self.update_table_index)
+        conv_time = plib.conv_time(run_table, self.update_table_index)
         keys = conv_time.keys()[:-1]
         for idx, k in enumerate(keys):
             if k in conv_dict:
                 self.assertEqual(conv_time[k], conv_dict[k])
+
+    def test_realistic_data(self):
+        pass
