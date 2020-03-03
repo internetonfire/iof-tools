@@ -27,12 +27,12 @@ if __name__ == '__main__':
         idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
     else:
         idx = update_table.index
-    pl = plib.nodes_by_dist(run_table)
-    print(update_table.index)
-    ct, pl = plib.conv_time(run_table, plot=True)
-    ct, pl = plib.conv_time_per_distance(run_table)
-    ct, pl = plib.conv_time_per_distance(run_table, column='distance_AS_before_t')
-    ct, pl = plib.conv_time_per_distance(run_table, column='distance_AS_after_t')
+    plib.avg_update_by_distance(run_table)
+    plib.nodes_by_dist(run_table)
+    plib.conv_time(run_table, plot=True)
+    plib.conv_time_by_distance(run_table)
+    plib.conv_time_by_distance(run_table, column='distance_AS_before_t')
+    plib.conv_time_by_distance(run_table, column='distance_AS_after_t')
     plt.show()
     #print(run_table)
     #print(update_table)

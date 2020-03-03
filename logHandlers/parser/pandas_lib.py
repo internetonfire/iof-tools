@@ -36,10 +36,15 @@ def check_data(update_table, run_table):
                 print('There are some convergence time beyond maximum time in the {} column'.format(c))
 
 def nodes_by_dist(run_table, plot=True):
-    pl = run_table['distance_AS_from_tr'].value_counts().sort_index().plot(kind='bar')
-    pl.set_xlabel('Distance from Tr')
-    pl.set_title('ASes by distance')
-    plt.show()
+    data = run_table['distance_AS_from_tr'].value_counts().sort_index()
+    pl = None
+    if plot:
+        pl = data.plot(kind='bar', color='tab:blue')
+        pl.set_xlabel('Distance from Tr')
+        pl.set_title('ASes by distance')
+        plt.draw()
+        plt.show()
+    return data, pl
     
 def conv_time(run_table, plot=False, relative=True):
     conv_times = run_table['conv_time']
@@ -51,23 +56,27 @@ def conv_time(run_table, plot=False, relative=True):
     pl = None
     if plot:
         pl = conv_series.plot(title='Convergence CDF')
-        pl.set_xlabel = ('time')
-        pl.set_ylabel = ('# of ASes')
-        plt.show(block=False)
+        pl.set_xlabel('time')
+        pl.set_ylabel('# of ASes')
+        plt.draw()
+        plt.show()
     return conv_series, pl
 
 
-def conv_time_per_distance(run_table, column='distance_AS_from_tr'):
+def conv_time_by_distance(run_table, column='distance_AS_from_tr', plot=True):
     distances = sorted(run_table[column].unique())
     conv_list = []
     for d in distances:
         x, _ = conv_time(run_table[run_table[column] == d])
         conv_list.append(x)
     convergence_table = pd.concat(conv_list, axis='columns', names=distances)
-    pl = convergence_table.plot(title='Convergence CDF by {}'.format(column))
-    pl.set_xlabel = ('time')
-    pl.set_ylabel = ('# of ASes')
-    plt.show(block=False)
+    pl = None
+    if plot:
+        pl = convergence_table.plot(title='Convergence CDF by {}'.format(column))
+        pl.set_xlabel('time')
+        pl.set_ylabel('# of ASes')
+        plt.draw()
+        plt.show()
     return convergence_table.reindex(sorted(convergence_table.columns), axis='columns'), pl
 
 def _compute_average(update_table, query=(slice(None), slice(None), slice(None)),
@@ -78,23 +87,37 @@ def _compute_average(update_table, query=(slice(None), slice(None), slice(None))
     # then slice the time serie
     # print(update_table.loc[:, (('AS1', slice(None), 'AS1'))]['00:00:00.770000':'00:00:00.870000'])
 
-def avg_update_per_t_r(update_table):
+def avg_update_by_t_r(update_table):
     return _compute_average(update_table).mean(level=0)
 
-def avg_update_per_t_r_per_AS(update_table):
+def avg_update_by_t_r_by_AS(update_table):
     return _compute_average(update_table).groupby(['t_r','AS']).mean()
 
 def avg_update(update_table):
     return _compute_average(update_table).mean()
 
-def update_per_sec(update_table, plot=False):
+def update_by_sec(update_table, plot=False):
     return update_table.sum(axis=1)
 
-def update_per_t_r_per_sec(update_table):
+def update_by_t_r_by_sec(update_table):
     return update_table.groupby(level=[0], axis='columns').sum()
 
-def update_per_t_r_per_AS_per_sec(update_table):
+def update_by_t_r_by_AS_by_sec(update_table):
     return update_table.groupby(level=[0,2], axis='columns').sum()
+
+def avg_update_by_distance(run_table, column='distance_AS_from_tr', plot=True):
+    ASes = run_table[column].value_counts().sort_index()
+    updates = run_table.groupby([column]).sum().sort_index()
+    up_by_node = updates['tot_updates']/ASes
+    pl = None
+    if plot:
+        pl = up_by_node.plot(kind='bar', color='tab:blue')
+        pl.set_title("UPDATES/node by distance")
+        pl.set_xlabel('Distance')
+        pl.set_ylabel('# of updates')
+        plt.draw()
+        plt.show()
+    return updates, pl
 
 
 
