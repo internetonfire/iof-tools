@@ -46,7 +46,7 @@ def nodes_by_dist(run_table, plot=True):
         plt.show()
     return data, pl
     
-def conv_time(run_table, plot=False, relative=True):
+def conv_time(run_table, plot=False):
     conv_times = run_table['conv_time']
     start = {pd.Timedelta('00:00:00.000000'):0}
     #FIXME label is ignored, thus must be a bug in pandas
@@ -96,13 +96,13 @@ def avg_update_by_t_r_by_AS(update_table):
 def avg_update(update_table):
     return _compute_average(update_table).mean()
 
-def update_by_sec(update_table, plot=False):
+def update_per_sec(update_table, plot=False):
     return update_table.sum(axis=1)
 
-def update_by_t_r_by_sec(update_table):
+def update_by_t_r_per_sec(update_table):
     return update_table.groupby(level=[0], axis='columns').sum()
 
-def update_by_t_r_by_AS_by_sec(update_table):
+def update_by_t_r_by_AS_per_sec(update_table):
     return update_table.groupby(level=[0,2], axis='columns').sum()
 
 def updates_by_distance_per_sec(run_table, column='avg_update_per_sec', 
