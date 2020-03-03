@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import datetime
 from os import walk, path
+import matplotlib.pyplot as plt
 
 log_types = ['FATAL', 'RECONF']
 samples = 25
@@ -34,28 +35,48 @@ def check_data(update_table, run_table):
             if (run_table[c] > max_time).all():
                 print('There are some convergence time beyond maximum time in the {} column'.format(c))
 
+def nodes_by_dist(run_table, plot=True):
+    pl = run_table['distance_AS_from_tr'].value_counts().sort_index().plot(kind='bar')
+    pl.set_xlabel('Distance from Tr')
+    pl.set_title('ASes by distance')
+    plt.show()
     
-def conv_time(run_table, update_table_index):
+def conv_time(run_table, plot=False, relative=True):
     conv_times = run_table['conv_time']
     start = {pd.Timedelta('00:00:00.000000'):0}
     #FIXME label is ignored, thus must be a bug in pandas
     conv_series = pd.Series([1]*len(conv_times), index=conv_times).append(
-                            pd.Series(start)).resample(delta, label='right').sum().cumsum()
-    return conv_series.reindex(index=update_table_index, method='pad')
+                            pd.Series(start)).resample(delta, 
+                            label='right').sum().cumsum()/len(conv_times)
+    pl = None
+    if plot:
+        pl = conv_series.plot(title='Convergence CDF')
+        pl.set_xlabel = ('time')
+        pl.set_ylabel = ('# of ASes')
+        plt.show(block=False)
+    return conv_series, pl
 
-def conv_time_per_distance(run_table, update_table_index, column='distance_AS_from_tr'):
-    distances = run_table[column].unique()
-    conv_list = {}
+
+def conv_time_per_distance(run_table, column='distance_AS_from_tr'):
+    distances = sorted(run_table[column].unique())
+    conv_list = []
     for d in distances:
-        x  = conv_time(run_table[run_table['distance_AS_from_tr'] == d], 
-                                           update_table_index).values
-        conv_list[d] = x
-    convergence_table = pd.DataFrame(conv_list, index=update_table_index, columns=distances)
-    return convergence_table.reindex(sorted(convergence_table.columns), axis='columns')
+        x, _ = conv_time(run_table[run_table[column] == d])
+        conv_list.append(x)
+    convergence_table = pd.concat(conv_list, axis='columns', names=distances)
+    pl = convergence_table.plot(title='Convergence CDF by {}'.format(column))
+    pl.set_xlabel = ('time')
+    pl.set_ylabel = ('# of ASes')
+    plt.show(block=False)
+    return convergence_table.reindex(sorted(convergence_table.columns), axis='columns'), pl
 
 def _compute_average(update_table, query=(slice(None), slice(None), slice(None)),
         time_start='00:00:00.000000', time_end='99:99:99.999999'):
     return update_table.loc[:, query].mean()
+    # just to recall how to slice on inner layers
+    # print(update_table.loc[:, (('AS1', slice(None), 'AS1'))])
+    # then slice the time serie
+    # print(update_table.loc[:, (('AS1', slice(None), 'AS1'))]['00:00:00.770000':'00:00:00.870000'])
 
 def avg_update_per_t_r(update_table):
     return _compute_average(update_table).mean(level=0)
@@ -66,7 +87,7 @@ def avg_update_per_t_r_per_AS(update_table):
 def avg_update(update_table):
     return _compute_average(update_table).mean()
 
-def update_per_sec(update_table):
+def update_per_sec(update_table, plot=False):
     return update_table.sum(axis=1)
 
 def update_per_t_r_per_sec(update_table):
@@ -293,7 +314,7 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     return  AS_data, reconf_time, dup
 
 
-def parse_folders(args, T_ASes):
+def parse_folders(args, T_ASes, gen_updates=False):
     #extract info from names
     dirNames = []
     AS_index_all = []
@@ -326,55 +347,55 @@ def parse_folders(args, T_ASes):
         count+=1
             
         
-        idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, strategy)
+        idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, strategy, gen_updates)
         AS_index_all.extend(idx)
         AS_data_all.extend(data)
         update_event.extend(update)
-    if args.v:
-        print('Done with reading files, now resampling')
-
     run_index = pd.MultiIndex.from_tuples(AS_index_all, names=index_names)
-    update_index = pd.Index(it.chain.from_iterable(update_event))
-    max_time = max(update_index)
-    min_time = min(update_index)
-    u_series = []
-    count = 0
-    up_len = len(update_event)
-    print_step = list(range(10,100,10))
-    for update_list in update_event:
+    update_table = pd.DataFrame()
+    if gen_updates:
         if args.v:
-            if int(100*count/up_len) in print_step:
-                print("Resampled {}% of the series".format(int(100*count/up_len)))
-                del print_step[0]
-        count += 1
-        tmp = pd.Series([1]*len(update_list), index=update_list)
-        if min_time not in update_list:
-            tmp.loc[min_time] = 0
-        if max_time not in update_list:
-            tmp.loc[max_time] = 0
-        tmp = tmp.resample(delta, label='right').sum()
-        u_series.append(tmp.values)
-    all_index = tmp.index # they are all the same, pick the last one
-    if args.v:
-        print('Done resampling, now creating DataFrame')
-    
+            print('Done with reading files, now resampling')
+        max_time = max(update_index)
+        min_time = min(update_index)
+        u_series = []
+        count = 0
+        up_len = len(update_event)
+        print_step = list(range(10,100,10))
+        for update_list in update_event:
+            if args.v:
+                if int(100*count/up_len) in print_step:
+                    print("Resampled {}% of the series".format(int(100*count/up_len)))
+                    del print_step[0]
+            count += 1
+            tmp = pd.Series([1]*len(update_list), index=update_list)
+            if min_time not in update_list:
+                tmp.loc[min_time] = 0
+            if max_time not in update_list:
+                tmp.loc[max_time] = 0
+            tmp = tmp.resample(delta, label='right').sum()
+            u_series.append(tmp.values)
+        all_index = tmp.index # they are all the same, pick the last one
+        if args.v:
+            print('Done resampling, now creating DataFrame')
+        
 
-     
-    # What follows it slow but I cant find a better way:
-    #  - either we first resample (as I do now) and then I can create a DataFrame,
-    #    then resampling is slow or,
-    #  - I concat each dataframe (which is slow because it reorders the index) 
-    #    and after that I resample the dataframe all together 
-    # Both seems slow solutions
-    update_table = pd.DataFrame(np.stack(u_series).transpose(), index=all_index, 
-                             columns=run_index)
-    if args.v:
-        print("Done creating DataFrame")
+         
+        # What follows it slow but I cant find a better way:
+        #  - either we first resample (as I do now) and then I can create a DataFrame,
+        #    then resampling is slow or,
+        #  - I concat each dataframe (which is slow because it reorders the index) 
+        #    and after that I resample the dataframe all together 
+        # Both seems slow solutions
+        update_table = pd.DataFrame(np.stack(u_series).transpose(), index=all_index, 
+                                 columns=run_index)
+        if args.v:
+            print("Done creating DataFrame")
     return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
 
 
 
-def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False):
+def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False, gen_updates=False):
     AS_index_all = []
     AS_data_all = []
     update_event = []
@@ -420,5 +441,6 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False):
                        reconf_time=reconf_time, T_ASes=T_ASes, verb=verb)
         AS_index_all.append([t_r, run_id, AS, strategy])
         AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
-        update_event.append(update_received)
+        if gen_updates:
+            update_event.append(update_received)
     return AS_index_all, AS_data_all, update_event
