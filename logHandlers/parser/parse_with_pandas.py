@@ -3,7 +3,13 @@ import pandas as pd
 import numpy as np
 import pandas_lib as plib
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
+class Dummy():
+    def savefig(self, x):
+        pass
+    def close(self):
+        pass
 
 if __name__ == '__main__':
     args = plib.parse_args()
@@ -27,12 +33,26 @@ if __name__ == '__main__':
         idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
     else:
         idx = update_table.index
-    plib.avg_update_by_distance(run_table)
-    plib.nodes_by_dist(run_table)
-    plib.conv_time(run_table, plot=True)
-    plib.conv_time_by_distance(run_table)
-    plib.conv_time_by_distance(run_table, column='distance_AS_before_t')
-    plib.conv_time_by_distance(run_table, column='distance_AS_after_t')
-    plt.show()
+    if args.pdf:
+        pdf = PdfPages(args.pdf)
+    else:
+        pdf = Dummy()
+    _, pl = plib.updates_by_distance(run_table)
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.updates_by_distance_per_sec(run_table, column='avg_update_per_sec')
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.updates_by_distance_per_sec(run_table, column='max_update_per_sec')
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.nodes_by_dist(run_table)
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.conv_time(run_table, plot=True)
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.conv_time_by_distance(run_table)
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.conv_time_by_distance(run_table, column='distance_AS_before_t')
+    pdf.savefig(pl.get_figure())
+    _, pl = plib.conv_time_by_distance(run_table, column='distance_AS_after_t')
+    pdf.savefig(pl.get_figure())
+    pdf.close()
     #print(run_table)
     #print(update_table)

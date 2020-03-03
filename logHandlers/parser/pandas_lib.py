@@ -12,7 +12,7 @@ delta = '100ms'
 index_names=['t_r', 'run_id', 'AS', 'strategy']
 column_names=['distance_AS_from_tr', 'distance_tr_to_t', 'distance_AS_after_t', 
               'distance_AS_before_t', 'first_up_time', 'conv_time', 'last_up_time', 
-              'tot_updates']
+              'avg_update_per_sec', 'max_update_per_sec', 'tot_updates']
 
 
 
@@ -105,16 +105,35 @@ def update_by_t_r_by_sec(update_table):
 def update_by_t_r_by_AS_by_sec(update_table):
     return update_table.groupby(level=[0,2], axis='columns').sum()
 
-def avg_update_by_distance(run_table, column='distance_AS_from_tr', plot=True):
-    ASes = run_table[column].value_counts().sort_index()
-    updates = run_table.groupby([column]).sum().sort_index()
-    up_by_node = updates['tot_updates']/ASes
+def updates_by_distance_per_sec(run_table, column='avg_update_per_sec', 
+                            groupby='distance_AS_from_tr', plot=True):
+    updates = run_table.groupby([groupby]).mean().sort_index()
+    up_by_node = updates[column]
+    pl = None
+    if plot:
+        pl = up_by_node.plot(kind='bar', color='tab:blue')
+        pl.set_title("UPDATES/node/sec by distance (bin = 100ms)")
+        pl.set_xlabel('Distance')
+        if column == 'avg_update_per_sec':
+            pl.set_ylabel('mean updates/s')
+        elif column == 'max_update_per_sec':
+            pl.set_ylabel('max updates/s')
+        plt.draw()
+        plt.show()
+    return updates, pl
+
+def updates_by_distance(run_table, column='tot_updates', 
+                        groupby='distance_AS_from_tr', 
+                        plot=True):
+    ASes = run_table[groupby].value_counts().sort_index()
+    updates = run_table.groupby([groupby]).sum().sort_index()
+    up_by_node = updates[column]/ASes
     pl = None
     if plot:
         pl = up_by_node.plot(kind='bar', color='tab:blue')
         pl.set_title("UPDATES/node by distance")
         pl.set_xlabel('Distance')
-        pl.set_ylabel('# of updates')
+        pl.set_ylabel(column)
         plt.draw()
         plt.show()
     return updates, pl
@@ -177,7 +196,8 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO',
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    #parser.add_argument('-f', help='the log file', required=False, nargs='*')
+    parser.add_argument('--pdf', help='Save graphs to pdf file', required=False, 
+                        default='')
     parser.add_argument('-p', help='Save binary parsed file to "pickle" format', 
                         required=False)
     parser.add_argument('-P', help='Load binary pickle files (two files expected)' 
@@ -187,15 +207,9 @@ def parse_args():
     parser.add_argument('-ff', help='Folder with log Folders', required=False)
     parser.add_argument('-v', help='be more verbose', default=False,
                         action='store_true')
-    #parser.add_argument('-c', help='Compute convergence delay', default=False,
-    #                    action='store_true')
-    #parser.add_argument('-t', help='compute the number of updates generated',
-    #                    default=False, action='store_true')
     parser.add_argument('-T', help='time resolution (s/decimal/cent/milli)',
                         default='100ms',
                         choices=['1s', '100ms', '10ms', '1ms'])
-    #parser.add_argument('-d', required=False, default=0, action='store', 
-    #        help="Use this option to see a negative delta")
     parser.add_argument('--tnodes', required=False, default=-1, type=int,
             help="Assume the first X nodes are T nodes")
     parser.add_argument('-l', required=False,
@@ -316,14 +330,6 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     update_received[:] = map(lambda x: x-reconf_time, update_received)
     zero_time = pd.Timedelta(0)
     update_received[:] = filter(lambda x: x >= zero_time, update_received)
-    AS_data = [
-    ('distance_AS_from_tr', AS_t_r_distance),
-    ('distance_AS_after_t', hops_after_t ),
-    ('distance_AS_before_t', hops_before_t ),
-    ('first_up_time', None), #FIXME 
-    ('conv_time', conv_time),
-    ('last_up_time', None), # FIXME
-    ('tot_updates', tot_updates)]
     update_series = pd.Series([1]*len(update_received), index=update_received)
     dup = update_series.index
     reindex = [x for x in update_series.index]
@@ -334,6 +340,26 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
                         pd.Timedelta('0.001ms')*np.random.randint(1,99)
         dup = pd.Index(reindex)
 
+    update_series = pd.Series([1]*len(dup), index=dup).sort_index()
+    avg_update_per_sec = 0
+    max_update_per_sec = 0
+    if len(dup) > 1:
+        a = (dup.max() - dup.min()).total_seconds()
+        avg_update_per_sec = len(dup)/a
+        rolling = update_series.rolling('100ms').count()
+        avg_update_per_sec = rolling.mean()*10
+        max_update_per_sec = rolling.max()*10 # 100ms x 10 = updates/s
+
+    AS_data = [
+    ('distance_AS_from_tr', AS_t_r_distance),
+    ('distance_AS_after_t', hops_after_t ),
+    ('distance_AS_before_t', hops_before_t ),
+    ('first_up_time', None), #FIXME 
+    ('conv_time', conv_time),
+    ('last_up_time', None), # FIXME
+    ('avg_update_per_sec', avg_update_per_sec),
+    ('max_update_per_sec', max_update_per_sec),
+    ('tot_updates', tot_updates)]
     return  AS_data, reconf_time, dup
 
 
