@@ -95,8 +95,8 @@ class DataTest(unittest.TestCase):
             data[t_r] += update_table[column].sum()
             AS = column[2]
             per_AS[t_r][AS] += update_table[column].sum()
-        avg = plib.avg_update_per_t_r(update_table)
-        avg_per_AS = plib.avg_update_per_t_r_per_AS(update_table)
+        avg = plib.avg_update_by_t_r(update_table)
+        avg_per_AS = plib.avg_update_by_t_r_by_AS(update_table)
         for t_r,v in data.items():
             self.assertTrue(np.isclose(v/(self.runs*self.ASes*plib.samples), 
                             avg[t_r]))
@@ -118,7 +118,6 @@ class DataTest(unittest.TestCase):
                                          columns=self.run_table_index)
 
 
-        per_sec = plib.update_per_sec(update_table)
         per_t_r = dict.fromkeys(self.indexes[0], None)
         per_t_r_per_AS = dict.fromkeys(self.indexes[0], dict())
         for t_r in per_t_r:
@@ -135,8 +134,8 @@ class DataTest(unittest.TestCase):
                 per_t_r_per_AS[t_r][AS] += update_table[column]
             except TypeError:
                 per_t_r_per_AS[t_r][AS] = update_table[column].copy()
-        updates_per_sec = plib.update_per_t_r_per_sec(update_table)
-        updates_per_AS_per_sec = plib.update_per_t_r_per_AS_per_sec(update_table)
+        updates_per_sec = plib.update_by_t_r_per_sec(update_table)
+        updates_per_AS_per_sec = plib.update_by_t_r_by_AS_per_sec(update_table)
         for t_r in per_t_r:
             self.assertTrue(per_t_r[t_r].equals(updates_per_sec[t_r]))
             for AS in per_t_r_per_AS[t_r]:
@@ -153,17 +152,13 @@ class DataTest(unittest.TestCase):
                                                     mode='INCREASING_L', 
                                                     samples=plib.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
-        conv_time = plib.conv_time(run_table, self.update_table_index)
-        conv_time_per_dist = plib.conv_time_per_distance(run_table, 
-                                                         self.update_table_index)
-        self.assertEqual(max(conv_time), self.t_r*self.runs*self.ASes)
+        conv_time, _ = plib.conv_time(run_table)
+        conv_time_per_dist, _ = plib.conv_time_by_distance(run_table, plot=False)
+        self.assertEqual(max(conv_time), 1)
         self.assertTrue(is_monotone(conv_time))
-        self.assertEqual(conv_time_per_dist[-1:].values.sum(), 
-                         self.t_r*self.runs*self.ASes)
+        self.assertEqual(conv_time_per_dist.max().sum(), len(conv_time_per_dist.columns))
         for c in conv_time_per_dist:
-            self.assertTrue(is_monotone(conv_time_per_dist[c]))
-        for t in conv_time_per_dist.index:
-            self.assertEqual(conv_time_per_dist.loc[t].sum(), conv_time[t])
+            self.assertTrue(is_monotone(conv_time_per_dist[c].notna()))
 
 
     def test_convergence_fail(self):
@@ -214,13 +209,14 @@ class DataTest(unittest.TestCase):
 
         node_stats_list = []
         node_stats_list.append({'AS':301, 'run':1, 'conv_time':'2020-02-11 20:28:00.069', 
-            'best_path':'70|40|2|153|285', 'reconf_time':'2020-02-11 20:27:56.135', 't_r':285})
+            'best_path':'70|40|2|153|285', 'reconf_time':'2020-02-11 20:27:56.135', 
+            't_r':285, 'tot_updates':5})
         node_stats_list.append({'AS':401, 'run':2, 'conv_time':'2020-02-11 20:33:34.890', 
             'best_path':'153|285|285|285|285|285|285|285', 
-            'reconf_time':'2020-02-11 20:33:34.867', 't_r':285})
+            'reconf_time':'2020-02-11 20:33:34.867', 't_r':285, 'tot_updates':1})
         node_stats_list.append({'AS':501, 'run':2, 'conv_time':'2020-02-11 21:30:13.545', 
             'best_path':'76|17|514|514|514|514|514|514|514', 
-            'reconf_time':'2020-02-11 21:30:09.611', 't_r':514})
+            'reconf_time':'2020-02-11 21:30:09.611', 't_r':514, 'tot_updates':5})
 
 
         for node_stats in node_stats_list:
@@ -236,6 +232,7 @@ class DataTest(unittest.TestCase):
                                                '%Y-%m-%d %H:%M:%S.%f'))
             self.assertTrue(AS_data['conv_time'] >= rel_reconf_time - pd.Timedelta('50ms') )
             self.assertTrue(AS_data['conv_time'] <= rel_reconf_time + pd.Timedelta('50ms') )
+            self.assertTrue(AS_data['tot_updates'], node_stats['tot_updates'])
 
 
 
