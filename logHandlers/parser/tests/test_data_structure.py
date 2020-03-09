@@ -199,7 +199,7 @@ class DataTest(unittest.TestCase):
         run_table_index = pd.MultiIndex.from_product([t_r_list, run_id_list, 
                                                       AS_list, strategy])
 
-        run_table, update_event = plib.parse_folders(
+        run_table, update_event = plib.parse_folders_MRAI(
                                                   FakeArgs(self.test_data_strategy), 
                                                   [0,1,2,3,4,5])
         run_set = set(run_table_index)

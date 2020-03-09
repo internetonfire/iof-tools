@@ -23,6 +23,11 @@ class WrongLogLine(Exception):
 class WrongFileName(Exception):
     pass
 
+
+class WrongFolderStructure(Exception):
+    pass
+
+
 def check_data(update_table, run_table):
     max_time = max(update_table.index)
     for c in run_table:
@@ -363,19 +368,51 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     return  AS_data, reconf_time, dup
 
 
+def identify_folder_structure(args):
+    
+    MRAI = False
+    DPC = False
+    fname = path.basename(path.normpath(args.ff))
+    try:
+        preamble, net_size, strategy = fname.split('-')
+        if preamble != 'RES':
+            raise WrongFolderStructure
+        MRAI = True
+
+    except (ValueError, WrongFolderStructure):
+        pass
+
+    try: 
+        if fname != 'RESULTS':
+            raise WrongFolderStructure
+        DPC = True
+    except WrongFolderStructure:
+        pass
+
+    return MRAI, DPC
+
 def parse_folders(args, T_ASes, gen_updates=False):
+    MRAI, DPC = identify_folder_structure(args)
+    if MRAI:
+        return parse_folders_MRAI(args, T_ASes, gen_updates)
+    elif DPC:
+        return parse_folders_DPC(args, T_ASes, gen_updates)
+    else:
+        fname = path.basename(path.normpath(args.ff))
+        print('ERROR: I expect a folder name of the kind: "RES-12K-30SEC" for MRAI simulations')
+        print('       or a folder named "RESULTS" for DPC simulations')
+        print('       While it is: {}'.format(fname))
+        exit()
+
+
+def parse_folders_MRAI(args, T_ASes, gen_updates=False):
     #extract info from names
     dirNames = []
     AS_index_all = []
     AS_data_all = []
     update_event = []
     fname = path.basename(path.normpath(args.ff))
-    try:
-        _, net_size, strategy = fname.split('-')
-    except ValueError:
-        print('ERROR: I expect a folder name of the kind: "RES-12K-30SEC"')
-        print('       While it is: {}'.format(fname))
-        exit()
+    _, net_size, strategy = fname.split('-')
 
     for (dir_path, dir_names, filenames) in walk(args.ff):
         # where run-id starts at 1
@@ -442,6 +479,9 @@ def parse_folders(args, T_ASes, gen_updates=False):
             print("Done creating DataFrame")
     return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
 
+
+def parse_folders_DPC(args, T_ASes, gen_updates=False):
+    pass
 
 
 def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False, gen_updates=False):

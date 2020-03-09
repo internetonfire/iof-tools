@@ -11,32 +11,7 @@ class Dummy():
     def close(self):
         pass
 
-if __name__ == '__main__':
-    args = plib.parse_args()
-    T_ASes = set()
-    if args.G:
-        pass # TODO implement graph parsing here
-    else:
-        T_ASes = set(range(args.tnodes))
-
-    if args.P:
-        run_table = pd.read_pickle(args.P[0])
-        update_table = pd.read_pickle(args.P[1])
-    elif args.ff:
-        run_table, update_table = plib.parse_folders(args, T_ASes)
-    if args.p:
-        run_table.to_pickle(args.p + "-runs.pickle")
-        update_table.to_pickle(args.p + "-update.pickle")
-    if update_table.empty:
-        stop = max(run_table['conv_time'])
-        number = stop/pd.Timedelta(args.T)
-        idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
-    else:
-        idx = update_table.index
-    if args.pdf:
-        pdf = PdfPages(args.pdf)
-    else:
-        pdf = Dummy()
+def gen_MRAI_graphs(run_table, update_table, pdf):
     _, pl = plib.updates_by_distance(run_table)
     pdf.savefig(pl.get_figure())
     _, pl = plib.updates_by_distance_per_sec(run_table, column='avg_update_per_sec')
@@ -54,5 +29,37 @@ if __name__ == '__main__':
     _, pl = plib.conv_time_by_distance(run_table, column='distance_AS_after_t')
     pdf.savefig(pl.get_figure())
     pdf.close()
-    #print(run_table)
-    #print(update_table)
+
+
+if __name__ == '__main__':
+    args = plib.parse_args()
+    T_ASes = set()
+    DPC = False
+    MRAI = False
+    if args.G:
+        pass # TODO implement graph parsing here
+    else:
+        T_ASes = set(range(args.tnodes))
+
+    if args.P:
+        run_table = pd.read_pickle(args.P[0])
+        update_table = pd.read_pickle(args.P[1])
+    elif args.ff:
+        #FIXME catch errors coming from wrong structure
+        run_table, update_table = plib.parse_folders(args, T_ASes)
+    if args.p:
+        #FIXME catch errors coming from wrong structure
+        run_table.to_pickle(args.p + "-runs.pickle")
+        update_table.to_pickle(args.p + "-update.pickle")
+    if update_table.empty:
+        stop = max(run_table['conv_time'])
+        number = stop/pd.Timedelta(args.T)
+        idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
+    else:
+        idx = update_table.index
+    if args.pdf:
+        pdf = PdfPages(args.pdf)
+    else:
+        pdf = Dummy()
+
+    gen_MRAI_graphs(run_table, update_table, pdf)
