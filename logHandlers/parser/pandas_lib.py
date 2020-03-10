@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from os import walk, path
+from os import walk, path, listdir
+import re
 import matplotlib.pyplot as plt
 
 log_types = ['FATAL', 'RECONF']
@@ -383,7 +384,7 @@ def identify_folder_structure(args):
         pass
 
     try: 
-        if fname != 'RESULTS':
+        if fname[:7] != 'RESULTS':
             raise WrongFolderStructure
         DPC = True
     except WrongFolderStructure:
@@ -477,11 +478,91 @@ def parse_folders_MRAI(args, T_ASes, gen_updates=False):
                                  columns=run_index)
         if args.v:
             print("Done creating DataFrame")
-    return pd.DataFrame(AS_data_all, index=run_index, columns=column_names), update_table
+    return 'MRAI', [pd.DataFrame(AS_data_all, index=run_index, 
+                                 columns=column_names), 
+                    update_table]
 
 
 def parse_folders_DPC(args, T_ASes, gen_updates=False):
-    pass
+    #extract info from names
+    dirNames = []
+    AS_index_all = []
+    AS_data_all = []
+    update_event = []
+
+    file_dict = {}
+    folders = listdir(args.ff)
+    if args.l:
+        slice_end = args.l
+    else:
+        slice_end = len(folders)
+    ASes = set()
+    for folder in folders:
+        # one folder per run
+        fname = path.basename(path.normpath(folder))
+        try:
+            run_id = int(fname[3:])
+            if run_id > slice_end:
+                continue
+            file_dict[run_id] = []
+            for (dir_path, dir_names, filenames) in walk(args.ff + '/' + folder + '/tgz'):
+                # where run-id starts at 1
+                if filenames:
+                    for f in filenames:
+                        if f.endswith('.log'):
+                            file_dict[run_id].append(dir_path + '/' + f) 
+                            AS = int(f.split('.')[0].split('_')[2])
+                            ASes.add(AS)
+        except ValueError:
+            print('ERROR: I expect each subfolder name to be like: runXX/tgz/nodeYY-logs')
+            print('       While it is: {}'.format(fname))
+            exit()
+    dpc_values = pd.DataFrame(columns=ASes, index=pd.MultiIndex(levels = [[]]*3, 
+                                                  labels = [[]]*3,
+                                                  names=['perc', 'run', 'metric']))
+    fracs = list(range(0,101,10))
+    for k,l in file_dict.items():
+        if args.v:
+            print("Parsing run {}".format(k))
+        file_n = len(l)
+        count = 1
+        print_step = list(range(10,100,10))
+        M_list = []
+        L_list = []
+        AS_list = []
+        for f in l:
+            if int(100*count/file_n) in print_step:
+                print("Parsed {}% of the files".format(int(100*count/file_n)))
+                del print_step[0]
+            count+=1
+            AS, M, L = parse_file_DPC(f, verb=args.v)
+            AS_list.append(AS)
+            M_list.append(M)
+            L_list.append(L)
+        DPC_frac = 100*len(AS_list)/len(ASes)
+        idx = min(fracs, key=lambda x:abs(x-DPC_frac))
+        dpc_values.loc[(idx, k, 'M'), AS_list] = M_list 
+    return 'DPC', [dpc_values]
+   
+
+def parse_file_DPC(fname, verb=False):
+    file_name = path.basename(path.normpath(fname))
+    AS = int(file_name.split('.')[0].split('_')[2])
+    pattern = '\|?\(K:'+str(AS)+'.*?\)\|?'
+    regex = re.compile(pattern)
+    metric_M = 0
+    metric_L = 0
+    for line in reversed(list(open(fname))):
+        cent_values = regex.search(line)
+        if cent_values:
+            couples = cent_values.group().strip('|()').split(',')
+            _, K = couples[0].split(':')
+            _, L = couples[1].split(':')
+            _, M = couples[2].split(':')
+            metric_M = float(M)
+            metric_L = float(L)
+            break
+    return AS, metric_M, metric_L
 
 
 def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False, gen_updates=False):

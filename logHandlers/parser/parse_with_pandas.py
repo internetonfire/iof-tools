@@ -45,21 +45,26 @@ if __name__ == '__main__':
         run_table = pd.read_pickle(args.P[0])
         update_table = pd.read_pickle(args.P[1])
     elif args.ff:
-        #FIXME catch errors coming from wrong structure
-        run_table, update_table = plib.parse_folders(args, T_ASes)
-    if args.p:
-        #FIXME catch errors coming from wrong structure
-        run_table.to_pickle(args.p + "-runs.pickle")
-        update_table.to_pickle(args.p + "-update.pickle")
-    if update_table.empty:
-        stop = max(run_table['conv_time'])
-        number = stop/pd.Timedelta(args.T)
-        idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
-    else:
-        idx = update_table.index
+        kind, res = plib.parse_folders(args, T_ASes)
+        if args.p:
+            if kind == 'MRAI':
+                MRAI = True
+                res[0].to_pickle(args.p + "-runs.pickle")
+                res[1].to_pickle(args.p + "-update.pickle")
+            if kind == 'DPC':
+                DPC = True
+                res[0].to_pickle(args.p + "-DPC.pickle")
+    if MRAI:
+        if update_table.empty:
+            stop = max(run_table['conv_time'])
+            number = stop/pd.Timedelta(args.T)
+            idx = pd.Index(pd.date_range(0, number, freq=pd.Timedelta(args.T)))
+        else:
+            idx = update_table.index
     if args.pdf:
         pdf = PdfPages(args.pdf)
     else:
         pdf = Dummy()
 
-    gen_MRAI_graphs(run_table, update_table, pdf)
+    if MRAI:
+        gen_MRAI_graphs(run_table, update_table, pdf)
