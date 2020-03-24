@@ -7,6 +7,7 @@ for i in range(10, 102, 10):
         p.index.set_levels([i], level=0, inplace=True)
         framelist.append(p)
     except ValueError:
+        print("Problems with {}".format(i))
         pass
 pp = pd.concat(framelist)
 print(pp)
