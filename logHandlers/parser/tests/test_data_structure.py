@@ -31,11 +31,15 @@ class DataTest(unittest.TestCase):
                                                      freq=plib.delta)
 
         self.test_data = 'tests/test-data/'
-        self.test_datafile = self.test_data + 'RES-1K.tgz'
-        self.test_datafolder = self.test_data + 'RES-1K/'
-        self.test_data_strategy = self.test_datafolder + 'RES-1K-1SEC'
-        if not path.isdir(self.test_datafolder):
-            unpack_archive(self.test_datafile, self.test_data)
+        self.test_datafile_MRAI = self.test_data + 'RES-1K.tgz'
+        self.test_datafolder_MRAI = self.test_data + 'RES-1K/'
+        self.test_data_strategy_MRAI = self.test_datafolder_MRAI + 'RES-1K-1SEC'
+        self.test_datafile_PARTIAL = self.test_data + 'RES-1K-0.1.tgz'
+        self.test_datafolder_PARTIAL = self.test_data + 'RES-1K-30SEC-0.1/'
+        if not path.isdir(self.test_datafolder_MRAI):
+            unpack_archive(self.test_datafile_MRAI, self.test_data)
+        if not path.isdir(self.test_datafolder_PARTIAL):
+            unpack_archive(self.test_datafile_PARTIAL, self.test_data)
 
 
 
@@ -184,7 +188,7 @@ class DataTest(unittest.TestCase):
             if k in conv_dict:
                 self.assertEqual(conv_time[k], conv_dict[k])
 
-    def test_real_data(self):
+    def test_real_data_MRAI(self):
         class FakeArgs():
             def __init__(self, ff):
                 self.ff = ff
@@ -200,7 +204,7 @@ class DataTest(unittest.TestCase):
                                                       AS_list, strategy])
 
         _, [run_table, update_event] = plib.parse_folders_MRAI(
-                                                  FakeArgs(self.test_data_strategy), 
+                                                  FakeArgs(self.test_data_strategy_MRAI), 
                                                   [0,1,2,3,4,5])
         run_set = set(run_table_index)
         run_set_II = set(run_table.index)
@@ -236,8 +240,33 @@ class DataTest(unittest.TestCase):
 
 
 
+    def test_real_data_PARTIAL(self):
+        """ testing the folder structure is parsed correctly """
+        class FakeArgs():
+            def __init__(self, ff):
+                self.ff = ff
+                self.l = 2
+                self.v = False
         
+        indexes = plib.make_index()
+        t_r_list = [514, 761] # see comment at beginning of parse_folder()
+        run_id_list = [1,2]
+        AS_list = [x for x in range(1, 1001)]
+        strategy = ['0.1']
+        run_table_index = pd.MultiIndex.from_product([t_r_list, run_id_list, 
+                                                      AS_list, strategy])
+
+        _, [run_table, update_event] = plib.parse_folders_MRAI(
+                                                  FakeArgs(self.test_datafolder_PARTIAL), 
+                                                  [0,1,2,3,4,5], action='PARTIAL')
+        self.assertEqual(len(run_table.index.levels[0]), 2)
+        self.assertEqual(len(run_table.index.levels[1]), 2)
+        self.assertEqual(len(run_table.index.levels[2]), 1000)
+        self.assertEqual(len(run_table.index.levels[3]), 1)
+        self.assertEqual(run_table.index.levels[3][0], '0.1')
 
 
 
-
+    def test_real_data_DPC(self):
+        # TBD
+        self.assertTrue(0)

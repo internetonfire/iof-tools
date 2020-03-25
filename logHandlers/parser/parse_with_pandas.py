@@ -51,11 +51,11 @@ if __name__ == '__main__':
                 MRAI = True
                 res[0].to_pickle(args.p + "-runs.pickle")
                 res[1].to_pickle(args.p + "-update.pickle")
-            if kind == 'DPC':
+                run_table = res[0] 
+                update_table = res[1] 
+            if kind == 'DPC': # TODO need to add functions for plots
                 DPC = True
                 res[0].to_pickle(args.p + "-DPC.pickle")
-            run_table = res[0] 
-            update_table = res[1] 
     if MRAI:
         if update_table.empty:
             stop = max(run_table['conv_time'])
@@ -67,6 +67,5 @@ if __name__ == '__main__':
         pdf = PdfPages(args.pdf)
     else:
         pdf = Dummy()
-
     if MRAI:
         gen_MRAI_graphs(run_table, update_table, pdf)

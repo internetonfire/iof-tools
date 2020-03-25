@@ -154,7 +154,8 @@ def make_index(t_r_number=3, run_id_number=3, AS_number=5, strategy=['']):
     return([t_r_list, run_id_list, AS_list, strategy])
 
 
-def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO', samples=0, delta='100ms'):
+def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO', 
+                   samples=0, delta='100ms'):
     """ creates a list of dictionaries to fill a multiindex dataframe with
         dummy data """
     data = []
@@ -195,10 +196,6 @@ def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO',
         time_data.append(updates)
     return data, np.matrix.transpose(np.array(time_data))
  
-
-# se puoi leggere l'AS riconfigurato dal nome della cartella, fai prima quel file e trova il tempo di riconfigurazione
-# trova i T nodes come si faceva prima.
-# 
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -373,6 +370,7 @@ def identify_folder_structure(args):
     
     MRAI = False
     DPC = False
+    PARTIAL = False
     fname = path.basename(path.normpath(args.ff))
     try:
         preamble, net_size, strategy = fname.split('-')
@@ -390,30 +388,43 @@ def identify_folder_structure(args):
     except WrongFolderStructure:
         pass
 
-    return MRAI, DPC
+    try: 
+        preamble, net_size, _, perc = fname.split('-')
+        PARTIAL = True
+    except ValueError:
+        pass
+
+    return MRAI, DPC, PARTIAL
 
 def parse_folders(args, T_ASes, gen_updates=False):
-    MRAI, DPC = identify_folder_structure(args)
+    MRAI, DPC, PARTIAL = identify_folder_structure(args)
     if MRAI:
         return parse_folders_MRAI(args, T_ASes, gen_updates)
     elif DPC:
-        return parse_folders_DPC(args, T_ASes, gen_updates)
+        return parse_folders_one_level(args, T_ASes, gen_updates, action='DPC')
+    elif PARTIAL:
+        return parse_folders_MRAI(args, T_ASes, gen_updates, action='PARTIAL')
     else:
         fname = path.basename(path.normpath(args.ff))
         print('ERROR: I expect a folder name of the kind: "RES-12K-30SEC" for MRAI simulations')
+        print('       or a folder name of the kind "RES-1K-30SEC-0.1" for' 
+              'MRAI simulations with partial deployment')
         print('       or a folder named "RESULTS" for DPC simulations')
         print('       While it is: {}'.format(fname))
         exit()
 
 
-def parse_folders_MRAI(args, T_ASes, gen_updates=False):
+def parse_folders_MRAI(args, T_ASes, gen_updates=False, action='MRAI'):
     #extract info from names
     dirNames = []
     AS_index_all = []
     AS_data_all = []
     update_event = []
     fname = path.basename(path.normpath(args.ff))
-    _, net_size, strategy = fname.split('-')
+    if action == 'MRAI':
+        _, net_size, strategy = fname.split('-')
+    elif action == 'PARTIAL':
+        _, net_size, _, strategy = fname.split('-')
 
     for (dir_path, dir_names, filenames) in walk(args.ff):
         # where run-id starts at 1
@@ -434,7 +445,8 @@ def parse_folders_MRAI(args, T_ASes, gen_updates=False):
         count+=1
             
         
-        idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, strategy, gen_updates)
+        idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, 
+                                         strategy, gen_updates)
         AS_index_all.extend(idx)
         AS_data_all.extend(data)
         update_event.extend(update)
@@ -483,7 +495,7 @@ def parse_folders_MRAI(args, T_ASes, gen_updates=False):
                     update_table]
 
 
-def parse_folders_DPC(args, T_ASes, gen_updates=False):
+def parse_folders_one_level(args, T_ASes, gen_updates=False, action='DPC'):
     #extract info from names
     dirNames = []
     AS_index_all = []
@@ -505,7 +517,12 @@ def parse_folders_DPC(args, T_ASes, gen_updates=False):
             if run_id > slice_end:
                 continue
             file_dict[run_id] = []
-            for (dir_path, dir_names, filenames) in walk(args.ff + '/' + folder + '/tgz'):
+            if action == 'DPC':
+                suffix = '/tgz'
+            else:
+                suffix = ''
+
+            for (dir_path, dir_names, filenames) in walk(args.ff + '/' + folder + suffix):
                 # where run-id starts at 1
                 if filenames:
                     for f in filenames:
@@ -514,12 +531,18 @@ def parse_folders_DPC(args, T_ASes, gen_updates=False):
                             AS = int(f.split('.')[0].split('_')[2])
                             ASes.add(AS)
         except ValueError:
-            print('ERROR: I expect each subfolder name to be like: runXX/tgz/nodeYY-logs')
+            print('ERROR: I expect each subfolder name to be like: runXX'
+                  + suffix + '/nodeYY-logs')
             print('       While it is: {}'.format(fname))
             exit()
     dpc_values = pd.DataFrame(columns=ASes, index=pd.MultiIndex(levels = [[]]*3, 
                                                   labels = [[]]*3,
                                                   names=['perc', 'run', 'metric']))
+
+    if action == 'DPC':
+        return parse_sub_folders_DPC(dpc_values, file_dict, args, len(ASes))
+
+def parse_sub_folders_DPC(dpc_values, file_dict, args, AS_num): 
     fracs = list(range(0,101,10))
     for k,l in file_dict.items():
         if args.v:
@@ -539,7 +562,7 @@ def parse_folders_DPC(args, T_ASes, gen_updates=False):
             AS_list.append(AS)
             M_list.append(M)
             L_list.append(L)
-        DPC_frac = 100*len(AS_list)/len(ASes)
+        DPC_frac = 100*len(AS_list)/AS_num
         idx = min(fracs, key=lambda x:abs(x-DPC_frac))
         dpc_values.loc[(idx, k, 'M'), AS_list] = M_list 
     return 'DPC', [dpc_values]
@@ -565,7 +588,8 @@ def parse_file_DPC(fname, verb=False):
     return AS, metric_M, metric_L
 
 
-def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False, gen_updates=False):
+def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False,
+        gen_updates=False):
     AS_index_all = []
     AS_data_all = []
     update_event = []
@@ -580,10 +604,19 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False, gen_updat
         if run_id > slice_end:
             return [], [], []
     except ValueError:
-        print('ERROR: I expect each subfolder name to be like:' 
-              '"RES-12K-30SEC-BROKEN10883_run10"')
-        print('       While it is: {}'.format(dir))
-        exit()
+        try: 
+            _, _ , _, perc, run_data = dir.split('-')
+            t_r = int(run_data.split('_')[0][6:])
+            run_id = int(run_data.split('_')[1][3:])
+            if run_id > slice_end:
+                return [], [], []
+        except ValueError:
+            print('ERROR: I expect each subfolder name to be like:' 
+                  '"RES-12K-30SEC-BROKEN10883_run10" for MRAI runs')
+            print('       Or, "RES-12K-30SEC-0.1-BROKEN10883_run10" '
+                  'for Partial deployment MRAI runs')
+            print('       While it is: {}'.format(dir))
+            exit()
     fileList = list()
     for (dir_path, dir_names, filenames) in walk(f_path + "/" + dir):
         fileList.extend(filenames)
