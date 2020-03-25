@@ -11,6 +11,11 @@ class Dummy():
     def close(self):
         pass
 
+def gen_PARTIAL_graphs(run_table, update_table, pdf):
+    _, pl = plib.update_by_AS_per_sec(run_table)
+    pdf.savefig(pl.get_figure())
+    pdf.close()
+
 def gen_MRAI_graphs(run_table, update_table, pdf):
     _, pl = plib.updates_by_distance(run_table)
     pdf.savefig(pl.get_figure())
@@ -36,6 +41,7 @@ if __name__ == '__main__':
     T_ASes = set()
     DPC = False
     MRAI = False
+    PARTIAL = False
     if args.G:
         pass # TODO implement graph parsing here
     else:
@@ -46,17 +52,26 @@ if __name__ == '__main__':
         update_table = pd.read_pickle(args.P[1])
     elif args.ff:
         kind, res = plib.parse_folders(args, T_ASes)
-        if args.p:
-            if kind == 'MRAI':
-                MRAI = True
+        if kind == 'MRAI':
+            if args.p:
                 res[0].to_pickle(args.p + "-runs.pickle")
                 res[1].to_pickle(args.p + "-update.pickle")
-                run_table = res[0] 
-                update_table = res[1] 
-            if kind == 'DPC': # TODO need to add functions for plots
-                DPC = True
+            run_table = res[0] 
+            update_table = res[1] 
+            MRAI = True
+        elif kind == 'DPC': # TODO need to add functions for plots
+            if args.p:
                 res[0].to_pickle(args.p + "-DPC.pickle")
-    if MRAI:
+            DPC = True
+            run_table = res[0] 
+        elif kind == 'PARTIAL':
+            if args.p:
+                res[0].to_pickle(args.p + "-PARTIAL.pickle")
+                res[1].to_pickle(args.p + "-PARTIAL.pickle")
+            PARTIAL = True
+            run_table = res[0] 
+            update_table = res[1] 
+    if MRAI or PARTIAL:
         if update_table.empty:
             stop = max(run_table['conv_time'])
             number = stop/pd.Timedelta(args.T)
@@ -69,3 +84,5 @@ if __name__ == '__main__':
         pdf = Dummy()
     if MRAI:
         gen_MRAI_graphs(run_table, update_table, pdf)
+    if PARTIAL:
+        gen_PARTIAL_graphs(run_table, update_table, pdf)

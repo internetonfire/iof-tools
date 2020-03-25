@@ -111,6 +111,24 @@ def update_by_t_r_per_sec(update_table):
 def update_by_t_r_by_AS_per_sec(update_table):
     return update_table.groupby(level=[0,2], axis='columns').sum()
 
+def update_by_AS_per_sec(run_table, column='max_update_per_sec', 
+                         plot=True):
+    penetration = run_table.index.levels[3][0]
+    updates = run_table.reset_index(level=[0,1])[column].sort_values(ascending=False)
+    if plot:
+        pl = updates.plot()
+        pl.locator_params(integer=True)
+        pl.set_title("max UPDATES/node/sec, penetration={}".format(penetration))
+        tics = [int (x) for x in filter(lambda x: x>=0 and x<=len(updates), plt.xticks()[0])]
+        plt.xticks(tics, tics)
+        pl.set_xlabel('AS')
+        pl.set_ylabel('max updates/s')
+        plt.draw()
+        plt.show()
+    return updates, pl
+
+
+
 def updates_by_distance_per_sec(run_table, column='avg_update_per_sec', 
                             groupby='distance_AS_from_tr', plot=True):
     updates = run_table.groupby([groupby]).mean().sort_index()
@@ -490,7 +508,7 @@ def parse_folders_MRAI(args, T_ASes, gen_updates=False, action='MRAI'):
                                  columns=run_index)
         if args.v:
             print("Done creating DataFrame")
-    return 'MRAI', [pd.DataFrame(AS_data_all, index=run_index, 
+    return action, [pd.DataFrame(AS_data_all, index=run_index, 
                                  columns=column_names), 
                     update_table]
 
