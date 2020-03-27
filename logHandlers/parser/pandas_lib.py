@@ -112,19 +112,22 @@ def update_by_t_r_by_AS_per_sec(update_table):
     return update_table.groupby(level=[0,2], axis='columns').sum()
 
 def update_by_AS_per_sec(run_table, column='max_update_per_sec', 
-                         plot=True):
+                         plot=True, limit=-1):
     penetration = run_table.index.levels[3][0]
-    updates = run_table.reset_index(level=[0,1])[column].sort_values(ascending=False)
+    updates = run_table.reset_index(level=[1,3])[column].sort_values(ascending=False)[:limit]
     if plot:
         pl = updates.plot()
-        pl.locator_params(integer=True)
-        pl.set_title("max UPDATES/node/sec, penetration={}".format(penetration))
+        title = "max UPDATES/node/sec, penetration={}".format(penetration)
+        if limit != -1:
+            title += ", top {} ASes".format(limit)
+        pl.set_title(title)
         tics = [int (x) for x in filter(lambda x: x>=0 and x<=len(updates), plt.xticks()[0])]
         plt.xticks(tics, tics)
+        #plt.xticks(range(1, 30), [item for item in updates.index.tolist()], rotation=90);
         pl.set_xlabel('AS')
         pl.set_ylabel('max updates/s')
         plt.draw()
-        plt.show()
+        #plt.show()
     return updates, pl
 
 
@@ -242,6 +245,7 @@ def parse_args():
         parser.error('No folders provided, you have to choose'
                 'at one folder of one pickle file')
 
+    global delta
     if args.T == 'SEC':
         delta = '1s'
     elif args.T == 'DSEC':
@@ -319,7 +323,7 @@ def path_analysis(best_path, T_ASes):
         raise Exception("Problems in countin path lenght!")
     return path_len, hops_before_t, hops_after_t
 
-def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
+def parse_file(fname, reconf_time=None, T_ASes=[], verb=False, delta='100ms'):
     tot_updates = 0
     last_message_before_reconf = None
     convergence_time = ''
@@ -367,9 +371,9 @@ def parse_file(fname, reconf_time=None, T_ASes=[], verb=False):
     if len(dup) > 1:
         a = (dup.max() - dup.min()).total_seconds()
         avg_update_per_sec = len(dup)/a
-        rolling = update_series.rolling('100ms').count()
-        avg_update_per_sec = rolling.mean()*10
-        max_update_per_sec = rolling.max()*10 # 100ms x 10 = updates/s
+        rolling = update_series.rolling(delta).count()
+        avg_update_per_sec = rolling.mean()
+        max_update_per_sec = rolling.max() 
 
     AS_data = [
     ('distance_AS_from_tr', AS_t_r_distance),
@@ -464,7 +468,7 @@ def parse_folders_MRAI(args, T_ASes, gen_updates=False, action='MRAI'):
             
         
         idx, data, update = parse_folder(dir, args.ff, slice_end, T_ASes, 
-                                         strategy, gen_updates)
+                                         strategy, gen_updates, delta=args.T)
         AS_index_all.extend(idx)
         AS_data_all.extend(data)
         update_event.extend(update)
@@ -607,7 +611,7 @@ def parse_file_DPC(fname, verb=False):
 
 
 def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False,
-        gen_updates=False):
+        gen_updates=False, delta='100ms'):
     AS_index_all = []
     AS_data_all = []
     update_event = []
@@ -642,7 +646,7 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False,
     broken_AS_file = "log_h_" + str(t_r-1) + ".log" 
     tr_data, reconf_time, update_received = \
             parse_file(f_path + "/" + dir + "/" + broken_AS_file, reconf_time='', 
-                    T_ASes=T_ASes, verb=verb)
+                    T_ASes=T_ASes, verb=verb, delta=delta)
     tr_data.append(('distance_tr_to_t', 0)) # FIXME
     AS_index = [t_r, run_id, t_r, strategy] 
     AS_index_all.append(AS_index)
@@ -659,7 +663,8 @@ def parse_folder(dir, f_path, slice_end, T_ASes, strategy, verb=False,
             exit()
         data, _, update_received = \
             parse_file(f_path + "/" + dir + "/" + fname, 
-                       reconf_time=reconf_time, T_ASes=T_ASes, verb=verb)
+                       reconf_time=reconf_time, T_ASes=T_ASes, verb=verb, 
+                       delta=delta)
         AS_index_all.append([t_r, run_id, AS, strategy])
         AS_data_all.append(dict(data + [('distance_tr_to_t', 0)])) # FIXME
         if gen_updates:

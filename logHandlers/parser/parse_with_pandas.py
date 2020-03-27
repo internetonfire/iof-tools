@@ -12,6 +12,8 @@ class Dummy():
         pass
 
 def gen_PARTIAL_graphs(run_table, update_table, pdf):
+    _, pl = plib.update_by_AS_per_sec(run_table, limit=30)
+    pdf.savefig(pl.get_figure())
     _, pl = plib.update_by_AS_per_sec(run_table)
     pdf.savefig(pl.get_figure())
     pdf.close()
