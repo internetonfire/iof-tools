@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import pandas_lib as plib
+import data_analysis as da
 from os import path
 from shutil import unpack_archive 
 from collections import defaultdict
@@ -99,8 +100,8 @@ class DataTest(unittest.TestCase):
             data[t_r] += update_table[column].sum()
             AS = column[2]
             per_AS[t_r][AS] += update_table[column].sum()
-        avg = plib.avg_update_by_t_r(update_table)
-        avg_per_AS = plib.avg_update_by_t_r_by_AS(update_table)
+        avg = da.avg_update_by_t_r(update_table)
+        avg_per_AS = da.avg_update_by_t_r_by_AS(update_table)
         for t_r,v in data.items():
             self.assertTrue(np.isclose(v/(self.runs*self.ASes*plib.samples), 
                             avg[t_r]))
@@ -108,7 +109,7 @@ class DataTest(unittest.TestCase):
                 self.assertTrue(np.isclose(vv/(self.runs*plib.samples), 
                                 avg_per_AS[t_r][AS]))
         self.assertTrue(np.isclose(mean/(self.t_r*self.runs*self.ASes*plib.samples), 
-                        plib.avg_update(update_table)))
+                        da.avg_update(update_table)))
 
 
     def test_per_sec(self):
@@ -138,8 +139,8 @@ class DataTest(unittest.TestCase):
                 per_t_r_per_AS[t_r][AS] += update_table[column]
             except TypeError:
                 per_t_r_per_AS[t_r][AS] = update_table[column].copy()
-        updates_per_sec = plib.update_by_t_r_per_sec(update_table)
-        updates_per_AS_per_sec = plib.update_by_t_r_by_AS_per_sec(update_table)
+        updates_per_sec = da.update_by_t_r_per_sec(update_table)
+        updates_per_AS_per_sec = da.update_by_t_r_by_AS_per_sec(update_table)
         for t_r in per_t_r:
             self.assertTrue(per_t_r[t_r].equals(updates_per_sec[t_r]))
             for AS in per_t_r_per_AS[t_r]:
@@ -156,8 +157,8 @@ class DataTest(unittest.TestCase):
                                                     mode='INCREASING_L', 
                                                     samples=plib.samples)
         run_table = pd.DataFrame(data_set, index=self.run_table_index)
-        conv_time, _ = plib.conv_time(run_table)
-        conv_time_per_dist, _ = plib.conv_time_by_distance(run_table, plot=False)
+        conv_time, _ = da.conv_time(run_table)
+        conv_time_per_dist, _ = da.conv_time_by_distance(run_table, plot=False)
         self.assertEqual(max(conv_time), 1)
         self.assertTrue(is_monotone(conv_time))
         self.assertEqual(conv_time_per_dist.max().sum(), len(conv_time_per_dist.columns))
@@ -194,6 +195,7 @@ class DataTest(unittest.TestCase):
                 self.ff = ff
                 self.l = 2
                 self.v = False
+                self.T = '100ms'
         
         indexes = plib.make_index()
         t_r_list = [285, 514, 529] # see comment at beginning of parse_folder()
@@ -247,6 +249,7 @@ class DataTest(unittest.TestCase):
                 self.ff = ff
                 self.l = 2
                 self.v = False
+                self.T = '100ms'
         
         indexes = plib.make_index()
         t_r_list = [514, 761] # see comment at beginning of parse_folder()

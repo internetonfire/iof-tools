@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import pandas_lib as plib
+import data_analysis as da
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -12,28 +13,28 @@ class Dummy():
         pass
 
 def gen_PARTIAL_graphs(run_table, update_table, pdf):
-    _, pl = plib.update_by_AS_per_sec(run_table, limit=30)
+    _, pl = da.update_by_AS_per_sec(run_table, limit=30)
     pdf.savefig(pl.get_figure())
-    _, pl = plib.update_by_AS_per_sec(run_table)
+    _, pl = da.update_by_AS_per_sec(run_table)
     pdf.savefig(pl.get_figure())
     pdf.close()
 
 def gen_MRAI_graphs(run_table, update_table, pdf):
-    _, pl = plib.updates_by_distance(run_table)
+    _, pl = da.updates_by_distance(run_table)
     pdf.savefig(pl.get_figure())
-    _, pl = plib.updates_by_distance_per_sec(run_table, column='avg_update_per_sec')
+    _, pl = da.updates_by_distance_per_sec(run_table, column='avg_update_per_sec')
     pdf.savefig(pl.get_figure())
-    _, pl = plib.updates_by_distance_per_sec(run_table, column='max_update_per_sec')
+    _, pl = da.updates_by_distance_per_sec(run_table, column='max_update_per_sec')
     pdf.savefig(pl.get_figure())
-    _, pl = plib.nodes_by_dist(run_table)
+    _, pl = da.nodes_by_dist(run_table)
     pdf.savefig(pl.get_figure())
-    _, pl = plib.conv_time(run_table, plot=True)
+    _, pl = da.conv_time(run_table, plot=True)
     pdf.savefig(pl.get_figure())
-    _, pl = plib.conv_time_by_distance(run_table)
+    _, pl = da.conv_time_by_distance(run_table)
     pdf.savefig(pl.get_figure())
-    _, pl = plib.conv_time_by_distance(run_table, column='distance_AS_before_t')
+    _, pl = da.conv_time_by_distance(run_table, column='distance_AS_before_t')
     pdf.savefig(pl.get_figure())
-    _, pl = plib.conv_time_by_distance(run_table, column='distance_AS_after_t')
+    _, pl = da.conv_time_by_distance(run_table, column='distance_AS_after_t')
     pdf.savefig(pl.get_figure())
     pdf.close()
 
