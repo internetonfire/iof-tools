@@ -9,6 +9,7 @@ import data_analysis as da
 from os import path
 from shutil import unpack_archive 
 from collections import defaultdict
+import itertools as it
 
 def test_equal(frame, value):
     return frame.min() == frame.max() == value
@@ -17,13 +18,63 @@ def is_monotone(array):
     # diff returns array of differences with next value
     return np.all(np.diff(array) >= 0)
 
+def make_index(t_r_number=3, run_id_number=3, AS_number=5, strategy=['']):
+    AS_list = ['AS' + str(x) for x in range(AS_number)]
+    t_r_list = AS_list[:t_r_number]
+    run_id_list = list(range(run_id_number))
+    return([t_r_list, run_id_list, AS_list, strategy])
+
+
+def fill_run_table(names, t_r_list, run_id_list, AS_list, strategy, mode='ZERO', 
+                   samples=0, delta='100ms'):
+    """ creates a list of dictionaries to fill a multiindex dataframe with
+        dummy data """
+    data = []
+    time_data = []
+    max_d = 9
+    zero_time = pd.Timedelta('0 days 00:00:00')
+    timedelta = pd.Timedelta(delta)
+    end_time = zero_time + timedelta*samples
+    for idx, val in enumerate(it.product(t_r_list, run_id_list, AS_list, strategy)):
+        tot_updates = idx
+        updates = [0] * samples
+        if mode == 'RANDOM':
+            updates = np.random.randn(samples)
+        if mode == 'LINEAR':
+            updates = [idx] * samples
+        if mode == 'INCREASING':
+            updates = range(samples)
+        if mode == 'INCREASING_L':
+            updates = [x*idx for x in range(samples)]
+        data_dict = {}
+        tot_updates = sum(updates)
+        for i in range(len(names)): 
+            data_dict[names[i]] = str(val[i])
+        data_dict['tot_updates'] =  tot_updates
+        data_dict['distance_AS_from_tr'] =  np.random.randint(max_d) + 1
+        data_dict['distance_tr_to_t'] =  np.random.randint(1,4)
+        data_dict['distance_AS_after_t'] = max(data_dict['distance_AS_from_tr'] -\
+                                           data_dict['distance_tr_to_t'], 0)
+        slot_len = samples/max_d
+        conv_sample = max((data_dict['distance_AS_from_tr']-1) * slot_len +\
+                np.random.randint(-slot_len, slot_len-1), 0)
+        data_dict['conv_time'] = zero_time + timedelta*conv_sample
+        data_dict['last_up_time'] = max(data_dict['conv_time'] +\
+                timedelta*np.random.rand()*slot_len, zero_time)
+        data_dict['first_up_time'] = max(data_dict['conv_time'] -\
+                timedelta*np.random.rand()*slot_len, zero_time)
+        data.append(data_dict)
+        time_data.append(updates)
+    return data, np.matrix.transpose(np.array(time_data))
+ 
+
 class DataTest(unittest.TestCase):
 
     def setUp(self):
         self.t_r = 2
         self.runs = 2
         self.ASes = 3
-        self.indexes = plib.make_index(self.t_r, self.runs, self.ASes)
+        self.indexes = make_index(self.t_r, self.runs, self.ASes)
 
             
         self.run_table_index = pd.MultiIndex.from_product(self.indexes, 
@@ -45,7 +96,7 @@ class DataTest(unittest.TestCase):
 
 
     def test_zero(self):
-        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+        self.data_set, self.time_data = fill_run_table(plib.index_names, 
                                                        self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
@@ -58,7 +109,7 @@ class DataTest(unittest.TestCase):
 
 
     def test_linear(self):
-        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+        self.data_set, self.time_data = fill_run_table(plib.index_names, 
                                                        self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
@@ -77,7 +128,7 @@ class DataTest(unittest.TestCase):
         self.assertTrue(test_equal(update_table.loc[:,(('AS0', 0, 'AS1', ''))], 1))
 
     def test_avg(self):
-        self.data_set, self.time_data = plib.fill_run_table(plib.index_names, 
+        self.data_set, self.time_data = fill_run_table(plib.index_names, 
                                                        self.indexes[0], 
                                                        self.indexes[1], 
                                                        self.indexes[2], 
@@ -113,7 +164,7 @@ class DataTest(unittest.TestCase):
 
 
     def test_per_sec(self):
-        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
+        data_set, time_data = fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
@@ -150,7 +201,7 @@ class DataTest(unittest.TestCase):
 
     def test_convergence(self):
 
-        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
+        data_set, time_data = fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
@@ -169,7 +220,7 @@ class DataTest(unittest.TestCase):
     def test_convergence_fail(self):
         self.skipTest('Skipping test that shows that resample does not work')
 
-        data_set, time_data = plib.fill_run_table(plib.index_names, self.indexes[0], 
+        data_set, time_data = fill_run_table(plib.index_names, self.indexes[0], 
                                                     self.indexes[1], 
                                                     self.indexes[2], 
                                                     self.indexes[3], 
@@ -197,7 +248,7 @@ class DataTest(unittest.TestCase):
                 self.v = False
                 self.T = '100ms'
         
-        indexes = plib.make_index()
+        indexes = make_index()
         t_r_list = [285, 514, 529] # see comment at beginning of parse_folder()
         run_id_list = [1,2]
         AS_list = [x for x in range(1, 1001)]
@@ -251,7 +302,7 @@ class DataTest(unittest.TestCase):
                 self.v = False
                 self.T = '100ms'
         
-        indexes = plib.make_index()
+        indexes = make_index()
         t_r_list = [514, 761] # see comment at beginning of parse_folder()
         run_id_list = [1,2]
         AS_list = [x for x in range(1, 1001)]
