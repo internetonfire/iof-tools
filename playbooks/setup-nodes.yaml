@@ -38,7 +38,7 @@
       pip:
         name: ansible
     - git:
-        repo: "https://ans.disi.unitn.it/redmine/iof-bird-daemon.git"
+        repo: "https://github.com/internetonfire/iof-bird.git"
         dest: "{{ bird_dir }}"
         version: "NoMiCe"
 #        version: "MRAI"
