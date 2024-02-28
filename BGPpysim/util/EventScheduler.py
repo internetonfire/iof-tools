@@ -1,5 +1,7 @@
 #!/usr/bin/python
-
+#==============================================================================
+# Copyright (C) 2019-2024 Mattia Milani, Leonardo Maccari, Luca Baldesi, Lorenzo Ghiro, Michele Segata, Marco Nesler 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -12,8 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright (C) 2019  Mattia Milani <mattia.milani@studenti.unitn.it> & Lorenzo Ghiro <lorenzo.ghiro@unitn.it>
+#==============================================================================
 
 import heapq
 import random
